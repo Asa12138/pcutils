@@ -1,0 +1,23 @@
+Package: pcutils
+Type: Package
+Title: some useful tools for myself
+Version: 0.1.0
+Author: Pengchen
+Maintainer: The package maintainer <pengchen2001@zju.edu.cn>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1
+Depends: 
+  R (>= 3.5.0)
+Imports: 
+    ggplot2,
+    dplyr,
+    magrittr,
+    fitdistrplus,
+    ggpmisc,
+    ggpubr,
+    nortest,
+    agricolae
