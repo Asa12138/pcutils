@@ -184,7 +184,7 @@ add_theme<-function(set_theme=NULL){
 #' group_box(a,col = 2,group = rep(c("a","b","c"),each=6))
 #' group_box(a,col = 1,group = rep(c("a","b","c"),each=6),alpha=F,rain=T,each=T)
 #'
-group_box<-function(tab,col=NULL,metadata=NULL,group=NULL,alpha=T,method="tukeyHSD",rain=F,p_value=F){
+group_box<-function(tab,col=NULL,metadata=NULL,group=NULL,alpha=F,method="tukeyHSD",rain=F,p_value=F){
   lib_ps("ggplot2","dplyr","ggpubr")
   if(is.vector(tab))tab=data.frame(value=tab)
   if(is.null(col))col=1
@@ -454,7 +454,7 @@ toXY <- function(dat){
 #'
 #' @examples
 #' china_map()
-china_map<-\(dir="~/Downloads/"){
+china_map<-function(dir="~/Downloads/"){
   lib_ps("ggspatial","ggplot2","sf")
   china_shp=paste0(dir,"china.json")
   if(!file.exists(china_shp))download.file("https://gitcode.net/mirrors/lyhmyd1211/geomapdata_cn/-/raw/master/china.json?inline=false",china_shp)
