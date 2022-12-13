@@ -150,11 +150,13 @@ get_cols <- function (n,pal=NULL){
 add_theme<-function(set_theme=NULL){
   if(is.null(set_theme)){
     mytheme<- {theme(text = element_text(family = "sans", size = 14))+
-        theme(plot.margin=unit(rep(0.75,4),'lines'))}
+        theme(plot.margin=unit(rep(0.5,4),'lines'),
+              strip.background = element_rect(fill=NA))}
     if (requireNamespace("ggpubr")){
       library(ggpubr)
       mytheme<- {theme_pubr(base_size = 14,legend = "right")+
-          theme(plot.margin=unit(rep(0.75,4),'lines'))}
+          theme(plot.margin=unit(rep(0.5,4),'lines'),
+                strip.background = element_rect(fill=NA))}
     }
   }
   else {
@@ -168,11 +170,10 @@ add_theme<-function(set_theme=NULL){
 #' @title Plot a boxplot
 #'
 #' @param tab your dataframe
-#' @param col which column choose for value
 #' @param metadata the dataframe contains the group
 #' @param group which colname choose for group or a vector
 #' @param alpha whether plot a group alphabeta
-#' @param method test method:tukeyHSD,LSD, (default: tukeyHSD)
+#' @param method test method:wilcox, tukeyHSD, LSD, (default: wilcox)
 #' @param rain plot a raincloud?
 #' @param p_value show the p-value between each group?(when group number is 2~4)
 #'
@@ -181,72 +182,84 @@ add_theme<-function(set_theme=NULL){
 #'
 #' @examples
 #' a=data.frame(a=1:18,b=runif(18,0,5))
-#' group_box(a,col = 2,group = rep(c("a","b","c"),each=6))
-#' group_box(a,col = 1,group = rep(c("a","b","c"),each=6),alpha=F,rain=T,each=T)
+#' group_box(a,group = rep(c("a","b","c"),each=6))
+#' group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,rain=T)
 #'
-group_box<-function(tab,col=NULL,metadata=NULL,group=NULL,alpha=F,method="tukeyHSD",rain=F,p_value=F){
+group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",rain=F,p_value=F){
   lib_ps("ggplot2","dplyr","ggpubr")
+#data transform
   if(is.vector(tab))tab=data.frame(value=tab)
-  if(is.null(col))col=1
-  if(is.character(col)){
-    col=which(names(tab)==col)
-    if(length(col)==0)stop("col is not in colnames")
-  }
+  else tab=select_if(tab,is.numeric)
   if(is.null(metadata)&&is.null(group)){
     #a single boxplot
-    md<-data.frame(value=tab[,col],group=names(tab)[col])
+    md<-data.frame(tab,group="value")
   }
   else{
     if(is.null(metadata)&&!is.null(group)){
-      md<-data.frame(value=tab[,col],group=group)
+      md<-data.frame(tab,group=group)
     }
     else if ((!is.null(metadata)&&!is.null(group))){
-      tab<-tab[rownames(metadata),]
-      md<-data.frame(value=tab[,col],group=metadata[,group])
+      if(!all(rownames(metadata)%in%rownames(tab)))message("rownames dont match in tab and metadata")
+      tab<-tab[rownames(metadata),,drop=F]
+      md<-data.frame(tab,group=metadata[,group])
       g_name=group
     }
   }
   md$group<-factor(md$group)
-  max(md$value)->high;min(md$value)->low
-  p<-ggplot(md,aes(group,value,color=group,group=group))+
-    stat_boxplot(geom = "errorbar",width=0.15)+
-    geom_boxplot(outlier.shape = NA)+
-    geom_jitter(width = 0.15,alpha=0.8,size=0.5)+
-    ylab(label = NULL)+xlab(label = NULL)
+
+  md%>%melt(id.vars="group",variable.name="indexes")->md
+  md$indexes=factor(md$indexes,levels = colnames(tab))
+#main plot
+  if(!rain){p<-ggplot(md,aes(group,value,color=group,group=group))+
+      stat_boxplot(geom = "errorbar",width=0.15)+
+      geom_boxplot(outlier.shape = NA)+
+      geom_jitter(width = 0.15,alpha=0.8,size=0.5)+
+      ylab(label = NULL)+xlab(label = NULL)}
   if(rain){
     lib_ps("gghalves")
     p<-ggplot(md,aes(group,value,color=group,group=group))+
-      gghalves::geom_half_violin(aes(fill=group),color=NA, side = "l", trim=FALSE)+
+      gghalves::geom_half_violin(aes(fill=group), side = "l", trim=FALSE)+
       gghalves::geom_half_point(side="r", size=0.5, alpha=0.8) +
-      geom_boxplot(fill = NA,
-                   position=position_nudge(x=.22),
+      geom_boxplot(position=position_nudge(x=.22),
                    linewidth = 0.6,
                    width = 0.2,
                    outlier.shape = NA
       )+ylab(label = NULL)+xlab(label = NULL)
   }
+#facet?
+  flag=(ncol(tab)==1)
+  if(flag) {ylab=colnames(tab)[1];p=p+ylab(ylab)}
+  if(!flag) p=p+facet_wrap(.~indexes,scales = "free_y")
 
   if(exists("g_name"))p=p+guides(color=guide_legend(g_name),
                                  fill=guide_legend(g_name))
-
+#p-value?
   if(p_value){
     if(between(nlevels(md$group),2,4)){
     p=p+stat_compare_means(show.legend = FALSE,
                            comparisons = combn(levels(md$group),2)%>%split(col(.)))
   }
-    else p=p+stat_compare_means(show.legend = FALSE,label.x = 1,label.y = (high+0.2*(high-low)))
+    else p=p+stat_compare_means(show.legend = FALSE,label.x = 1)
     }
 
   if(alpha){
-    multitest(md$value,md$group,print = F,return = method)->a
+    a<-list()
+    for (i in colnames(tab)){
+      filter(md,indexes==!!i)->tmp
+      a[[i]]=multitest(tmp$value,tmp$group,return = method)%>%cbind(.,indexes=i)
+    }
+    do.call(rbind,a)->aa
+    md%>%group_by(indexes)%>%summarise(low=min(value),high=max(value))%>%left_join(aa,.,"indexes")->aa
+    aa$indexes=factor(aa$indexes,levels = colnames(tab))
     if(rain){
-      p=p+ geom_text(data = a,aes(x=variable,y=(high+0.15*(high-low)),label=groups),
+      p=p+ geom_text(data = aa,aes(x=variable,y=(high+0.15*(high-low)),label=groups),
                      inherit.aes = FALSE,color='red',size=5,position=position_nudge(x=.1))
     }
-    else {p=p+ geom_text(data = a,aes(x=variable,y=(high+0.05*(high-low)),label=groups),
+    else {p=p+ geom_text(data = aa,aes(x=variable,y=(high+0.05*(high-low)),label=groups),
                          inherit.aes = FALSE,color='red',size=5)
     }
   }
+
   if(exists("mytheme"))p=p+mytheme
   return(p)
 }
@@ -280,13 +293,14 @@ twotest<-function(var,group){
 #'
 #' @examples
 #' multitest(c(runif(20),runif(10,2,3)),rep(c("a","b","c"),each=10))
-#' invisible(multitest(runif(30),rep(c("a","b","c"),each=10))->aa)
+#' multitest(runif(30),rep(c("a","b","c"),each=10),print=F,return="wilcox")->aa
 multitest<-function(var,group,print=T,return=F){
   lib_ps("agricolae")
   group<-factor(group)
   ano<-aov(var~group)
   #LSD
   lsdres <- LSD.test(ano, 'group', p.adj = 'bonferroni')
+  if(return=="LSD")return(data.frame(lsdres$groups,variable=rownames(lsdres$groups)))
   #TukeyHSD
   tukeyres<-TukeyHSD(ano)
   means=aggregate(var,by=list(group),mean)$x
@@ -294,6 +308,7 @@ multitest<-function(var,group,print=T,return=F){
   Q <- matrix(1, ncol = ntr, nrow = ntr)
   Q[lower.tri(Q)]<-Q[upper.tri(Q)] <- tukeyres$group[,4]
   out<-agricolae::orderPvalue(levels(group),means,0.05,Q)
+  if(return=="tukeyHSD")return(data.frame(out,variable=rownames(out)))
   #each wilcox.test
   Q <- matrix(1, ncol = ntr, nrow = ntr)
   for(i in 1:(ntr-1)){
@@ -304,8 +319,9 @@ multitest<-function(var,group,print=T,return=F){
     }
   }
   rownames(Q)<-colnames(Q)<-levels(group)
+  Q[is.nan(Q)]=1
   out1<-agricolae::orderPvalue(levels(group),means,0.05,Q)
-
+  if(return=="wilcox")return(data.frame(out1,variable=rownames(out1)))
   if(print){
     print("ANOVA:")
     print(summary(ano))
@@ -319,9 +335,6 @@ multitest<-function(var,group,print=T,return=F){
     print('===Wilcox-test====================================')
     print(Q)
   }
-  if(return=="LSD")return(data.frame(lsdres$groups,variable=rownames(lsdres$groups)))
-  if(return=="tukeyHSD")return(data.frame(out,variable=rownames(out)))
-  if(return=="wilcox")return(data.frame(out1,variable=rownames(out1)))
 }
 
 #' Fit a distribution
@@ -403,31 +416,54 @@ gghuan<-function(tab,reorder=T,mode="1"){
 
 #' Fit a lm and plot
 #'
-#' @param y a numeric vector or a two-columns dataframe
-#' @param x a numeric vector or NULL
+#' @param tab your dataframe
+#' @param metadata the dataframe contains the var
+#' @param var which colname choose for var or a vector
 #' @import ggpmisc
 #' @return a ggplot
 #' @export
 #'
 #' @examples
-#'my_lm(runif(50),1:50)
-#'my_lm(c(1:50)+runif(50,0,5),1:50)
-my_lm<-function(y,x=NULL,...){
-  lib_ps("ggpmisc")
-  if(!is.null(x))y=data.frame(y=y,x=x)
-  y1=y
-  colnames(y)[1:2]=c("y","x")
-  if(!is.numeric(y[,1])|!is.numeric(y[,2]))stop("need numeric")
-  #model <- lm(y ~ x, data = y)
-  ggplot(y,aes(x,y))+geom_point(...)+
+#'my_lm(runif(50),var=1:50)
+#'my_lm(c(1:50)+runif(50,0,5),var=1:50)
+my_lm<-function(tab,var,metadata=NULL,...){
+  lib_ps("ggplot2","dplyr","ggpubr")
+  #data transform
+  if(is.vector(tab))tab=data.frame(value=tab)
+
+  if(is.null(metadata)){
+    md<-data.frame(tab,var=var)
+  }
+  else if (!is.null(metadata)){
+    if(!all(rownames(metadata)%in%rownames(tab)))message("rownames dont match in tab and metadata")
+    tab<-tab[rownames(metadata),,drop=F]
+    md<-data.frame(tab,var=metadata[,var])
+    g_name=var
+  }
+
+  if(!all(apply(md, 2, is.numeric)))stop("need numeric")
+  md%>%melt(.,id.vars="var",variable.name="indexes")->md
+  md$indexes=factor(md$indexes,levels = colnames(tab))
+  #main plot
+  p=ggplot(md,aes(var,value))+
+    geom_point(...)+
     geom_smooth(method = "lm",color="red",se = F,formula = "y~x")+
     ggpmisc::stat_poly_eq(
       aes(label = paste(after_stat(eq.label), after_stat(adj.rr.label), sep = '~~~~~')),
       formula = y ~ x,  parse = TRUE,color="red",
       size = 3, #公式字体大小
-      label.x = 0.05, label.y = 1.05) +   #位置 ，0-1之间的比例
-      labs(x=colnames(y1)[2],y=colnames(y1)[1])
+      label.x = 0.05, label.y = 1.05)+#位置 ，0-1之间的比例
+    labs(x=NULL,y=NULL)
+  #facet?
+  flag=(ncol(tab)==1)
+  if(flag) {ylab=colnames(tab)[1];p=p+ylab(ylab)}
+  if(!flag) p=p+facet_wrap(.~indexes,scales = "free_y")
+  if(exists("g_name"))p=p+xlab(g_name)
+
+  if(exists("mytheme"))p=p+mytheme
+  return(p)
 }
+
 
 #' transfer Geographical latitude and longitude to XY(m)
 #'
