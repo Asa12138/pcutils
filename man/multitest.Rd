@@ -18,5 +18,5 @@ Multi-group test
 }
 \examples{
 multitest(c(runif(20),runif(10,2,3)),rep(c("a","b","c"),each=10))
-invisible(multitest(runif(30),rep(c("a","b","c"),each=10))->aa)
+multitest(runif(30),rep(c("a","b","c"),each=10),print=F,return="wilcox")->aa
 }

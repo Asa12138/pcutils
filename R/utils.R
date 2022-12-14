@@ -95,6 +95,23 @@ sanxian<-function(aa,digits = 3,nrow=10,ncol=10,...){
 }
 
 
+#' Transform a rgb vector to a Rcolor code
+#'
+#' @param x vector or three columns data.frame
+#'
+#' @return Rcolor code like "#69C404"
+#' @export
+#'
+#' @examples
+#' rgb2code(c(12,23,34))
+rgb2code<-function(x){
+  library(dplyr)
+  if(length(x)!=3)stop("need r,g,b!")
+  names(x)=c("r","g","b")
+  if(is.vector(x))return(rgb(x[1],x[2],x[3],maxColorValue = 255))
+  if(is.data.frame(x))return(transmute(x,code=rgb(r,g,b,maxColorValue = 255)))
+}
+
 #' Plot a multi pages pdf
 #' @param plist plot list
 #'
@@ -183,11 +200,12 @@ add_theme<-function(set_theme=NULL){
 #' @examples
 #' a=data.frame(a=1:18,b=runif(18,0,5))
 #' group_box(a,group = rep(c("a","b","c"),each=6))
-#' group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,rain=T)
+#' group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,mode=3)
 #'
-group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",rain=F,p_value=F){
+group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",mode=1,p_value=F){
   lib_ps("ggplot2","dplyr","ggpubr")
 #data transform
+  g_name=NULL
   if(is.vector(tab))tab=data.frame(value=tab)
   else tab=select_if(tab,is.numeric)
   if(is.null(metadata)&&is.null(group)){
@@ -210,12 +228,16 @@ group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",rain=F,
   md%>%melt(id.vars="group",variable.name="indexes")->md
   md$indexes=factor(md$indexes,levels = colnames(tab))
 #main plot
-  if(!rain){p<-ggplot(md,aes(group,value,color=group,group=group))+
+  if(mode==1){p<-ggplot(md,aes(group,value,color=group,group=group))+
       stat_boxplot(geom = "errorbar",width=0.15)+
       geom_boxplot(outlier.shape = NA)+
-      geom_jitter(width = 0.15,alpha=0.8,size=0.5)+
-      ylab(label = NULL)+xlab(label = NULL)}
-  if(rain){
+      geom_jitter(width = 0.15,alpha=0.8,size=0.5)}
+  if(mode==2){
+    p=ggplot(md,aes(group,value,group=group,fill=group))+
+      #stat_boxplot(geom = "errorbar",width=0.15)+
+      geom_boxplot(color="black",outlier.shape = NA)+
+      geom_jitter(color="black",width = 0.15,alpha=0.8,size=0.5)}
+  if(mode==3){
     lib_ps("gghalves")
     p<-ggplot(md,aes(group,value,color=group,group=group))+
       gghalves::geom_half_violin(aes(fill=group), side = "l", trim=FALSE)+
@@ -224,15 +246,15 @@ group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",rain=F,
                    linewidth = 0.6,
                    width = 0.2,
                    outlier.shape = NA
-      )+ylab(label = NULL)+xlab(label = NULL)
+      )
   }
+  p=p+guides(color=guide_legend(g_name),fill=guide_legend(g_name))+
+    ylab(label = NULL)+xlab(label = NULL)
 #facet?
   flag=(ncol(tab)==1)
   if(flag) {ylab=colnames(tab)[1];p=p+ylab(ylab)}
   if(!flag) p=p+facet_wrap(.~indexes,scales = "free_y")
 
-  if(exists("g_name"))p=p+guides(color=guide_legend(g_name),
-                                 fill=guide_legend(g_name))
 #p-value?
   if(p_value){
     if(between(nlevels(md$group),2,4)){
@@ -251,7 +273,7 @@ group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",rain=F,
     do.call(rbind,a)->aa
     md%>%group_by(indexes)%>%summarise(low=min(value),high=max(value))%>%left_join(aa,.,"indexes")->aa
     aa$indexes=factor(aa$indexes,levels = colnames(tab))
-    if(rain){
+    if(mode==3){
       p=p+ geom_text(data = aa,aes(x=variable,y=(high+0.15*(high-low)),label=groups),
                      inherit.aes = FALSE,color='red',size=5,position=position_nudge(x=.1))
     }
@@ -429,6 +451,7 @@ gghuan<-function(tab,reorder=T,mode="1"){
 my_lm<-function(tab,var,metadata=NULL,...){
   lib_ps("ggplot2","dplyr","ggpubr")
   #data transform
+  g_name=NULL
   if(is.vector(tab))tab=data.frame(value=tab)
 
   if(is.null(metadata)){
@@ -458,7 +481,7 @@ my_lm<-function(tab,var,metadata=NULL,...){
   flag=(ncol(tab)==1)
   if(flag) {ylab=colnames(tab)[1];p=p+ylab(ylab)}
   if(!flag) p=p+facet_wrap(.~indexes,scales = "free_y")
-  if(exists("g_name"))p=p+xlab(g_name)
+  p=p+xlab(g_name)
 
   if(exists("mytheme"))p=p+mytheme
   return(p)

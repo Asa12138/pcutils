@@ -4,12 +4,14 @@
 \alias{my_lm}
 \title{Fit a lm and plot}
 \usage{
-my_lm(y, x = NULL, ...)
+my_lm(tab, var, metadata = NULL, ...)
 }
 \arguments{
-\item{y}{a numeric vector or a two-columns dataframe}
+\item{tab}{your dataframe}
 
-\item{x}{a numeric vector or NULL}
+\item{var}{which colname choose for var or a vector}
+
+\item{metadata}{the dataframe contains the var}
 }
 \value{
 a ggplot
@@ -18,6 +20,6 @@ a ggplot
 Fit a lm and plot
 }
 \examples{
-my_lm(runif(50),1:50)
-my_lm(c(1:50)+runif(50,0,5),1:50)
+my_lm(runif(50),var=1:50)
+my_lm(c(1:50)+runif(50,0,5),var=1:50)
 }

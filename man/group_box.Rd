@@ -6,11 +6,10 @@
 \usage{
 group_box(
   tab,
-  col = NULL,
-  metadata = NULL,
   group = NULL,
-  alpha = T,
-  method = "tukeyHSD",
+  metadata = NULL,
+  alpha = F,
+  method = "wilcox",
   rain = F,
   p_value = F
 )
@@ -18,15 +17,13 @@ group_box(
 \arguments{
 \item{tab}{your dataframe}
 
-\item{col}{which column choose for value}
+\item{group}{which colname choose for group or a vector}
 
 \item{metadata}{the dataframe contains the group}
 
-\item{group}{which colname choose for group or a vector}
-
 \item{alpha}{whether plot a group alphabeta}
 
-\item{method}{test method:tukeyHSD,LSD, (default: tukeyHSD)}
+\item{method}{test method:wilcox, tukeyHSD, LSD, (default: wilcox)}
 
 \item{rain}{plot a raincloud?}
 
@@ -40,7 +37,7 @@ Plot a boxplot
 }
 \examples{
 a=data.frame(a=1:18,b=runif(18,0,5))
-group_box(a,col = 2,group = rep(c("a","b","c"),each=6))
-group_box(a,col = 1,group = rep(c("a","b","c"),each=6),alpha=F,rain=T,each=T)
+group_box(a,group = rep(c("a","b","c"),each=6))
+group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,rain=T)
 
 }
