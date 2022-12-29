@@ -10,7 +10,7 @@ group_box(
   metadata = NULL,
   alpha = F,
   method = "wilcox",
-  rain = F,
+  mode = 1,
   p_value = F
 )
 }
@@ -25,9 +25,9 @@ group_box(
 
 \item{method}{test method:wilcox, tukeyHSD, LSD, (default: wilcox)}
 
-\item{rain}{plot a raincloud?}
-
 \item{p_value}{show the p-value between each group?(when group number is 2~4)}
+
+\item{rain}{plot a raincloud?}
 }
 \value{
 a 'ggplot' plot object,
@@ -38,6 +38,6 @@ Plot a boxplot
 \examples{
 a=data.frame(a=1:18,b=runif(18,0,5))
 group_box(a,group = rep(c("a","b","c"),each=6))
-group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,rain=T)
+group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,mode=3)
 
 }

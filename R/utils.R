@@ -7,7 +7,7 @@
 #' Print with =
 #' @param str output strings
 #' @param n the number of = side chars
-#'
+#' @export
 dabiao<-function(str,n=80){
   if(n<nchar(str))n=nchar(str)+2
   x=(n-nchar(str))%/%2
@@ -64,7 +64,8 @@ lib_ps<-function(p_list,...){
 #' @examples
 #' x=runif(10)
 #' mmscale(x,5,10)
-mmscale=function(x,min_s=0,max_s=1){
+mmscale<-function(x,min_s=0,max_s=1){
+  if((max(x)-min(x))==0)return(rep((min_s+max_s)/2,length(x)))
   min_s+(x-min(x))/(max(x)-min(x))*(max_s-min_s)
 }
 
@@ -210,16 +211,16 @@ group_box<-function(tab,group=NULL,metadata=NULL,alpha=F,method="wilcox",mode=1,
   else tab=select_if(tab,is.numeric)
   if(is.null(metadata)&&is.null(group)){
     #a single boxplot
-    md<-data.frame(tab,group="value")
+    md<-data.frame(tab,group="value",check.names = F)
   }
   else{
     if(is.null(metadata)&&!is.null(group)){
-      md<-data.frame(tab,group=group)
+      md<-data.frame(tab,group=group,check.names = F)
     }
     else if ((!is.null(metadata)&&!is.null(group))){
       if(!all(rownames(metadata)%in%rownames(tab)))message("rownames dont match in tab and metadata")
       tab<-tab[rownames(metadata),,drop=F]
-      md<-data.frame(tab,group=metadata[,group])
+      md<-data.frame(tab,group=metadata[,group],check.names = F)
       g_name=group
     }
   }
