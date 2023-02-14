@@ -2,9 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{gghuan}
 \alias{gghuan}
-\title{Plot a donut chart}
+\title{Plot a doughnut chart}
 \usage{
-gghuan(tab, reorder = T, mode = "1")
+gghuan(tab, reorder = T, mode = "1", topN = 5, name = T)
 }
 \arguments{
 \item{ad}{a two-columns dataframe, first is type, second is number}
@@ -13,11 +13,11 @@ gghuan(tab, reorder = T, mode = "1")
 a ggplot
 }
 \description{
-Plot a donut chart
+Plot a doughnut chart
 }
 \examples{
 a=data.frame(type=letters[1:6],num=c(1,3,3,4,5,10))
-gghuan(a)
+gghuan(a)+scale_fill_manual(values=get_cols(6,"col3"))
 b=data.frame(type=letters[1:12],num=c(1,3,3,4,15,10,35,2:6))
-gghuan(b)
+gghuan(b)+theme(legend.position="right")
 }

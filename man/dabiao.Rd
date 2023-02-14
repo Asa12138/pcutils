@@ -4,12 +4,16 @@
 \alias{dabiao}
 \title{Print with =}
 \usage{
-dabiao(str, n = 80)
+dabiao(str, n = 80, char = "=", mode = c("middle", "left", "right"))
 }
 \arguments{
 \item{str}{output strings}
 
-\item{n}{the number of = side chars}
+\item{n}{the number of output length}
+
+\item{char}{side chars default:=}
+
+\item{mode}{"middle", "left" or "right"}
 }
 \description{
 Print with =

@@ -4,7 +4,7 @@
 \alias{mmscale}
 \title{Min_Max scale}
 \usage{
-mmscale(x, min_s = 0, max_s = 1)
+mmscale(x, min_s = 0, max_s = 1, n = 1, plot = F)
 }
 \arguments{
 \item{x}{a numeric vector}
@@ -12,6 +12,10 @@ mmscale(x, min_s = 0, max_s = 1)
 \item{min_s}{scale min}
 
 \item{max_s}{scale max}
+
+\item{n}{linear transfer for n=1; the slope will change if n>1 or n<1}
+
+\item{plot}{whether plot the transfer?}
 }
 \value{
 a numeric vector

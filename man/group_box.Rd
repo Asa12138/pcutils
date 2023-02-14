@@ -8,10 +8,14 @@ group_box(
   tab,
   group = NULL,
   metadata = NULL,
+  mode = 1,
+  facet = T,
   alpha = F,
   method = "wilcox",
-  mode = 1,
-  p_value = F
+  p_value1 = F,
+  p_value2 = F,
+  comparisons = NULL,
+  ...
 )
 }
 \arguments{
@@ -21,13 +25,19 @@ group_box(
 
 \item{metadata}{the dataframe contains the group}
 
+\item{mode}{1~3}
+
+\item{facet}{facet when only one var?}
+
 \item{alpha}{whether plot a group alphabeta}
 
 \item{method}{test method:wilcox, tukeyHSD, LSD, (default: wilcox)}
 
-\item{p_value}{show the p-value between each group?(when group number is 2~4)}
+\item{p_value1}{multi-test of all group}
 
-\item{rain}{plot a raincloud?}
+\item{p_value2}{two-test of each pair}
+
+\item{comparisons}{comparison pairs, as list, e.g. list(c("a","b"))}
 }
 \value{
 a 'ggplot' plot object,
@@ -37,7 +47,8 @@ Plot a boxplot
 }
 \examples{
 a=data.frame(a=1:18,b=runif(18,0,5))
-group_box(a,group = rep(c("a","b","c"),each=6))
-group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),alpha=T,mode=3)
+group_box(a,group = rep(c("a","b","c"),each=6),p_value1=F,p_value2=T)
+multitest(a$a,group = rep(c("a","b","c"),each=6))
+group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),p_value2=T,mode=3,comparisons=list(c("a","b")))
 
 }

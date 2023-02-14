@@ -4,7 +4,7 @@
 \alias{rgb2code}
 \title{Transform a rgb vector to a Rcolor code}
 \usage{
-rgb2code(x)
+rgb2code(x, rev = F)
 }
 \arguments{
 \item{x}{vector or three columns data.frame}
@@ -17,4 +17,5 @@ Transform a rgb vector to a Rcolor code
 }
 \examples{
 rgb2code(c(12,23,34))
+rgb2code("#69C404",rev=T)
 }

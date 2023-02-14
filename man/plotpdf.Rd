@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{plotpdf}
 \alias{plotpdf}
-\title{Plot a multi pages pdf}
+\title{Plot a multi-pages pdf}
 \usage{
 plotpdf(plist, file = "new", width = 8, height = 7, ...)
 }
@@ -18,5 +18,5 @@ plotpdf(plist, file = "new", width = 8, height = 7, ...)
 \item{...}{additional arguments}
 }
 \description{
-Plot a multi pages pdf
+Plot a multi-pages pdf
 }

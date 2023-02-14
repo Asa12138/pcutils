@@ -2,9 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{my_lm}
 \alias{my_lm}
-\title{Fit a lm and plot}
+\title{Fit a linear model and plot}
 \usage{
-my_lm(tab, var, metadata = NULL, ...)
+my_lm(tab, var, metadata = NULL, facet = T, ...)
 }
 \arguments{
 \item{tab}{your dataframe}
@@ -12,12 +12,16 @@ my_lm(tab, var, metadata = NULL, ...)
 \item{var}{which colname choose for var or a vector}
 
 \item{metadata}{the dataframe contains the var}
+
+\item{facet}{facet when only one var?}
+
+\item{...}{}
 }
 \value{
 a ggplot
 }
 \description{
-Fit a lm and plot
+Fit a linear model and plot
 }
 \examples{
 my_lm(runif(50),var=1:50)

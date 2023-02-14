@@ -4,7 +4,7 @@
 \alias{toXY}
 \title{transfer Geographical latitude and longitude to XY(m)}
 \usage{
-toXY(dat)
+toXY(geo)
 }
 \arguments{
 \item{dat}{a two-columns dataframe, first is latitude, second is longitude}
@@ -13,6 +13,6 @@ toXY(dat)
 transfer Geographical latitude and longitude to XY(m)
 }
 \examples{
-data.frame(row.names = letter[1:18],x=runif(18,30,35),y=runif(18,40,45))->geo
+data.frame(row.names = letters[1:18],x=runif(18,30,35),y=runif(18,40,45))->geo
 toXY(geo)
 }

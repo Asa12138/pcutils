@@ -15,7 +15,7 @@ sanxian(aa, digits = 3, nrow = 10, ncol = 10, ...)
 
 \item{ncol}{show how many columns}
 
-\item{...}{additional arguments e.g.(rowname=NULL)}
+\item{...}{additional arguments e.g.(rows=NULL)}
 }
 \value{
 a ggplot
@@ -26,4 +26,5 @@ Three-line table
 \examples{
 data("otutab")
 sanxian(otutab)
+sanxian(otutab,ncol=4,rows=NULL)
 }

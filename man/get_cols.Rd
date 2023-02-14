@@ -4,12 +4,14 @@
 \alias{get_cols}
 \title{Get n colors}
 \usage{
-get_cols(n, pal = NULL)
+get_cols(n, pal = "col1", picture = NULL)
 }
 \arguments{
 \item{n}{how many colors you need}
 
-\item{pal}{a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}}
+\item{pal}{col1~3; or a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}}
+
+\item{picture}{a picture file, colors will be extracted from the picture}
 }
 \value{
 n colors
@@ -18,6 +20,9 @@ n colors
 Get n colors
 }
 \examples{
-get_cols(10)->my_cols
+get_cols(10,"col2")->my_cols
 scales::show_col(my_cols)
+scales::show_col(get_cols(15,brewer.pal(5,"Set2")))
+scales::show_col(get_cols(15,ggsci::pal_aaas()(5)))
+scales::show_col(get_cols(4,picture="~/Desktop/Screenshot 2023-02-14 at 16.17.28.png"))
 }
