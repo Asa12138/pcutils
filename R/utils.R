@@ -675,12 +675,12 @@ read.file<-function(file,format=NULL,just_print=F){
               "png" = {p1=png::readPNG(file)}
       )
       RImagePalette::display_image(p1)
-    }}
+    }
     if(format=="pdf"){
       lib_ps("pdftools")
 
     }
-
+  }
 }
 
 
