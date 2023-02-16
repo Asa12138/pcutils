@@ -4,10 +4,12 @@
 \alias{my_sankey}
 \title{My Sankey plot}
 \usage{
-my_sankey(test)
+my_sankey(test, ...)
 }
 \arguments{
 \item{test}{a dataframe with hierarchical structure}
+
+\item{...}{look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}}
 }
 \description{
 My Sankey plot

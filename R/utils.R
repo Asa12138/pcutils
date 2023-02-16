@@ -25,6 +25,7 @@ dabiao<-function(str,n=80,char="=",mode=c("middle", "left", "right")){
   cat(xx,"\n")
 }
 
+
 #' Library packages or install
 #'
 #' @param p_list a vector of packages list
@@ -34,20 +35,33 @@ dabiao<-function(str,n=80,char="=",mode=c("middle", "left", "right")){
 #'
 #' @examples
 #' lib_ps("ggplot2","dplyr")
-lib_ps<-function(p_list,...){
+lib_ps<-function(p_list,...,all_yes=F){
+  some_packages=c(
+    "ggsankey"="davidsjoberg/ggsankey",
+    "sankeyD3"="fbreitwieser/sankeyD3",
+    "pctax"="Asa12138/pctax",
+    "MetaNet"="Asa12138/MetaNet",
+    "ggcor"="Github-Yilei/ggcor"
+  )
   p_list=c(p_list,...)
   for (p in p_list) {
     if (!requireNamespace(p)) {
+      if(!all_yes){
       print(paste0(p,": this package haven't install, should install?"))
-      flag=readline("yes/no(y/n)?")
+      flag=readline("yes/no(y/n)?")}
+      else flag="y"
+
       if(tolower(flag)%in%c("yes","y")){
-        install.packages(p)
+        if(p%in%names(some_packages))remotes::install_github(some_packages[p])
+        else install.packages(p)
       }
       else stop(paste0("exit, because '",p,"' need to install"))
 
       if (!requireNamespace(p)){
-        print(paste0(p," is not available, try Bioconductor?"))
-        flag=readline("yes/no(y/n)?")
+
+        if(!all_yes){print(paste0(p," is not available, try Bioconductor?"))
+        flag=readline("yes/no(y/n)?")}
+
         if(tolower(flag)%in%c("yes","y")){
           if (!requireNamespace("BiocManager"))install.packages("BiocManager")
           BiocManager::install(p)
@@ -55,8 +69,9 @@ lib_ps<-function(p_list,...){
         else stop(paste0("exit, because '",p,"' need to install"))
       }
 
-      if (!requireNamespace(p))stop("please try other way (github...) to install ",p)
+      if (!requireNamespace(p)){cat("\n");stop("please try other way (github...) to install ",p)}
     }
+
     suppressPackageStartupMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE))
   }
 }
@@ -111,7 +126,7 @@ mmscale<-function(x,min_s=0,max_s=1,n=1,plot=F){
 #' @export
 #'
 #' @examples
-#' data("otutab")
+#' data("otutab",package = "MetaNet")
 #' sanxian(otutab)
 #' sanxian(otutab,ncol=4,rows=NULL)
 sanxian<-function(aa,digits = 3,nrow=10,ncol=10,...){
@@ -153,18 +168,31 @@ rgb2code<-function(x,rev=F){
 
 
 #' Plot a multi-pages pdf
+#'
 #' @param plist plot list
 #' @param file prefix of your .pdf file
 #' @param width width
 #' @param height height
+#' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
 #' @param ... additional arguments
+#'
 #' @export
-plotpdf<-function(plist,file='new',width=8,height=7,...){
-  pdf(paste0(file,'.pdf'),width,height,...)
-  for (i in plist){
-    print(i)
+plotpdf<-function(plist,file='new',width=8,height=7,brower="/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge",...){
+  if(inherits(plist,"htmlwidget")){
+    lib_ps("pagedown")
+    if(!file.exists(brower))stop(brower,"is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
+    suppressMessages(htmlwidgets::saveWidget(plist,"tmppp.html"))
+    pagedown::chrome_print("tmppp.html",paste0(file,'.pdf'),wait = 0,browser =brower,
+                           options = list(pageRanges="1",paperWidth=width,paperHeight=height,...))
+    file.remove("tmppp.html")
+    message("pdf saved sucessfully")
   }
-  dev.off()
+  else{
+    pdf(paste0(file,'.pdf'),width,height,...)
+    for (i in plist){
+      print(i)
+    }
+    dev.off()}
 }
 
 
@@ -180,9 +208,9 @@ plotpdf<-function(plist,file='new',width=8,height=7,...){
 #' @examples
 #' get_cols(10,"col2")->my_cols
 #' scales::show_col(my_cols)
-#' scales::show_col(get_cols(15,brewer.pal(5,"Set2")))
+#' scales::show_col(get_cols(15,RColorBrewer::brewer.pal(5,"Set2")))
 #' scales::show_col(get_cols(15,ggsci::pal_aaas()(5)))
-#' scales::show_col(get_cols(4,picture="~/Desktop/Screenshot 2023-02-14 at 16.17.28.png"))
+#' #scales::show_col(get_cols(4,picture="~/Desktop/Screenshot 2023-02-14 at 16.17.28.png"))
 get_cols <- function (n,pal="col1",picture=NULL){
   col1 <- c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
                     "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
@@ -235,6 +263,24 @@ add_theme<-function(set_theme=NULL){
     mytheme<-set_theme
   }
   mytheme<<-mytheme
+}
+
+#' Remove outliers
+#'
+#' @param x a numeric vector
+#' @param factor default 1.5
+#'
+#' @export
+#'
+#' @examples
+#' remove.outliers(c(1,10:15))
+remove.outliers <- function(x, factor = 1.5) {
+  q25 = quantile(x, probs = 0.25)
+  q75 = quantile(x, probs = 0.75)
+  iqr = unname(q75 - q25)
+  lower.threshold = q25 - (iqr * factor)
+  upper.threshold = q75 + (iqr * factor)
+  return(x[(x >= lower.threshold) & (x <= upper.threshold)])
 }
 
 #' @title Plot a boxplot
@@ -694,53 +740,110 @@ my_cat<-function(mode=1){
   t<-seq(0, 2*pi, 0.08)
   d=data.frame(x=2*(sin(t)-0.5*sin(2*t)),y=2*(cos(t)-0.5*cos(2*t)))
   ggplot(d, aes(x, y)) +
-    ggimage::geom_image(image = "data/smallguodong.ppp", size = .05)+theme_void()}
+    ggimage::geom_image(image = system.file("data/smallguodong.ppp",package = "pcutils"), size = .05)+theme_void()}
 }
 
 
 #' My Sankey plot
 #'
 #' @param test a dataframe with hierarchical structure
+#' @param ... look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}
+#' @param mode "sankeyD3","ggsankey"
 #'
 #' @export
 #'
 #' @examples
-#' data.frame(aa=rep("a",5),a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_sankey()
-#' data("otutab",package = "pctax")
+#' data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)%>%my_sankey(.,"gg",num=T)
+#' data("otutab",package = "MetaNet")
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
-#' my_sankey(test)
-my_sankey=function(test){
-  lib_ps("sankeyD3","dplyr")
+#' my_sankey(test)->p
+#' plotpdf(p)
+my_sankey=function(test,mode=c("sankeyD3","ggsankey"),...){
+  mode=match.arg(mode,c("sankeyD3","ggsankey"))
+  lib_ps("dplyr")
   nc=ncol(test)
   if(nc<3)stop("as least 3-columns dataframe")
   if(!is.numeric(test[,nc]))stop("the last column must be numeric")
-  #change duplicated data
-  for (i in 1:(nc-2)){
-    for(j in (i+1):(nc-1)){
-      du=intersect(test[,i],test[,j])
-      if(length(du)>0){
-        for (t in du){
-          test[(test[,j]==t),j]=paste0(t,strrep(" ",j-1))
-        }
-      }}
-  }
-  #merge to two columns
-  links=data.frame()
-  for (i in 1:(nc-2)){
-    test[,c(i,i+1,nc)]->tmp
-    colnames(tmp)=c("source","target","weight")
-    tmp=group_by(tmp,source,target)%>%summarise(weight=sum(weight),.groups="keep")
-    links=rbind(links,tmp)
-  }
-  #give ids
-  nodes <- data.frame(name=c(as.character(links$source), as.character(links$target)) %>% unique())
-  links$IDsource <- match(links$source, nodes$name)-1
-  links$IDtarget <- match(links$target, nodes$name)-1
+  if(mode=="sankeyD3"){
+    lib_ps("sankeyD3")
+    #change duplicated data
+    for (i in 1:(nc-1)){
+      test[,i]=paste0(test[,i],strrep(" ",i-1))
+    }
+    #merge to two columns
+    links=data.frame()
+    for (i in 1:(nc-2)){
+      test[,c(i,i+1,nc)]->tmp
+      colnames(tmp)=c("source","target","weight")
+      tmp=group_by(tmp,source,target)%>%summarise(weight=sum(weight),.groups="keep")
+      links=rbind(links,tmp)
+    }
+    #give ids
+    nodes <- data.frame(name=c(as.character(links$source), as.character(links$target)) %>% unique())
+    links$IDsource <- match(links$source, nodes$name)-1
+    links$IDtarget <- match(links$target, nodes$name)-1
 
-  sankeyNetwork(Links = as.data.frame(links), Nodes = nodes, Source = "IDsource", Target = "IDtarget",
-                Value = "weight", NodeID = "name",nodeWidth =10,units = 'TWh',
-                height=400,width=300,
-                colourScale=JS("d3.scaleOrdinal(d3.schemeCategory10);"),
-                #numberFormat=".0f",
-                fontSize = 8)
+    p=sankeyNetwork(Links = as.data.frame(links), Nodes = nodes,
+                  Source = "IDsource", Target = "IDtarget",Value = "weight",
+                  NodeID = "name",nodeWidth =10,units = 'TWh',
+                  xAxisDomain =colnames(test)[-nc],
+                  # height=400,width=500,
+                  # colourScale=JS("d3.scaleOrdinal(d3.schemeCategory10);"),
+                  # numberFormat=".0f",
+                  # fontSize = 8,dragY = T,nodeShadow = T,
+                  # doubleclickTogglesChildren = T,
+                  ...)
+    return(p)
+    }
+  if(mode=="ggsankey"){
+    lib_ps("ggsankey")
+    df=make_long(test,1:(nc-1),value =!!nc)
+    parms=list(...)
+
+    if(!is.null(parms$num)){
+      if((parms$num)){
+      df%>%group_by(x,node)%>%summarise(value=sum(value))%>%mutate(label=paste0(node,"\n",value))->tmp
+      df=left_join(df,tmp[,-3])}
+      else df$label=df$node
+      }
+    else df$label=df$node
+
+    p=ggplot(df, aes(x = x, next_x = next_x, node = node, next_node = next_node, label = label,value=value)) +
+      geom_sankey(aes(fill = factor(node)),flow.alpha = .6,node.color = "gray30",space = 1) +
+      scale_fill_manual(values = get_cols(nlevels(factor(df$node))))+
+      geom_sankey_text(size = 3, color = "black",space = 1) +
+      theme_sankey(base_size = 18) +
+      labs(x = NULL) +
+      theme(legend.position = "none",plot.title = element_text(hjust = .5))
+    return(p)
+  }
 }
+
+
+if(F){
+  animation::saveGIF(
+  (for (k in 1:time){
+    next
+  }), movie.name = "LifeGame.gif"
+)
+}
+
+#' My cicro plot
+#'
+#' @param df
+#' @param ...
+#
+#' @return
+#' @export
+#'
+#' @examples
+#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_cicro()
+my_cicro=function(df,...){
+  colnames(df)=c("from","to","count")
+  tab=reshape2::dcast(df,from~to,value.var = "count")%>%tibble::column_to_rownames("from")%>%as.matrix()
+  tab[is.na(tab)]=0
+  lib_ps("circlize")
+  circlize::chordDiagram(tab,grid.col = pcutils::get_cols(length(unique(c(colnames(tab),rownames(tab))))),...)
+  del_ps("circlize")
+}
+
