@@ -4,7 +4,14 @@
 \alias{plotpdf}
 \title{Plot a multi-pages pdf}
 \usage{
-plotpdf(plist, file = "new", width = 8, height = 7, ...)
+plotpdf(
+  plist,
+  file = "new",
+  width = 8,
+  height = 7,
+  brower = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+  ...
+)
 }
 \arguments{
 \item{plist}{plot list}
@@ -14,6 +21,8 @@ plotpdf(plist, file = "new", width = 8, height = 7, ...)
 \item{width}{width}
 
 \item{height}{height}
+
+\item{brower}{the path of Google Chrome, Microsoft Edge or Chromium in your computer.}
 
 \item{...}{additional arguments}
 }

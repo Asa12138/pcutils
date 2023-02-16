@@ -4,7 +4,7 @@
 \alias{lib_ps}
 \title{Library packages or install}
 \usage{
-lib_ps(p_list, ...)
+lib_ps(p_list, ..., all_yes = F)
 }
 \arguments{
 \item{p_list}{a vector of packages list}

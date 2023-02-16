@@ -24,7 +24,7 @@ a ggplot
 Three-line table
 }
 \examples{
-data("otutab")
+data("otutab",package = "MetaNet")
 sanxian(otutab)
 sanxian(otutab,ncol=4,rows=NULL)
 }

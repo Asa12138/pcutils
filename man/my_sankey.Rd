@@ -4,10 +4,12 @@
 \alias{my_sankey}
 \title{My Sankey plot}
 \usage{
-my_sankey(test, ...)
+my_sankey(test, mode = c("sankeyD3", "ggsankey"), ...)
 }
 \arguments{
 \item{test}{a dataframe with hierarchical structure}
+
+\item{mode}{"sankeyD3","ggsankey"}
 
 \item{...}{look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}}
 }
@@ -15,8 +17,9 @@ my_sankey(test, ...)
 My Sankey plot
 }
 \examples{
-data.frame(aa=rep("a",5),a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_sankey()
-data("otutab",package = "pctax")
+data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_sankey(.,"gg",num=T)
+data("otutab",package = "MetaNet")
 cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
-my_sankey(test)
+my_sankey(test)->p
+plotpdf(p)
 }

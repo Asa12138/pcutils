@@ -830,10 +830,10 @@ if(F){
 
 #' My cicro plot
 #'
-#' @param df
-#' @param ...
+#' @param df dataframe
+#' @param ... \code{\link[circlize]{chordDiagram}}
 #
-#' @return
+#' @return chordDiagram
 #' @export
 #'
 #' @examples
