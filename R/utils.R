@@ -5,6 +5,8 @@
 #            install.packages(p)}}
 
 
+
+#=========little tools=========
 #' Print with =
 #'
 #' @param str output strings
@@ -41,7 +43,8 @@ lib_ps<-function(p_list,...,all_yes=F){
     "sankeyD3"="fbreitwieser/sankeyD3",
     "pctax"="Asa12138/pctax",
     "MetaNet"="Asa12138/MetaNet",
-    "ggcor"="Github-Yilei/ggcor"
+    "ggcor"="Github-Yilei/ggcor",
+    "chorddiag"="mattflor/chorddiag"
   )
   p_list=c(p_list,...)
   for (p in p_list) {
@@ -164,9 +167,6 @@ rgb2code<-function(x,rev=F){
     }
 }
 
-
-
-
 #' Plot a multi-pages pdf
 #'
 #' @param plist plot list
@@ -195,6 +195,31 @@ plotpdf<-function(plist,file='new',width=8,height=7,brower="/Applications/Micros
     dev.off()}
 }
 
+#' Plot a gif
+#'
+#' @param plist plot list
+#' @param file prefix of your .gif file
+#'
+#' @export
+plotgif<-function(plist,file='new',mode="gif"){
+  if(mode=="gif"){ animation::saveGIF(
+      for (i in plist){
+        print(i)
+      },movie.name = paste0(file,".gif")
+    )}
+  #transfer pngs to a gif use gifski::gifski()
+  if(mode=="html"){
+    nwd=getwd()
+    dir.create(paste0(file,"_html"))
+    setwd(paste0(file,"_html"))
+    animation::saveHTML(
+    for (i in plist){
+      print(i)
+    },movie.name = paste0(file,".html")
+    )
+    setwd(nwd)
+    }
+}
 
 #' Get n colors
 #'
@@ -212,15 +237,15 @@ plotpdf<-function(plist,file='new',width=8,height=7,brower="/Applications/Micros
 #' scales::show_col(get_cols(15,ggsci::pal_aaas()(5)))
 #' #scales::show_col(get_cols(4,picture="~/Desktop/Screenshot 2023-02-14 at 16.17.28.png"))
 get_cols <- function (n,pal="col1",picture=NULL){
-  col1 <- c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
+  col1 <- c("#8dd3c7", "#ffed6f", "#bebada", "#fb8072", "#80b1d3",
                     "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
-                    "#ccebc5", "#ffed6f")
-  col2 <- c("#1f78b4", "#ffff33", "#c2a5cf", "#ff7f00", "#810f7c",
-                     "#a6cee3", "#006d2c", "#4d4d4d", "#8c510a", "#d73027",
-                     "#78c679", "#7f0000", "#41b6c4", "#e7298a", "#54278f")
-  col3 <- c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99",
-                    "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a",
-                    "#ffff99", "#b15928")
+                    "#ccebc5")
+  col2 <- c("#a6cee3", "#78c679","#c2a5cf", "#ff7f00","#1f78b4",  "#810f7c", "#ffff33",
+                     "#006d2c", "#4d4d4d", "#8c510a", "#d73027",
+                      "#7f0000", "#41b6c4", "#e7298a", "#54278f")
+  col3 <- c("#a6bce3", "#fb9a99", "#fdbf6f", "#1f78b4", "#b2df8a", "#cab2d6", "#33a02c",
+                    "#e31a1c", "#ff7f00", "#6a3d9a",
+                    "#ffef00", "#b15928")
 
   if(length(pal)==1)pal=get(pal)
   if(!is.null(picture)){
@@ -283,6 +308,280 @@ remove.outliers <- function(x, factor = 1.5) {
   return(x[(x >= lower.threshold) & (x <= upper.threshold)])
 }
 
+
+#' Grepl applied on a data.frame
+#'
+#' @param pattern search pattern
+#' @param x your data.frame
+#' @param ... addtitional arguments for gerpl()
+#'
+#' @return a logical data.frame
+#' @export
+#' @examples
+#' matrix(letters[1:6],2,3)|>as.data.frame()->a
+#' grepl.data.frame("c",a)
+#' grepl.data.frame("\\w",a)
+grepl.data.frame<-function(pattern, x, ...) {
+  y <- if (length(x)) {
+    do.call("cbind", lapply(x, "grepl", pattern = pattern,...))
+  }
+  else {
+    matrix(FALSE, length(row.names(x)), 0)
+  }
+  if (.row_names_info(x) > 0L)
+    rownames(y) <- row.names(x)
+  y
+}
+
+#' Read some special format file
+#'
+#' @param file file path
+#' @param format "blast","diamond"
+#'
+#' @return data.frame
+#' @export
+#'
+read.file<-function(file,format=NULL,just_print=F){
+  if(just_print){
+    if(file.size(file)>10000){
+      print(paste0(file,": this file is a little big, still open?"))
+      flag=readline("yes/no(y/n)?")
+      if(tolower(flag)%in%c("yes","y")){
+        cat(readr::read_file(file))
+      }}
+    else cat(readr::read_file(file))
+  }
+  else{
+    if(is.null(format))format=tools::file_ext(file)
+    format=match.arg(format,c("blast","diamond","jpg","png","pdf","svg"))
+
+    if(format%in%c("blast","diamond")){
+      df=read.table(file,sep = "\t",
+                    col.names = c("Qseqid","Sseqid","Pident","Length","Mismatch","Gapopen",
+                                  "Qstart","Qend","Sstart","Send","E_value","Bitscore"))
+      return(df)
+    }
+
+    if(format%in%c("jpg","png")){
+      switch (format,
+              "jpg" = {p1=jpeg::readJPEG(file)},
+              "png" = {p1=png::readPNG(file)}
+      )
+      graphics::plot(1:2, type = "n", axes = F, ylab = "n", xlab = "n",ann = FALSE)
+      graphics::rasterImage(p1, 1, 1, 2, 2)
+    }
+    if(format=="svg"){
+      x <- grImport2::readPicture(file)
+      g <- grImport2::pictureGrob(x)
+      p=as_ggplot(g)
+      p
+    }
+  }
+}
+
+
+#' Transfer the format of file
+#'
+#' @param file input file
+#' @param to_format transfer to
+#' @param format input file format
+#'
+#' @return file at work directory
+#' @export
+#'
+trans_format<-function(file,to_format,format=NULL,...,brower="/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge"){
+  if(is.null(format))format=tools::file_ext(file)
+  name=tools::file_path_sans_ext(basename(file))
+  out=paste0(name,".",to_format)
+  if(to_format=="jpeg")to_format="jpg"
+  if(format==to_format)stop("don not need transfer")
+  lib_ps("ggplot2")
+  if(format=="svg"){
+    if(to_format=="html"){file.copy(file,out)}
+    else{
+      lib_ps("rsvg","grImport2")
+      rsvg::rsvg_svg(file, file)
+      x <- grImport2::readPicture(file)
+      g <- grImport2::pictureGrob(x)
+      ggplot2::ggsave(g, filename = out, device = to_format,...)
+      invisible(g)
+    }
+  }
+  if(format=="pdf"){
+    lib_ps("pdftools")
+    switch (to_format,
+            "png" = {pdftools::pdf_convert(file,"png",filenames = out)},
+            "jpg" = {pdftools::pdf_convert(file,"jpeg",filenames = out)},
+            "jpeg" = {pdftools::pdf_convert(file,"jpeg",filenames = out)}
+    )
+  }
+  #https://phantomjs.org/download.html
+  #PhantomJS
+  if(format=="png"){
+    img=png::readPNG(file)
+    g <- grid::rasterGrob(img, interpolate=TRUE)
+    p=qplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
+    ggplot2::ggsave(p, filename = out, device = to_format,...)
+    invisible(g)
+  }
+  if(format=="jpg"){
+    img=jpeg::readJPEG(file)
+    g <- grid::rasterGrob(img, interpolate=TRUE)
+    p=qplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
+    ggplot2::ggsave(p, filename = out, device = to_format,...)
+    invisible(g)
+  }
+  if(format=="html"){
+    if(to_format%in%c("pdf", "png", "jpeg")){
+      pagedown::chrome_print(file,out,wait = 0,browser =brower,format = to_format,
+                             options = list(#paperWidth=width,
+                               #pageRanges="1",
+                               #paperHeight=height,
+                               ...))}
+    if(to_format=="svg"){file.copy(file,out)}
+  }
+
+}
+
+
+#' Download supplemental materials according to a doi
+#'
+#' @param doi doi
+#' @param dir dir
+#' @param bget_path your bget_path
+#'
+#' @export
+#'
+#'
+get_doi<-function(doi,dir="~/Downloads/",bget_path="~/software/bget_0.3.2_Darwin_64-bit/bget"){
+  if(!file.exists(bget_path))stop("Cann't find bget! check `bget_path`")
+  doi=sub("https://doi.org/","",doi)
+  command=paste0(bget_path," doi ",doi," -t2 --suppl --full-text -o ",dir)
+  system(command)
+
+}
+
+#=========statistics==========
+
+#' Two-group test
+#'
+#' @param var numeric vector
+#' @param group two-levels group vector
+#'
+#' @export
+#'
+#' @examples
+#'twotest(runif(20),rep(c("a","b"),each=10))
+twotest<-function(var,group){
+  group<-factor(group)
+  print(t.test(var~group))#parameter
+  print('===================================================')
+  print(wilcox.test(var~group))#non-parameter
+  print('===================================================')
+  print(ks.test(var~group))
+}
+
+#' Multi-group test
+#'
+#' @param var numeric vector
+#' @param group more than two-levels group vector
+#' @param return return which method result (tukeyHSD or LSD or wilcox?)
+#'
+#' @importFrom agricolae LSD.test
+#' @export
+#'
+#' @examples
+#' multitest(c(runif(20),runif(10,2,3)),rep(c("a","b","c"),each=10))
+#' multitest(runif(30),rep(c("a","b","c"),each=10),print=F,return="wilcox")->aa
+multitest<-function(var,group,print=T,return=F){
+  lib_ps("agricolae")
+  group<-factor(group)
+  ano<-aov(var~group)
+  #LSD
+  lsdres <- LSD.test(ano, 'group', p.adj = 'bonferroni')
+  if(return=="LSD")return(data.frame(lsdres$groups,variable=rownames(lsdres$groups)))
+  #TukeyHSD
+  tukeyres<-TukeyHSD(ano)
+  means=aggregate(var,by=list(group),mean)$x
+  ntr=nlevels(group)
+  Q <- matrix(1, ncol = ntr, nrow = ntr)
+  Q[lower.tri(Q)]<-Q[upper.tri(Q)] <- tukeyres$group[,4]
+  out<-agricolae::orderPvalue(levels(group),means,0.05,Q)
+  if(return=="tukeyHSD")return(data.frame(out,variable=rownames(out)))
+  #each wilcox.test
+  Q <- matrix(1, ncol = ntr, nrow = ntr)
+  for(i in 1:(ntr-1)){
+    for(j in (i+1):ntr){
+      gi=levels(group)[i];gj=levels(group)[j]
+      w<-wilcox.test(var[which(group%in%c(gi,gj))]~group[which(group%in%c(gi,gj))])
+      Q[j,i]<-Q[i,j]<-w$p.value
+    }
+  }
+  rownames(Q)<-colnames(Q)<-levels(group)
+  Q[is.nan(Q)]=1
+  out1<-agricolae::orderPvalue(levels(group),means,0.05,Q)
+  if(return=="wilcox")return(data.frame(out1,variable=rownames(out1)))
+  if(print){
+    dabiao("1.ANOVA:")
+    print(summary(ano))
+    dabiao("2.Kruskal.test:")
+    print(kruskal.test(var~group))
+    dabiao("3.LSDtest, bonferroni p-adj:")
+    print(lsdres$groups)
+    dabiao("4.tukeyHSD:")
+    print(tukeyres)
+    dabiao("5.Wilcox-test:")
+    print(Q)
+  }
+}
+
+#' Fit a distribution
+#'
+#' @param a a numeric vector
+#'
+#' @export
+#' @examples
+#'a=runif(50)
+#'fittest(a)
+fittest<-function(a){
+  lib_ps("fitdistrplus","nortest")
+  if(is.vector(a)){
+    #肉眼看
+    plot(a)
+    #QQ图
+    qqnorm(a,col="red",main = "a");qqline(a,col="blue")
+    #fitdistrplus包多个分布判断包多个分布判断
+    fitdistrplus::descdist(a)
+    print("use fitdis(a) to test which distribution. e.g:fitdis(a,'norm')")
+    #统计学检验是否正态（拟合优度检验）
+    #（1）Shapiro-Wilks检验：
+    shapiro.test(a)|>print()
+    #（2）Kolmogorov-Smirnov(K-S检验)
+    ks.test(a,"pnorm",mean=mean(a),sd=sqrt(var(a)))|>print()
+    #（3）Cramer-Von Mises检验（cvm.test）
+    nortest::cvm.test(a)|>print()
+    #（4）Anderson Darling检验
+    nortest::ad.test(a)|>print()
+  }
+}
+
+#' transfer Geographical latitude and longitude to XY(m)
+#'
+#' @param dat a two-columns dataframe, first is latitude, second is longitude
+#'
+#' @export
+#'
+#' @examples
+#'data.frame(row.names = letters[1:18],x=runif(18,30,35),y=runif(18,40,45))->geo
+#'toXY(geo)
+toXY <- function(geo){
+  lib_ps("SoDA")
+  XY <- geoXY(geo[,1], geo[,2])
+  #geosphere::distm
+  return(as.data.frame(row.names = rownames(geo),XY))
+}
+
+#=========some plot===========
 #' @title Plot a boxplot
 #'
 #' @param tab your dataframe
@@ -393,108 +692,6 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
 
   if(exists("mytheme"))if(inherits(mytheme,c("theme","gg")))p=p+mytheme
   return(p)
-}
-
-#' Two-group test
-#'
-#' @param var numeric vector
-#' @param group two-levels group vector
-#'
-#' @export
-#'
-#' @examples
-#'twotest(runif(20),rep(c("a","b"),each=10))
-twotest<-function(var,group){
-  group<-factor(group)
-  print(t.test(var~group))#parameter
-  print('===================================================')
-  print(wilcox.test(var~group))#non-parameter
-  print('===================================================')
-  print(ks.test(var~group))
-}
-
-#' Multi-group test
-#'
-#' @param var numeric vector
-#' @param group more than two-levels group vector
-#' @param return return which method result (tukeyHSD or LSD or wilcox?)
-#'
-#' @importFrom agricolae LSD.test
-#' @export
-#'
-#' @examples
-#' multitest(c(runif(20),runif(10,2,3)),rep(c("a","b","c"),each=10))
-#' multitest(runif(30),rep(c("a","b","c"),each=10),print=F,return="wilcox")->aa
-multitest<-function(var,group,print=T,return=F){
-  lib_ps("agricolae")
-  group<-factor(group)
-  ano<-aov(var~group)
-  #LSD
-  lsdres <- LSD.test(ano, 'group', p.adj = 'bonferroni')
-  if(return=="LSD")return(data.frame(lsdres$groups,variable=rownames(lsdres$groups)))
-  #TukeyHSD
-  tukeyres<-TukeyHSD(ano)
-  means=aggregate(var,by=list(group),mean)$x
-  ntr=nlevels(group)
-  Q <- matrix(1, ncol = ntr, nrow = ntr)
-  Q[lower.tri(Q)]<-Q[upper.tri(Q)] <- tukeyres$group[,4]
-  out<-agricolae::orderPvalue(levels(group),means,0.05,Q)
-  if(return=="tukeyHSD")return(data.frame(out,variable=rownames(out)))
-  #each wilcox.test
-  Q <- matrix(1, ncol = ntr, nrow = ntr)
-  for(i in 1:(ntr-1)){
-    for(j in (i+1):ntr){
-      gi=levels(group)[i];gj=levels(group)[j]
-      w<-wilcox.test(var[which(group%in%c(gi,gj))]~group[which(group%in%c(gi,gj))])
-      Q[j,i]<-Q[i,j]<-w$p.value
-    }
-  }
-  rownames(Q)<-colnames(Q)<-levels(group)
-  Q[is.nan(Q)]=1
-  out1<-agricolae::orderPvalue(levels(group),means,0.05,Q)
-  if(return=="wilcox")return(data.frame(out1,variable=rownames(out1)))
-  if(print){
-    dabiao("1.ANOVA:")
-    print(summary(ano))
-    dabiao("2.Kruskal.test:")
-    print(kruskal.test(var~group))
-    dabiao("3.LSDtest, bonferroni p-adj:")
-    print(lsdres$groups)
-    dabiao("4.tukeyHSD:")
-    print(tukeyres)
-    dabiao("5.Wilcox-test:")
-    print(Q)
-  }
-}
-
-#' Fit a distribution
-#'
-#' @param a a numeric vector
-#'
-#' @export
-#' @examples
-#'a=runif(50)
-#'fittest(a)
-fittest<-function(a){
-  lib_ps("fitdistrplus","nortest")
-  if(is.vector(a)){
-    #肉眼看
-    plot(a)
-    #QQ图
-    qqnorm(a,col="red",main = "a");qqline(a,col="blue")
-    #fitdistrplus包多个分布判断包多个分布判断
-    fitdistrplus::descdist(a)
-    print("use fitdis(a) to test which distribution. e.g:fitdis(a,'norm')")
-    #统计学检验是否正态（拟合优度检验）
-    #（1）Shapiro-Wilks检验：
-    shapiro.test(a)|>print()
-    #（2）Kolmogorov-Smirnov(K-S检验)
-    ks.test(a,"pnorm",mean=mean(a),sd=sqrt(var(a)))|>print()
-    #（3）Cramer-Von Mises检验（cvm.test）
-    nortest::cvm.test(a)|>print()
-    #（4）Anderson Darling检验
-    nortest::ad.test(a)|>print()
-  }
 }
 
 #' Plot a doughnut chart
@@ -610,22 +807,6 @@ my_lm<-function(tab,var,metadata=NULL,facet=T,...){
 }
 
 
-#' transfer Geographical latitude and longitude to XY(m)
-#'
-#' @param dat a two-columns dataframe, first is latitude, second is longitude
-#'
-#' @export
-#'
-#' @examples
-#'data.frame(row.names = letters[1:18],x=runif(18,30,35),y=runif(18,40,45))->geo
-#'toXY(geo)
-toXY <- function(geo){
-  lib_ps("SoDA")
-  XY <- geoXY(geo[,1], geo[,2])
-  #geosphere::distm
-  return(as.data.frame(row.names = rownames(geo),XY))
-}
-
 #https://cloud.tencent.com/developer/article/1751856
 #' Plot china map
 #'
@@ -662,79 +843,58 @@ china_map<-function(dir="~/Downloads/"){
       plot.margin=unit(c(0,0,0,0),"mm"))
 }
 
-#' Grepl applied on a data.frame
+
+#' Plot a DNA double helix
 #'
-#' @param pattern search pattern
-#' @param x your data.frame
-#' @param ... addtitional arguments for gerpl()
-#'
-#' @return a logical data.frame
 #' @export
-#' @examples
-#' matrix(letters[1:6],2,3)|>as.data.frame()->a
-#' grepl.data.frame("c",a)
-#' grepl.data.frame("\\w",a)
-grepl.data.frame<-function(pattern, x, ...) {
-  y <- if (length(x)) {
-    do.call("cbind", lapply(x, "grepl", pattern = pattern,...))
+#' @references \code{https://github.com/SherryDong/create_plot_by_R_base}
+dna_plot<-function(){
+  lib_ps("RColorBrewer")
+  col_DNA <- brewer.pal(8,'Set1')[2]
+  # A-green, T-red, C-yellow, G-blue
+  col_ATCG <- c(brewer.pal(8,'Accent')[1],brewer.pal(11,'Set3')[4],brewer.pal(11,'Set3')[2],brewer.pal(11,'Paired')[1])
+  DNA_length <- 4 ## the code only applies when DNA_length%%2==0, if DNA_length%%2==1, need to modify
+  x <- seq(-DNA_length*pi/2,DNA_length*pi/2,length.out=1000) ##
+  y1 <- cos(x) ## backbone up
+  y2 <- cos(x+pi) ## backbone down
+  # get the position of nucleotides
+  xx <- seq(DNA_length*pi/2,-DNA_length*pi/2,length.out = DNA_length*5+1);
+  xx <- xx+(xx[2]-xx[1])/2
+  # remove the first and the lines in the boundary region
+  xx <- setdiff(xx,c(xx[c(1:DNA_length)*5-2],min(xx)))
+  plot(y1~x,pch=16,type='l',xlab='',ylab='',xaxt='n',yaxt='n',main='',bty='n',col='white')
+  for(i in 1:length(xx)){
+    ybottom <- cos(xx[i]) # ybottom position
+    ytop    <- cos(xx[i]+pi) # yup position
+    rr <- sample(1:4,1) ## ATCG, random select one pair
+    if(rr==1){
+      segments(y0=ybottom,y1=0,x0=xx[i],x1=xx[i],col=col_ATCG[1],lwd=4) ## A-T
+      segments(y0=0,y1=ytop,x0=xx[i],x1=xx[i],col=col_ATCG[2],lwd=4)
+    }
+    if(rr==2){
+      segments(y0=ybottom,y1=0,x0=xx[i],x1=xx[i],col=col_ATCG[2],lwd=4) ## T-A
+      segments(y0=0,y1=ytop,x0=xx[i],x1=xx[i],col=col_ATCG[1],lwd=4)
+    }
+    if(rr==3){
+      segments(y0=ybottom,y1=0,x0=xx[i],x1=xx[i],col=col_ATCG[3],lwd=4) ## C-G
+      segments(y0=0,y1=ytop,x0=xx[i],x1=xx[i],col=col_ATCG[4],lwd=4)
+    }
+    if(rr==4){
+      segments(y0=ybottom,y1=0,x0=xx[i],x1=xx[i],col=col_ATCG[4],lwd=4) ## G-C
+      segments(y0=0,y1=ytop,x0=xx[i],x1=xx[i],col=col_ATCG[3],lwd=4)
+    }
   }
-  else {
-    matrix(FALSE, length(row.names(x)), 0)
-  }
-  if (.row_names_info(x) > 0L)
-    rownames(y) <- row.names(x)
-  y
+  lines(y1~x,pch=16,lwd=8,col=col_DNA)
+  lines(y2~x,pch=16,lwd=8,col=col_DNA)
+
 }
-
-#' Read some special format file
-#'
-#' @param file file path
-#' @param format "blast","diamond"
-#'
-#' @return data.frame
-#' @export
-#'
-read.file<-function(file,format=NULL,just_print=F){
-  if(just_print){
-    if(file.size(file)>10000){
-      print(paste0(file,": this file is a little big, still open?"))
-      flag=readline("yes/no(y/n)?")
-      if(tolower(flag)%in%c("yes","y")){
-        cat(readr::read_file(file))
-      }}
-    else cat(readr::read_file(file))
-  }
-  else{
-    if(is.null(format))format=tools::file_ext(file)
-    format=match.arg(format,c("blast","diamond","jpg","png","pdf"))
-
-    if(format%in%c("blast","diamond")){
-      df=read.table(file,sep = "\t",
-                 col.names = c("Qseqid","Sseqid","Pident","Length","Mismatch","Gapopen",
-                               "Qstart","Qend","Sstart","Send","E_value","Bitscore"))
-      return(df)
-    }
-
-    if(format%in%c("jpg","png")){
-      switch (format,
-              "jpg" = {p1=jpeg::readJPEG(file)},
-              "png" = {p1=png::readPNG(file)}
-      )
-      RImagePalette::display_image(p1)
-    }
-    if(format=="pdf"){
-      lib_ps("pdftools")
-
-    }
-  }
-}
-
 
 #' @export
 my_cat<-function(mode=1){
   if(mode==1){  lib_ps("RImagePalette","png")
   p1=png::readPNG(system.file("data/smallguodong.ppp",package = "pcutils"))
-  RImagePalette::display_image(p1)}
+  graphics::plot(1:2, type = "n", axes = F, ylab = "n", xlab = "n",ann = FALSE)
+  graphics::rasterImage(p1, 1, 1, 2, 2)}
 
   if(mode==2){  lib_ps("ggimage","ggplot2")
   t<-seq(0, 2*pi, 0.08)
@@ -819,15 +979,6 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),...){
   }
 }
 
-
-if(F){
-  animation::saveGIF(
-  (for (k in 1:time){
-    next
-  }), movie.name = "LifeGame.gif"
-)
-}
-
 #' My cicro plot
 #'
 #' @param df dataframe
@@ -838,12 +989,95 @@ if(F){
 #'
 #' @examples
 #' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_cicro()
-my_cicro=function(df,...){
+my_cicro=function(df,reorder=T,colors=NULL,mode=c("circlize","chorddiag"),...){
+  mode=match.arg(mode,c("circlize","chorddiag"))
   colnames(df)=c("from","to","count")
+
+  if(mode=="chorddiag"){
+    #need a square matrix
+    all_g=unique(df$from,df$to)
+    expand.grid(all_g,all_g)->tab
+    df=left_join(tab,df,by=c("Var1"="from","Var2"="to"))
+    colnames(df)=c("from","to","count")}
+
   tab=reshape2::dcast(df,from~to,value.var = "count")%>%tibble::column_to_rownames("from")%>%as.matrix()
   tab[is.na(tab)]=0
-  lib_ps("circlize")
-  circlize::chordDiagram(tab,grid.col = pcutils::get_cols(length(unique(c(colnames(tab),rownames(tab))))),...)
-  del_ps("circlize")
+
+  if(reorder){
+    colSums(tab)%>%sort(decreasing = T)%>%names()->s_name
+    tab=tab[,s_name]
+    rowSums(tab)%>%sort(decreasing = T)%>%names()->s_name
+    tab=tab[s_name,]
+    }
+
+  if(is.null(colors))colors=pcutils::get_cols(length(unique(c(colnames(tab),rownames(tab)))))
+
+  if(mode=="circlize"){
+    lib_ps("circlize")
+    circlize::chordDiagram(tab,grid.col = colors,...)
+    del_ps("circlize")}
+  if(mode=="chorddiag"){
+    lib_ps("chorddiag")
+    chorddiag::chorddiag(tab,groupedgeColor= colors,...)
+    del_ps("chorddiag")}
 }
 
+#' my_synteny
+#'
+#' @export
+#'
+my_synteny<-function(){
+  modu_sum<-data.frame(module=c(1:5,1:5,1:3),
+                       start=1,
+                       end=5,
+                       fill=get_cols(13)%>%sub("#","",.),
+                       omics=c(rep("A",5),rep("B",5),rep("C",3)),
+                       size=10,
+                       color="252525")
+  edge_sum<-data.frame(omics1=1:5,
+                       start_1=c(1,2,3,4,3),
+                       end_1=c(3,3,4,5,5),
+                       omics2=c(3,2,3,2,5),
+                       start_2=c(1,2,1,1,3),
+                       end_2=c(3,3,2,2,5),
+                       fill="cccccc",
+                       type=c(3,3,2,2,1))
+
+  lib_ps("RIdeogram")
+  colnames(modu_sum)=c("Chr","Start","End","fill","species","size","color")
+  colnames(edge_sum)=c("Species_1","Start_1","End_1","Species_2","Start_2","End_2","fill")
+  ideogram(karyotype = modu_sum, synteny =edge_sum)
+  rsvg::rsvg_svg("chromosome.svg",file = "chromosome.svg")
+  read.file("chromosome.svg")
+}
+
+#=======some tips========
+#' @export
+how_to_use_parallel=function(){
+  cat('  #parallel
+  reps=100;threads=1
+  #main function
+  loop=function(i){
+    return(mean(rnorm(100)))
+  }
+  {
+  if(threads>1){
+    lib_ps("foreach","doSNOW")
+    pb <- utils::txtProgressBar(max =reps, style = 3)
+    opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
+    cl <- snow::makeCluster(threads)
+    doSNOW::registerDoSNOW(cl)
+    res <- foreach::foreach(i = 1:reps,.options.snow = opts,
+                             .packages = c()) %dopar% {
+                               loop(i)
+                             }
+    snow::stopCluster(cl)
+    gc()
+  }
+  else {
+    res <-lapply(1:reps, loop)
+  }}
+  #simplify method
+  res=do.call(c,res)
+',"\n")
+}

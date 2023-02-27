@@ -4,7 +4,7 @@
 \alias{my_cicro}
 \title{My cicro plot}
 \usage{
-my_cicro(df, ...)
+my_cicro(df, reorder = T, ...)
 }
 \arguments{
 \item{df}{dataframe}
