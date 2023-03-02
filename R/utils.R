@@ -123,6 +123,7 @@ mmscale<-function(x,min_s=0,max_s=1,n=1,plot=F){
 #' @param nrow show how many rows
 #' @param ncol show how many columns
 #' @param ... additional arguments e.g.(rows=NULL)
+#' @param plot print a plot or html table
 #'
 #' @import ggpubr dplyr
 #' @return a ggplot
@@ -132,15 +133,21 @@ mmscale<-function(x,min_s=0,max_s=1,n=1,plot=F){
 #' data("otutab",package = "MetaNet")
 #' sanxian(otutab)
 #' sanxian(otutab,ncol=4,rows=NULL)
-sanxian<-function(aa,digits = 3,nrow=10,ncol=10,...){
-  lib_ps("ggpubr","dplyr")
+sanxian<-function(aa,digits = 3,nrow=10,ncol=10,plot=F,...){
+
   if(nrow(aa)>nrow)aa<-aa[1:nrow,,drop=F]
   if(ncol(aa)>ncol)aa<-aa[,1:ncol,drop=F]
+
+  if(plot){lib_ps("ggpubr","dplyr")
   aa%>%mutate_if(is.numeric,\(x)round(x,digits = digits))%>%
     ggtexttable(...,theme = ttheme("blank")) %>%
     tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 3)%>%
     tab_add_hline(at.row = nrow(aa)+1, row.side = "bottom", linewidth = 3)->p
-  return(p)
+  return(p)}
+
+  else {
+    lib_ps("kableExtra")
+    kbl(aa,digits = digits,...)%>%kable_classic(full_width = F, html_font = "Cambria")}
 }
 
 #' Transform a rgb vector to a Rcolor code
@@ -165,6 +172,11 @@ rgb2code<-function(x,rev=F){
     if(is.vector(x))return(rgb(x[1],x[2],x[3],maxColorValue = 255))
     if(is.data.frame(x))return(transmute(x,code=rgb(r,g,b,maxColorValue = 255)))
     }
+}
+
+#' @export
+add_alpha<-function(color,alpha=0.3){
+  paste0(color,as.hexmode(ceiling(255*alpha)))
 }
 
 #' Plot a multi-pages pdf
@@ -773,12 +785,12 @@ my_lm<-function(tab,var,metadata=NULL,facet=T,...){
   if(is.vector(tab))tab=data.frame(value=tab)
 
   if(is.null(metadata)){
-    md<-data.frame(tab,var=var)
+    md<-data.frame(tab,var=var,check.names = F)
   }
   else if (!is.null(metadata)){
     if(!all(rownames(metadata)%in%rownames(tab)))message("rownames dont match in tab and metadata")
     tab<-tab[rownames(metadata),,drop=F]
-    md<-data.frame(tab,var=metadata[,var])
+    md<-data.frame(tab,var=metadata[,var],check.names = F)
     g_name=var
   }
 

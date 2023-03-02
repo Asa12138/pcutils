@@ -4,7 +4,13 @@
 \alias{my_cicro}
 \title{My cicro plot}
 \usage{
-my_cicro(df, reorder = T, ...)
+my_cicro(
+  df,
+  reorder = T,
+  colors = NULL,
+  mode = c("circlize", "chorddiag"),
+  ...
+)
 }
 \arguments{
 \item{df}{dataframe}
