@@ -44,7 +44,8 @@ lib_ps<-function(p_list,...,all_yes=F){
     "pctax"="Asa12138/pctax",
     "MetaNet"="Asa12138/MetaNet",
     "ggcor"="Github-Yilei/ggcor",
-    "chorddiag"="mattflor/chorddiag"
+    "chorddiag"="mattflor/chorddiag",
+    "inborutils"="inbo/inborutils"
   )
   p_list=c(p_list,...)
   for (p in p_list) {
@@ -176,6 +177,7 @@ rgb2code<-function(x,rev=F){
 
 #' @export
 add_alpha<-function(color,alpha=0.3){
+  color=col2rgb(color)%>%t%>%rgb(.,, maxColorValue = 255)
   paste0(color,as.hexmode(ceiling(255*alpha)))
 }
 
@@ -594,6 +596,227 @@ toXY <- function(geo){
 }
 
 #=========some plot===========
+#' Plot a stack plot
+#'
+#' @param otutab otutab
+#' @param metadata metadata
+#' @param topN plot how many top species
+#' @param groupID one group name of columns of metadata
+#' @param shunxu should order the samples by the top1 abundance
+#' @param relative transfer to relative or absolute
+#' @param style "group" or "sample"
+#' @param sorted should legend be sorted by "abunance"
+#' @param flow should plot a flow plot?
+#' @param others should plot others?
+#' @param pmode fill/stack/dodge
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' stackplot(otutab,metadata,groupID="Group")
+#' stackplot(otutab,metadata,groupID="Group",shunxu=T,flow=T,relative=F)
+#'
+#' hclust(dist(t(otutab)))%>%ape::as.phylo()%>%as_tibble()->s_tree
+#' full_join(s_tree,metadata,by=c("label"="Id"))->s_tree
+#' library(ggtree)
+#' ggtree(tidytree::as.treedata(s_tree))+geom_tippoint(aes(col=Group,shape=Group),size=2)->p1
+#' stackplot(hebing(otutab,taxonomy$Phylum,1),metadata,groupID ='Id',topN = 10,others = T,flow = T)+
+#'   coord_flip()+ scale_y_continuous(expand=c(0,0)) +xlab("")->pp2
+#' pp2%>%aplot::insert_left(p1, width=.3)
+#'
+stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=F,relative=T,
+                     style = "group", sorted = "abundance",flow=F,others=T,pmode='stack',legend_title=NULL) {
+  #用来画物种堆积图，适合处理各种OTU类似数据，输入metatab作为分组依据。style可以选择group或者sample
+  #others=T用来选择是否画出除TopN外的其他，pmode可选择fill/stack/dodge
+  lib_ps("ggplot2", "reshape2","scales")
+
+  if(!is.null(metadata)){idx = rownames(metadata) %in% colnames(otutab)
+  metadata = metadata[idx, , drop = F]
+  otutab = otutab[, rownames(metadata),drop=F]
+  sampFile = as.data.frame(metadata[, groupID], row.names = row.names(metadata))
+  colnames(sampFile)[1] = "group"}
+  else sampFile =data.frame(row.names =colnames(otutab),group=colnames(otutab))
+
+  mean_sort = as.data.frame(otutab[(order(-rowSums(otutab))), ,drop=F])
+
+  if (nrow(mean_sort)>topN){
+    other = colSums(mean_sort[topN:dim(mean_sort)[1], ])
+    mean_sort = mean_sort[1:(topN - 1), ]
+    mean_sort = rbind(mean_sort, other)
+    rownames(mean_sort)[topN] = c("Other")
+  }
+
+  if (style == "sample") {
+
+    mean_sort$Taxonomy = rownames(mean_sort)
+    data_all = as.data.frame(melt(mean_sort, id.vars = c("Taxonomy")))
+    if(relative){
+      data_all <- data_all  %>%
+        group_by(variable, Taxonomy) %>%
+        summarise(n = sum(value)) %>%
+        mutate(value = n / sum(n))
+    }
+
+
+    if (sorted == "abundance") {
+      data_all$Taxonomy = factor(data_all$Taxonomy, levels = rownames(mean_sort))
+    }
+
+
+    data_all = merge(data_all, sampFile, by.x = "variable",
+                     by.y = "row.names")
+    if (!others){
+      data_all<-data_all[data_all$Taxonomy!='Other',]
+    }
+    if(!flow){
+      p = ggplot(data_all, aes(x = variable, y = value, fill = Taxonomy)) +
+        geom_bar(stat = "identity",width = 1,position = pmode) +
+        facet_grid(~group, as.table = FALSE,
+                   switch = "both", scales = "free", space = "free") +
+        theme(strip.background = element_blank()) +
+        theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+        xlab(groupID) +
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+    }
+    else{
+      lib_ps("ggalluvial")
+      p = ggplot(data_all, aes(x = variable, y = value,alluvium = Taxonomy, fill = Taxonomy)) +
+        ggalluvial::geom_flow(stat="alluvium", lode.guidance = "frontback", color = "darkgray") +
+        ggalluvial::geom_stratum(stat="alluvium") +
+        facet_grid(~group, as.table = FALSE,
+                   switch = "both", scales = "free", space = "free") +
+        theme(strip.background = element_blank()) +
+        theme(axis.ticks.x = element_blank(), axis.text.x = element_blank()) +
+        xlab(groupID) +
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+    }
+    if(relative)p=p+scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
+    else p=p+ylab("Counts")
+    p+guides(fill=guide_legend(title = legend_title))
+  }
+
+  else {
+    mat_t = t(mean_sort)
+    aggregate(mat_t,by=list(sampFile$group),mean)%>%melt(.,id=1)->data_all
+    colnames(data_all)<-c('variable','Taxonomy','value')
+
+
+    data_all$value = as.numeric(data_all$value)
+    as.factor(data_all$variable)->data_all$variable
+
+    if(relative){
+      data_all <- data_all  %>%
+        group_by(variable, Taxonomy) %>%
+        summarise(n = sum(value)) %>%
+        mutate(value = n / sum(n))
+    }
+
+    if (!others){
+      data_all<-data_all[data_all$Taxonomy!='Other',]
+    }
+    if (sorted == "abundance") {
+      data_all$Taxonomy = factor(data_all$Taxonomy, levels = rownames(mean_sort))
+    }
+    if(shunxu==1)data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy==rownames(mean_sort)[1])%>%
+                                                                                arrange(value)%>%as.data.frame())[,1]%>%as.character()))
+    if(shunxu=='other')data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy=='Other')%>%
+                                                                                      arrange(value)%>%as.data.frame())[,1]%>%as.character()))
+    if(!flow){
+      p = ggplot(data_all, aes(x = variable, y = value, fill = Taxonomy)) +
+        geom_bar(stat = "identity",position = pmode,width = 0.7) +
+        xlab(groupID)
+    }
+    else{
+      lib_ps("ggalluvial")
+      p = ggplot(data_all, aes(x = variable, y = value,alluvium = Taxonomy, fill = Taxonomy)) +
+        ggalluvial::geom_flow(stat="alluvium", lode.guidance = "frontback", color = "darkgray") +
+        ggalluvial::geom_stratum(stat="alluvium") +
+        xlab(groupID)
+    }
+
+    if(relative)p=p+scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
+    else p=p+ylab("Counts")
+    p+guides(fill=guide_legend(title = legend_title))
+  }
+
+}
+
+#' Plot correlation
+#'
+#' @param env dataframe1
+#' @param env2 dataframe2 (default:NULL)
+#' @param mode plot mode (1~3)
+#' @param method one of "pearson","kendall","spearman"
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' cor_plot(metadata[,12:19])
+#' cor_plot(t(otutab)[,1:50],mode=3)
+cor_plot<-function(env,env2=NULL,mode=1,method = "pearson",heat=T,...){
+if(ncol(env)>30&heat){
+  cor(env)->a
+  pheatmap::pheatmap(a,show_rownames = F,show_colnames = F,border_color = F,...)
+}
+else {
+  lib_ps("ggcor","dplyr")
+  set_scale(c("#6D9EC1", "white", "#E46726"),type = "gradient2n")
+  if(is.null(env2)){
+    if(mode==1){p<-quickcor(env, method = method,cor.test = T) +
+      geom_square(data = get_data(type = "lower", show.diag = FALSE)) +
+      geom_mark(data = get_data(type = "upper", show.diag = FALSE), size = 2.5) +
+      geom_abline(slope = -1, intercept=ncol(env)+1)
+    detach('package:ggcor')
+    return(p)
+    }
+
+    if(mode==2) {
+      p<-env%>%quickcor(circular = TRUE, cluster = TRUE, open = 45,
+                        method = method,cor.test = T) +
+        geom_colour(colour = "white", size = 0.125) +
+        anno_row_tree() +
+        anno_col_tree() +
+        set_p_xaxis() +
+        set_p_yaxis()
+      detach('package:ggcor')
+      return(p)
+    }
+
+    if(mode==3){
+      lib_ps("corrplot")
+      ggcor::correlate(env, method = method,cor.test = T,p.adjust = T,p.adjust.method = "fdr")->res2
+      rownames(res2$p.value)<-rownames(res2$r);colnames(res2$p.value)<-colnames(res2$r)
+      #pls package also has a function called corrplot
+      corrplot::corrplot(res2$r, order = "hclust", p.mat = res2$p.value, sig.level = 0.05, insig = "blank",
+                         diag = FALSE, tl.cex=0.5, addrect = 17, method="color", outline=TRUE,
+                         col=brewer.pal(n=10, name="PuOr"),tl.srt=45, tl.col="black")
+    }
+  }
+  else{
+    if(mode==1){p<-quickcor(env,env2, method = method,cor.test = T) +
+      geom_square(data = get_data(show.diag = FALSE)) +
+      geom_mark(data = get_data(show.diag = FALSE), size = 2.5)
+    detach('package:ggcor')
+    return(p)
+    }
+
+    if(mode==2) {
+      p<-quickcor(env,env2,circular = TRUE, cluster = TRUE, open = 45,
+                  method = method,cor.test = T) +
+        geom_colour(colour = "white", size = 0.125) +
+        anno_row_tree() +
+        anno_col_tree() +
+        set_p_xaxis() +
+        set_p_yaxis()
+      detach('package:ggcor')
+      return(p)
+    }
+  }
+  }
+}
+
 #' @title Plot a boxplot
 #'
 #' @param tab your dataframe
@@ -702,7 +925,6 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
     }
   }
 
-  if(exists("mytheme"))if(inherits(mytheme,c("theme","gg")))p=p+mytheme
   return(p)
 }
 
@@ -802,7 +1024,7 @@ my_lm<-function(tab,var,metadata=NULL,facet=T,...){
     geom_point(...)+
     geom_smooth(method = "lm",color="red",se = F,formula = "y~x")+
     ggpmisc::stat_poly_eq(
-      aes(label = paste(after_stat(eq.label), after_stat(adj.rr.label), sep = '~~~~~')),
+      aes(label = paste(after_stat(eq.label), after_stat(adj.rr.label),after_stat(p.value.label) ,sep = '~~~~~')),
       formula = y ~ x,  parse = TRUE,color="red",
       size = 3, #公式字体大小
       label.x = 0.05, label.y = 1.05)+#位置 ，0-1之间的比例
@@ -829,7 +1051,7 @@ my_lm<-function(tab,var,metadata=NULL,facet=T,...){
 #'
 #' @examples
 #' china_map()
-china_map<-function(dir="~/Downloads/"){
+china_map<-function(dir="~/database/"){
   lib_ps("ggspatial","ggplot2","sf")
   china_shp=paste0(dir,"china.json")
   if(!file.exists(china_shp))download.file("https://gitcode.net/mirrors/lyhmyd1211/geomapdata_cn/-/raw/master/china.json?inline=false",china_shp)
@@ -916,6 +1138,67 @@ my_cat<-function(mode=1){
 }
 
 
+#' Transfer a dataframe to a network edgelist.
+#'
+#' @param test
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' cbind(taxonomy,num=rowSums(otutab))[1:50,]->test
+#' df2net(test)->ttt
+#' plot(ttt,vertex.color=tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
+#'
+df2net=function(test){
+  if(!is.numeric(test[,ncol(test)]))test$num=1
+  nc=ncol(test)
+  if(nc<3)stop("as least 3-columns dataframe")
+  #change duplicated data
+
+  # for (i in 1:(nc-1)){
+  #   test[,i]=paste0(test[,i],strrep(" ",i-1))
+  # }
+
+  #merge to two columns
+  links=data.frame()
+  nodes=data.frame(name=unique(test[,1]),level=colnames(test)[1],weight=aggregate(test[,ncol(test)],by=list(test[,1]),sum)[["x"]])
+  for (i in 1:(nc-2)){
+    test[,c(i,i+1,nc)]->tmp
+    colnames(tmp)=c("from","to","weight")
+    tmp=group_by(tmp,from,to)%>%summarise(weight=sum(weight),.groups="keep")
+    links=rbind(links,tmp)
+    nodes=rbind(nodes,data.frame(name=unique(tmp$to),level=colnames(test)[i+1],weight=aggregate(tmp$weight,by=list(tmp$to),sum)[["x"]]))
+  }
+  igraph::graph_from_data_frame(as.data.frame(links),vertices = nodes)
+}
+
+if(F){
+  #matenet
+  c_net_update(as.undirected(ttt))->ttt
+  c_net_set(ttt,vertex_class = "level",vertex_size = "weight",edge_width = "weight")->ttt
+  plot(ttt,as_tree())
+
+  #circlepack
+  #https://r-graph-gallery.com/315-hide-first-level-in-circle-packing.html
+  ggraph(ttt, layout = 'circlepack', weight=weight) +
+    geom_node_circle(aes(fill = as.factor(depth), color = as.factor(depth) )) +
+    scale_color_d3()+scale_fill_d3()+
+    theme_void() +
+    theme(legend.position="FALSE")
+
+  #tree
+  df2net(test)->ttt
+  ggraph(ttt, 'igraph', algorithm = 'tree', circular = TRUE) +
+    geom_edge_diagonal(aes(alpha = ..index..)) +
+    coord_fixed() +
+    scale_edge_alpha('Direction', guide = 'edge_direction') +
+    geom_node_point(aes(filter = igraph::degree(ttt, mode = 'out') == 0),
+                    color = 'steelblue', size = 1) +
+    ggforce::theme_no_axes()
+
+}
+
 #' My Sankey plot
 #'
 #' @param test a dataframe with hierarchical structure
@@ -965,6 +1248,7 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),...){
                   # fontSize = 8,dragY = T,nodeShadow = T,
                   # doubleclickTogglesChildren = T,
                   ...)
+
     return(p)
     }
   if(mode=="ggsankey"){
