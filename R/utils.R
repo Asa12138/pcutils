@@ -595,6 +595,7 @@ toXY <- function(geo){
   return(as.data.frame(row.names = rownames(geo),XY))
 }
 
+
 #=========some plot===========
 #' Plot a stack plot
 #'
@@ -1140,9 +1141,9 @@ my_cat<-function(mode=1){
 
 #' Transfer a dataframe to a network edgelist.
 #'
-#' @param test
+#' @param test df
 #'
-#' @return
+#' @return igraph
 #' @export
 #'
 #' @examples
@@ -1346,6 +1347,214 @@ my_synteny<-function(){
   rsvg::rsvg_svg("chromosome.svg",file = "chromosome.svg")
   read.file("chromosome.svg")
 }
+
+#venn========
+#' plot a general venn (upset, flower)
+#'
+#' @param object list/data.frame/pc_otu
+#' @param ... additional
+#'
+#' @return a plot
+#' @export
+#'
+#' @examples
+#'aa=list(a=1:3,b=3:7,c=2:4)
+#'venn(aa)
+venn <- function(object,...){
+  UseMethod("venn", object)
+}
+
+venn_cal<-function(otu_time){
+  aa=list()
+  for (i in 1:ncol(otu_time)){
+    name=colnames(otu_time)[i]
+    aa[[name]]=rownames(otu_time[otu_time[,i]>0,])
+  }
+  return(aa)
+}
+
+#' @method venn list
+#' @rdname venn
+#' @param mode "venn","venn2","upset","flower"
+#' @exportS3Method
+venn.list<-function(aa,mode="venn",...){
+  if(is.null(names(aa)))names(aa)=seq_along(aa)
+  if(length(aa)>4&&mode=="venn")print("venn < 4, recommend upset or flower")
+  if(mode=="venn")lib_ps("ggvenn");ggvenn::ggvenn(aa)->p
+  if(mode=="venn2"){
+    lib_ps("Vennerable")
+    Vennerable::Venn(aa)->aap
+    plot(aap,...)
+    # plot(aap,type="triangles")
+    # plot(aap, doWeights = FALSE)
+    # plot(aap, doWeights = FALSE,type="ellipses")
+    # plot(aap, doWeights = FALSE,type="ChowRuskey")
+  }
+  if(mode=="upset"){
+    lib_ps("UpSetR")
+    UpSetR::upset(UpSetR::fromList(aa), order.by = "freq",nsets = length(aa),nintersects = 30)->p
+  }
+  if(mode=="flower"){
+    lib_ps("RColorBrewer","plotrix")
+    otu_num=length(aa[[1]])
+    core_otu_id=aa[[1]]
+    for (i in 2:length(aa)){
+      core_otu_id <- intersect(core_otu_id, aa[[i]])
+      otu_num <- c(otu_num, length(aa[[i]]))
+    }
+    core_num <- length(core_otu_id)
+    otu_num<-otu_num-core_num
+    sample_id<-names(aa)
+    n <- length(sample_id)
+
+    ellipse_col <- colorRampPalette(brewer.pal(10,"Set3"))(n)
+    start = 90; a = 0.5; b = 2.2; r = 0.5; ellipse_col = ellipse_col; circle_col = 'white'
+
+    par( bty = 'n', ann = F, xaxt = 'n', yaxt = 'n', mar = c(1,1,1,1))
+
+    plot(c(0,10),c(0,10),type='n')
+    deg <- 360 / n
+    res <- lapply(1:n, function(t){
+      draw.ellipse(x = 5 + cos((start + deg * (t - 1)) * pi / 180),
+                   y = 5 + sin((start + deg * (t - 1)) * pi / 180),
+                   col = ellipse_col[t],
+                   border = ellipse_col[t],
+                   a = 0.6, b = 2.2, angle = deg * (t - 1))
+
+      text(x = 5 + 2.5 * cos((start + deg * (t - 1)) * pi / 180),
+           y = 5 + 2.5 * sin((start + deg * (t - 1)) * pi / 180),
+           otu_num[t])
+
+      if (deg * (t - 1) < 180 && deg * (t - 1) > 0 ) {
+        text(x = 5 + 3.3 * cos((start + deg * (t - 1)) * pi / 180),
+             y = 5 + 3.3 * sin((start + deg * (t - 1)) * pi / 180),
+             sample_id[t],
+             srt = deg * (t - 1) - start,
+             adj = 1,
+             cex = 1
+        )
+      } else {
+        text(x = 5 + 3.3 * cos((start + deg * (t - 1)) * pi / 180),
+             y = 5 + 3.3 * sin((start + deg * (t - 1)) * pi / 180),
+             sample_id[t],
+             srt = deg * (t - 1) + start,
+             adj = 0,
+             cex = 1
+        )
+      }
+    })
+    draw.circle(x = 5, y = 5, r = 1.3, col = circle_col, border = NA)
+    text(x = 5, y = 5, paste('Core:', core_num))
+    p=NULL
+  }
+  return(p)
+}
+
+#' @method venn data.frame
+#' @rdname venn
+#' @exportS3Method
+venn.data.frame<-function(otutab,mode="venn"){
+  venn_cal(otutab)->aa
+  venn.list(aa,mode = mode)
+}
+
+
+#' Pie plot
+#'
+#' @param otutab otutab
+#' @param n topn
+#'
+#' @return ggplot
+#' @export
+#'
+#' @examples
+#'tax_pie(otutab,n = 7)
+tax_pie<-function(otutab,n=6){
+  lib_ps("RColorBrewer","ggpubr")
+  rowSums(otutab)->a
+  if(length(a)>n){
+    sort(a,decreasing = T)[1:n-1]->b
+    other=sum(sort(a,decreasing = T)[n:length(a)])
+    b<-c(b,other)
+    names(b)[length(b)]<-'Others'}
+  else b<-a
+  myPalette <- brewer.pal(n, "Paired")
+  # You can change the border of each area with the classical parameters:
+  # pie(b , labels = paste0(names(b),"\n(",round(b/sum(b)*100,2),"%)"), border="white",
+  #     col=myPalette,radius = 1,main = main)
+  df=data.frame(va=b,labels = paste0(names(b),"\n(",round(b/sum(b)*100,2),"%)"))
+  ggpie(df,'va',fill=myPalette,label = "labels",grepl=T)
+}
+
+#' Radar plot
+#'
+#' @param otu_time
+#'
+#' @export
+#'
+#' @examples
+#' tax_radar(otu_time)
+tax_radar<-function(otu_time){
+  lib_ps("ggradar","scales")
+  otu_time[1:4,]%>%
+    mutate_all(scales::rescale) %>%cbind(tax=rownames(.),.)%>%
+    ggradar::ggradar()
+}
+
+#' Word cloud
+#'
+#' @param aa
+#'
+#' @export
+#'
+#' @examples
+#'tax_wordcloud(taxonomy$Genus)
+tax_wordcloud<-function(aa){
+  lib_ps("pcutils","wordcloud2")
+  remove_unclassfied<-\ (taxdf) {
+    taxdf[grepl.data.frame("Unclassified|uncultured|Ambiguous|Unknown|unknown|metagenome|Unassig",
+                           taxdf, ignore.case = TRUE)] <- NA
+    return(taxdf)
+  }
+  sort(table(aa),decreasing = TRUE)[1:50]%>%as.data.frame()%>%
+    remove_unclassfied()%>%na.omit()%>%wordcloud2::wordcloud2(.,size=.7)
+}
+
+#' Triangle plot
+#'
+#' @param otutab otutab
+#' @param group group
+#' @param scale default:F
+#' @param class
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#'triangp(otutab,metadata$Group,class=taxonomy$Phylum)+theme_classic()
+triangp<-function(otutab,group,scale=F,class=NULL){
+  lib_ps("ggtern","vegan")
+  group%>%as.factor()->group
+  if (nlevels(group)!=3)stop("group is not 3, can't plot trip")
+  hebing(otutab,group,act = 'mean')->tmp
+  if (scale){vegan::decostand(tmp,'hellinger',2)->tmp}
+  tmp%>%as.data.frame()%>%mutate(sum=rowSums(.))->tmp1
+  colnames(tmp1)[1:3]<-c('KO','OE','WT')
+  if (is.null(class)){
+    p=ggtern(tmp1,aes(x=KO,y=OE,z=WT)) +
+      geom_point(aes(size=sum,col=class))+#define data geometry
+      theme_showarrows() +labs(x=names(tmp)[1],y=names(tmp)[2],z=names(tmp)[3])
+    return(p)
+  }
+  else {
+    tmp1$class =class
+    p=ggtern(tmp1,aes(x=KO,y=OE,z=WT)) +
+      geom_point(aes(size=sum,col=class))+#define data geometry
+      theme_showarrows() +labs(x=names(tmp)[1],y=names(tmp)[2],z=names(tmp)[3])
+    return(p)
+  }
+}
+
 
 #=======some tips========
 #' @export

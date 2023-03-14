@@ -4,7 +4,7 @@
 \alias{china_map}
 \title{Plot china map}
 \usage{
-china_map(dir = "~/Downloads/")
+china_map(dir = "~/database/")
 }
 \arguments{
 \item{dir}{where to put the china.json file}
