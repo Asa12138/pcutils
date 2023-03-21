@@ -1,9 +1,4 @@
 # Some useful tools
-# pls=c("ggplot2","dplyr","magrittr","fitdistrplus","ggpmisc","ggpubr","nortest","agricolae")
-#   for (p in pls) {
-#     if (!requireNamespace(p)) {
-#            install.packages(p)}}
-
 
 
 #=========little tools=========
@@ -45,7 +40,8 @@ lib_ps<-function(p_list,...,all_yes=F){
     "MetaNet"="Asa12138/MetaNet",
     "ggcor"="Github-Yilei/ggcor",
     "chorddiag"="mattflor/chorddiag",
-    "inborutils"="inbo/inborutils"
+    "inborutils"="inbo/inborutils",
+    "ggradar"="ricardo-bion/ggradar"
   )
   p_list=c(p_list,...)
   for (p in p_list) {
@@ -489,9 +485,9 @@ get_doi<-function(doi,dir="~/Downloads/",bget_path="~/software/bget_0.3.2_Darwin
 twotest<-function(var,group){
   group<-factor(group)
   print(t.test(var~group))#parameter
-  print('===================================================')
+  dabiao("")
   print(wilcox.test(var~group))#non-parameter
-  print('===================================================')
+  dabiao("")
   print(ks.test(var~group))
 }
 
@@ -590,7 +586,7 @@ fittest<-function(a){
 #'toXY(geo)
 toXY <- function(geo){
   lib_ps("SoDA")
-  XY <- geoXY(geo[,1], geo[,2])
+  XY <- SoDA::geoXY(geo[,1], geo[,2])
   #geosphere::distm
   return(as.data.frame(row.names = rownames(geo),XY))
 }
@@ -754,9 +750,9 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
 #'
 #' @examples
 #' data(otutab)
-#' cor_plot(metadata[,12:19])
+#' cor_plot(metadata[,3:10],mode=2)
 #' cor_plot(t(otutab)[,1:50],mode=3)
-cor_plot<-function(env,env2=NULL,mode=1,method = "pearson",heat=T,...){
+cor_plot<-function(env,env2=NULL,mode=1,method = "pearson",heat=T,addrect=5,...){
 if(ncol(env)>30&heat){
   cor(env)->a
   pheatmap::pheatmap(a,show_rownames = F,show_colnames = F,border_color = F,...)
@@ -789,16 +785,33 @@ else {
       lib_ps("corrplot")
       ggcor::correlate(env, method = method,cor.test = T,p.adjust = T,p.adjust.method = "fdr")->res2
       rownames(res2$p.value)<-rownames(res2$r);colnames(res2$p.value)<-colnames(res2$r)
-      #pls package also has a function called corrplot
+
       corrplot::corrplot(res2$r, order = "hclust", p.mat = res2$p.value, sig.level = 0.05, insig = "blank",
-                         diag = FALSE, tl.cex=0.5, addrect = 17, method="color", outline=TRUE,
+                         diag = FALSE, tl.cex=0.5, addrect = addrect, method="color", outline=TRUE,
                          col=brewer.pal(n=10, name="PuOr"),tl.srt=45, tl.col="black")
     }
   }
   else{
-    if(mode==1){p<-quickcor(env,env2, method = method,cor.test = T) +
-      geom_square(data = get_data(show.diag = FALSE)) +
-      geom_mark(data = get_data(show.diag = FALSE), size = 2.5)
+    if(mode==1){
+    if (ncol(env2)==1) {
+      env2=cbind(env2,env2)
+      p<-quickcor(env,env2, method = method,cor.test = T) +
+        geom_square(data = get_data(show.diag = FALSE)) +
+        geom_mark(data = get_data(show.diag = FALSE), size = 2.5)
+      p=p+coord_fixed(xlim = c(0.5,1.5))
+    }
+    else if(ncol(env)==1){
+      env=cbind(env,env)
+      p<-quickcor(env,env2, method = method,cor.test = T) +
+        geom_square(data = get_data(show.diag = FALSE)) +
+        geom_mark(data = get_data(show.diag = FALSE), size = 2.5)
+      p=p+coord_fixed(ylim = c(0.5,1.5))
+    }
+    else{
+      p<-quickcor(env,env2, method = method,cor.test = T) +
+        geom_square(data = get_data(show.diag = FALSE)) +
+        geom_mark(data = get_data(show.diag = FALSE), size = 2.5)
+    }
     detach('package:ggcor')
     return(p)
     }
@@ -814,8 +827,17 @@ else {
       detach('package:ggcor')
       return(p)
     }
+
+    if(mode==3){
+      lib_ps("corrplot")
+      ggcor::correlate(env, env2,method = method,cor.test = T,p.adjust = T,p.adjust.method = "fdr")->res2
+      rownames(res2$p.value)<-rownames(res2$r);colnames(res2$p.value)<-colnames(res2$r)
+
+      corrplot::corrplot(res2$r, p.mat = res2$p.value, sig.level = 0.05,diag = FALSE,method="square",
+                         tl.srt=45, tl.col="black",addCoef.col = "black",insig = "label_sig")
+    }
   }
-  }
+}
 }
 
 #' @title Plot a boxplot
@@ -942,7 +964,7 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
 #'gghuan(a)+scale_fill_manual(values=get_cols(6,"col3"))
 #'b=data.frame(type=letters[1:12],num=c(1,3,3,4,15,10,35,2:6))
 #'gghuan(b)+theme(legend.position="right")
-gghuan<-function(tab,reorder=T,mode="1",topN=5,name=T){
+gghuan<-function(tab,reorder=T,mode="1",topN=5,name=T,percentage=T){
   if(ncol(tab)>2)stop("need two columns: first is type, second is number")
   colnames(tab)[1]->g_name
   colnames(tab)<-c("type","n")
@@ -965,7 +987,15 @@ gghuan<-function(tab,reorder=T,mode="1",topN=5,name=T){
 
   plot_df$ymax = cumsum(plot_df$fraction)
   plot_df$ymin = c(0, head(plot_df$ymax, n = -1))
-  plot_df$rate_per<-paste(as.character(round(100*plot_df$fraction,1)),'%',sep='')
+  if(percentage)plot_df$rate_per<-paste(as.character(round(100*plot_df$fraction,1)),'%',sep='')
+  else plot_df$rate_per=plot_df$mean
+  if(mode==3){
+    #ggpie::ggpie
+    labs=paste0(plot_df$type,"\n",plot_df$rate_per)
+    p=ggpubr::ggpie(plot_df,"fraction",label = labs,fill="type")+theme(legend.position = "none")
+    return(p)
+  }
+
   if(mode=="1"){plt<-ggplot(data = plot_df, aes(fill = type, ymax = ymax, ymin = ymin, xmax = 3.2, xmin = 1.7)) +
     geom_rect(alpha=0.8) +xlim(c(0, 5)) +
     coord_polar(theta = "y") +
@@ -973,17 +1003,17 @@ gghuan<-function(tab,reorder=T,mode="1",topN=5,name=T){
   if(name)plt=plt+geom_text(aes(x = 3.6, y = ((ymin+ymax)/2),label = type) ,size=4)
   }
   if(mode=="2"){plt <- ggplot(plot_df,aes(x = type,y = fraction,fill = type)) +
-    geom_col(position = "dodge2",show.legend = TRUE,alpha = .9
-    ) + coord_polar()+ylim(-min(plot_df$fraction),max(plot_df$fraction)+0.2)+
+    geom_col(position = "dodge2",show.legend = TRUE,alpha = .9) +
+    coord_polar()+ylim(-min(plot_df$fraction),max(plot_df$fraction)+0.2)+
     geom_text(aes(x=type,y=fraction+0.1,label = paste0(type,"\n",rate_per)) ,size=4)
   }
-  plt+theme_light() +
+  plt=plt+theme_light() +
     labs(x = "", y = "",fill=g_name) +
     theme(panel.grid=element_blank()) + ## 去掉白色外框
     theme(axis.text=element_blank()) + ## 把图旁边的标签去掉
     theme(axis.ticks=element_blank()) + ## 去掉左上角的坐标刻度线
     theme(panel.border=element_blank(),legend.position = "none")## 去掉最外层的正方形边框
-
+  return(plt)
 }
 
 #' Fit a linear model and plot
@@ -1147,7 +1177,7 @@ my_cat<-function(mode=1){
 #' @export
 #'
 #' @examples
-#' cbind(taxonomy,num=rowSums(otutab))[1:50,]->test
+#' cbind(taxonomy,num=rowSums(otutab))[1:20,]->test
 #' df2net(test)->ttt
 #' plot(ttt,vertex.color=tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
 #'
@@ -1182,6 +1212,7 @@ if(F){
 
   #circlepack
   #https://r-graph-gallery.com/315-hide-first-level-in-circle-packing.html
+  lib_ps("ggraph")
   ggraph(ttt, layout = 'circlepack', weight=weight) +
     geom_node_circle(aes(fill = as.factor(depth), color = as.factor(depth) )) +
     scale_color_d3()+scale_fill_d3()+
@@ -1348,7 +1379,6 @@ my_synteny<-function(){
   read.file("chromosome.svg")
 }
 
-#venn========
 #' plot a general venn (upset, flower)
 #'
 #' @param object list/data.frame/pc_otu
@@ -1471,19 +1501,23 @@ venn.data.frame<-function(otutab,mode="venn"){
 #'tax_pie(otutab,n = 7)
 tax_pie<-function(otutab,n=6){
   lib_ps("RColorBrewer","ggpubr")
-  rowSums(otutab)->a
+  if(is.vector(otutab)){
+    otutab->a
+    if(!is.null(names(a)))names(a)=seq_along(a)
+  }
+  else rowSums(otutab)->a
   if(length(a)>n){
     sort(a,decreasing = T)[1:n-1]->b
     other=sum(sort(a,decreasing = T)[n:length(a)])
     b<-c(b,other)
     names(b)[length(b)]<-'Others'}
   else b<-a
-  myPalette <- brewer.pal(n, "Paired")
+
   # You can change the border of each area with the classical parameters:
   # pie(b , labels = paste0(names(b),"\n(",round(b/sum(b)*100,2),"%)"), border="white",
   #     col=myPalette,radius = 1,main = main)
   df=data.frame(va=b,labels = paste0(names(b),"\n(",round(b/sum(b)*100,2),"%)"))
-  ggpie(df,'va',fill=myPalette,label = "labels",grepl=T)
+  ggpie(df,'va',fill=get_cols(length(b)),label = "labels",grepl=T)
 }
 
 #' Radar plot
@@ -1493,12 +1527,12 @@ tax_pie<-function(otutab,n=6){
 #' @export
 #'
 #' @examples
-#' tax_radar(otu_time)
+#' tax_radar(otutab[1:20,1:3])
 tax_radar<-function(otu_time){
   lib_ps("ggradar","scales")
   otu_time[1:4,]%>%
     mutate_all(scales::rescale) %>%cbind(tax=rownames(.),.)%>%
-    ggradar::ggradar()
+    ggradar::ggradar(.,legend.text.size=10)
 }
 
 #' Word cloud
