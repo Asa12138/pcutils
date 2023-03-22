@@ -623,7 +623,7 @@ toXY <- function(geo){
 #' pp2%>%aplot::insert_left(p1, width=.3)
 #'
 stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=F,relative=T,
-                     style = "group", sorted = "abundance",flow=F,others=T,pmode='stack',legend_title=NULL) {
+                     style = "group", sorted = "abundance",flow=F,others=T,pmode='stack',legend_title=NULL,number=F) {
   #用来画物种堆积图，适合处理各种OTU类似数据，输入metatab作为分组依据。style可以选择group或者sample
   #others=T用来选择是否画出除TopN外的其他，pmode可选择fill/stack/dodge
   lib_ps("ggplot2", "reshape2","scales")
@@ -660,7 +660,6 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
       data_all$Taxonomy = factor(data_all$Taxonomy, levels = rownames(mean_sort))
     }
 
-
     data_all = merge(data_all, sampFile, by.x = "variable",
                      by.y = "row.names")
     if (!others){
@@ -690,6 +689,7 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
     }
     if(relative)p=p+scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
     else p=p+ylab("Counts")
+    if(number)p=p+geom_text(aes(label=value),position = pmode)
     p+guides(fill=guide_legend(title = legend_title))
   }
 
@@ -734,6 +734,7 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
 
     if(relative)p=p+scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
     else p=p+ylab("Counts")
+    if(number)p=p+geom_text(aes(label=value),position = pmode)
     p+guides(fill=guide_legend(title = legend_title))
   }
 
