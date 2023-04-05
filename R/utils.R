@@ -864,7 +864,8 @@ else {
 #' group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),p_value2=T,mode=3,comparisons=list(c("a","b")))
 #'
 group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
-                    alpha=F,method="wilcox",p_value1=F,p_value2=F,comparisons=NULL,...){
+                    alpha=F,method="wilcox",p_value1=F,p_value2=F,comparisons=NULL,
+                    alpha_color="red",trend_line=F,line_color="blue",...){
   lib_ps("ggplot2","dplyr","ggpubr","reshape2")
 #data transform
   g_name=NULL
@@ -913,6 +914,9 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
   p=p+guides(color=guide_legend(g_name),fill=guide_legend(g_name))+
     ylab(label = NULL)+xlab(label = NULL)
 
+#trend line
+  if(trend_line)p=p+geom_smooth(aes(group=1), method = "glm",color = line_color, se=F,alpha = 0.8)
+
 #facet?
   flag=(ncol(tab)==1)
   if((!flag)|facet) p=p+facet_wrap(.~indexes,scales = "free_y")
@@ -942,10 +946,10 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
     aa$indexes=factor(aa$indexes,levels = colnames(tab))
     if(mode==3){
       p=p+ geom_text(data = aa,aes(x=variable,y=(high+0.15*(high-low)),label=groups),
-                     inherit.aes = FALSE,color='red',size=5,position=position_nudge(x=.1))
+                     inherit.aes = FALSE,color=alpha_color,size=5,position=position_nudge(x=.1))
     }
     else {p=p+ geom_text(data = aa,aes(x=variable,y=(high+0.05*(high-low)),label=groups),
-                         inherit.aes = FALSE,color='red',size=5)
+                         inherit.aes = FALSE,color=alpha_color,size=5)
     }
   }
 
