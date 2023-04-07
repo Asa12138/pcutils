@@ -16,7 +16,8 @@ stackplot(
   flow = F,
   others = T,
   pmode = "stack",
-  legend_title = NULL
+  legend_title = NULL,
+  number = F
 )
 }
 \arguments{

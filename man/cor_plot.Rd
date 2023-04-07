@@ -4,7 +4,15 @@
 \alias{cor_plot}
 \title{Plot correlation}
 \usage{
-cor_plot(env, env2 = NULL, mode = 1, method = "pearson", heat = T, ...)
+cor_plot(
+  env,
+  env2 = NULL,
+  mode = 1,
+  method = "pearson",
+  heat = T,
+  addrect = 5,
+  ...
+)
 }
 \arguments{
 \item{env}{dataframe1}
@@ -20,6 +28,6 @@ Plot correlation
 }
 \examples{
 data(otutab)
-cor_plot(metadata[,12:19])
+cor_plot(metadata[,3:10],mode=2)
 cor_plot(t(otutab)[,1:50],mode=3)
 }

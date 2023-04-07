@@ -15,6 +15,9 @@ group_box(
   p_value1 = F,
   p_value2 = F,
   comparisons = NULL,
+  alpha_color = "red",
+  trend_line = F,
+  line_color = "blue",
   ...
 )
 }

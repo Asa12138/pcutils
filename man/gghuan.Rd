@@ -4,7 +4,7 @@
 \alias{gghuan}
 \title{Plot a doughnut chart}
 \usage{
-gghuan(tab, reorder = T, mode = "1", topN = 5, name = T)
+gghuan(tab, reorder = T, mode = "1", topN = 5, name = T, percentage = T)
 }
 \arguments{
 \item{ad}{a two-columns dataframe, first is type, second is number}
