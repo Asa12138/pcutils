@@ -14,7 +14,10 @@ multitest(var, group, print = T, return = F)
 \item{return}{return which method result (tukeyHSD or LSD or wilcox?)}
 }
 \description{
-Multi-group test
+anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
+LSD and TukeyHSD are post hoc test of anova.
+dunn and nemenyi are post hoc test of kruskal.test.
+ttest or wilcox is just perform wilcox-test in each two group (no p.adjust).
 }
 \examples{
 multitest(c(runif(20),runif(10,2,3)),rep(c("a","b","c"),each=10))

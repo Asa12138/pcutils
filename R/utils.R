@@ -22,6 +22,14 @@ dabiao<-function(str,n=80,char="=",mode=c("middle", "left", "right")){
   cat(xx,"\n")
 }
 
+#' @export
+#'
+copy_vector=function(vec){
+  library("clipr")
+  clipr::write_clip(paste0('c("',paste0(vec,collapse = '","'),'")'))
+  print("copy done, just Ctrl+V")
+}
+
 
 #' Library packages or install
 #'
@@ -130,17 +138,19 @@ mmscale<-function(x,min_s=0,max_s=1,n=1,plot=F){
 #' data("otutab",package = "MetaNet")
 #' sanxian(otutab)
 #' sanxian(otutab,ncol=4,rows=NULL)
-sanxian<-function(aa,digits = 3,nrow=10,ncol=10,plot=F,...){
+sanxian<-function(aa,digits = 3,nrow=10,ncol=10,fig=F,...){
 
   if(nrow(aa)>nrow)aa<-aa[1:nrow,,drop=F]
   if(ncol(aa)>ncol)aa<-aa[,1:ncol,drop=F]
 
-  if(plot){lib_ps("ggpubr","dplyr")
-  aa%>%mutate_if(is.numeric,\(x)round(x,digits = digits))%>%
-    ggtexttable(...,theme = ttheme("blank")) %>%
-    tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 3)%>%
-    tab_add_hline(at.row = nrow(aa)+1, row.side = "bottom", linewidth = 3)->p
-  return(p)}
+  if(fig){
+    lib_ps("ggpubr","dplyr")
+    aa%>%mutate_if(is.numeric,\(x)round(x,digits = digits))%>%
+      ggtexttable(...,theme = ttheme("blank")) %>%
+      tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 3)%>%
+      tab_add_hline(at.row = nrow(aa)+1, row.side = "bottom", linewidth = 3)->p
+  return(p)
+  }
 
   else {
     lib_ps("kableExtra")
@@ -491,11 +501,18 @@ twotest<-function(var,group){
   print(ks.test(var~group))
 }
 
+
 #' Multi-group test
 #'
 #' @param var numeric vector
 #' @param group more than two-levels group vector
 #' @param return return which method result (tukeyHSD or LSD or wilcox?)
+#'
+#' @description
+#' anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
+#' LSD and TukeyHSD are post hoc test of anova.
+#' dunn and nemenyi are post hoc test of kruskal.test.
+#' ttest or wilcox is just perform wilcox-test in each two group (no p.adjust).
 #'
 #' @importFrom agricolae LSD.test
 #' @export
@@ -504,46 +521,118 @@ twotest<-function(var,group){
 #' multitest(c(runif(20),runif(10,2,3)),rep(c("a","b","c"),each=10))
 #' multitest(runif(30),rep(c("a","b","c"),each=10),print=F,return="wilcox")->aa
 multitest<-function(var,group,print=T,return=F){
-  lib_ps("agricolae")
+
+  methods=c("LSD","TukeyHSD","dunn","nemenyi","wilcox","ttest")
+  if(is.character(return)){return=match.arg(return,methods);print=F}
+  if(print)return=methods
+
+  lib_ps("agricolae","PMCMRplus")
   group<-factor(group)
-  ano<-aov(var~group)
-  #LSD
-  lsdres <- LSD.test(ano, 'group', p.adj = 'bonferroni')
-  if(return=="LSD")return(data.frame(lsdres$groups,variable=rownames(lsdres$groups)))
-  #TukeyHSD
-  tukeyres<-TukeyHSD(ano)
   means=aggregate(var,by=list(group),mean)$x
+
+  ano<-aov(var~group)
+  kw<-kruskal.test(var~group)
   ntr=nlevels(group)
-  Q <- matrix(1, ncol = ntr, nrow = ntr)
-  Q[lower.tri(Q)]<-Q[upper.tri(Q)] <- tukeyres$group[,4]
-  out<-agricolae::orderPvalue(levels(group),means,0.05,Q)
-  if(return=="tukeyHSD")return(data.frame(out,variable=rownames(out)))
-  #each wilcox.test
-  Q <- matrix(1, ncol = ntr, nrow = ntr)
-  for(i in 1:(ntr-1)){
-    for(j in (i+1):ntr){
-      gi=levels(group)[i];gj=levels(group)[j]
-      w<-wilcox.test(var[which(group%in%c(gi,gj))]~group[which(group%in%c(gi,gj))])
-      Q[j,i]<-Q[i,j]<-w$p.value
-    }
+
+  #LSD
+  if("LSD"%in%return)lsdres <- LSD.test(ano, 'group', p.adj = 'bonferroni')
+  if(identical(return,"LSD"))return(data.frame(lsdres$groups,variable=rownames(lsdres$groups)))
+
+  #TukeyHSD
+  if("TukeyHSD"%in%return)tukeyres<-TukeyHSD(ano)
+
+  if(identical(return,"tukeyHSD")){
+    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+    p_mat[lower.tri(p_mat)]<-p_mat[upper.tri(p_mat)] <- tukeyres$group[,4]
+    tukeyHSD_out<-agricolae::orderPvalue(levels(group),means,0.05,p_mat)
+    return(data.frame(tukeyHSD_out,variable=rownames(tukeyHSD_out)))
   }
-  rownames(Q)<-colnames(Q)<-levels(group)
-  Q[is.nan(Q)]=1
-  out1<-agricolae::orderPvalue(levels(group),means,0.05,Q)
-  if(return=="wilcox")return(data.frame(out1,variable=rownames(out1)))
+
+  #dunn
+  if("dunn"%in%return)dunnres=PMCMRplus::kwAllPairsDunnTest(var~group)
+  if(identical(return,"dunn")){
+    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+    for(i in 1:(ntr-1)){
+      for(j in (i+1):ntr){
+        gi=levels(group)[i];gj=levels(group)[j]
+        p_mat[j,i]<-p_mat[i,j]<-dunnres$p.value[gj,gi]
+      }
+    }
+    rownames(p_mat)<-colnames(p_mat)<-levels(group)
+    p_mat[is.nan(p_mat)]=1
+    dunn_out<-agricolae::orderPvalue(levels(group),means,0.05,p_mat)
+    return(data.frame(dunn_out,variable=rownames(dunn_out)))
+  }
+
+  #nemenyi
+  if("nemenyi"%in%return)nemenyires=PMCMRplus::kwAllPairsNemenyiTest(var~group)
+  if(identical(return,"nemenyi")){
+    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+    for(i in 1:(ntr-1)){
+      for(j in (i+1):ntr){
+        gi=levels(group)[i];gj=levels(group)[j]
+        p_mat[j,i]<-p_mat[i,j]<-nemenyires$p.value[gj,gi]
+      }
+    }
+    rownames(p_mat)<-colnames(p_mat)<-levels(group)
+    p_mat[is.nan(p_mat)]=1
+    nemenyi_out<-agricolae::orderPvalue(levels(group),means,0.05,p_mat)
+    return(data.frame(nemenyi_out,variable=rownames(nemenyi_out)))
+  }
+
+  #each t-test
+  if("ttest"%in%return){
+    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+    for(i in 1:(ntr-1)){
+      for(j in (i+1):ntr){
+        gi=levels(group)[i];gj=levels(group)[j]
+        w<-t.test(var[which(group%in%c(gi,gj))]~group[which(group%in%c(gi,gj))])
+        p_mat[j,i]<-p_mat[i,j]<-w$p.value
+      }
+    }
+    rownames(p_mat)<-colnames(p_mat)<-levels(group)
+    p_mat[is.nan(p_mat)]=1
+    ttest_p=p_mat
+    ttest_out<-agricolae::orderPvalue(levels(group),means,0.05,p_mat)
+    if(identical(return,"ttest"))return(data.frame(ttest_out,variable=rownames(ttest_out)))
+  }
+  #each wilcox.test
+  if("wilcox"%in%return){
+    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+    for(i in 1:(ntr-1)){
+      for(j in (i+1):ntr){
+        gi=levels(group)[i];gj=levels(group)[j]
+        w<-wilcox.test(var[which(group%in%c(gi,gj))]~group[which(group%in%c(gi,gj))])
+        p_mat[j,i]<-p_mat[i,j]<-w$p.value
+      }
+    }
+    rownames(p_mat)<-colnames(p_mat)<-levels(group)
+    p_mat[is.nan(p_mat)]=1
+    wilcox_p=p_mat
+    wilcox_out<-agricolae::orderPvalue(levels(group),means,0.05,p_mat)
+    if(identical(return,"wilcox"))return(data.frame(wilcox_out,variable=rownames(wilcox_out)))
+  }
+
   if(print){
     dabiao("1.ANOVA:")
     print(summary(ano))
-    dabiao("2.Kruskal.test:")
-    print(kruskal.test(var~group))
-    dabiao("3.LSDtest, bonferroni p-adj:")
+    dabiao("1-1.LSDtest, bonferroni p-adj:")
     print(lsdres$groups)
-    dabiao("4.tukeyHSD:")
+    dabiao("1-2.tukeyHSD:")
     print(tukeyres)
-    dabiao("5.Wilcox-test:")
-    print(Q)
+    dabiao("2.Kruskal.test:")
+    print(kw)
+    dabiao("2-1.Dunn.test:")
+    print(dunnres)
+    dabiao("2-2.Nemenyi.test:")
+    print(nemenyires)
+    dabiao("3.Wilcox-test:")
+    print(wilcox_p)
+    dabiao("4.t.test:")
+    print(ttest_p)
   }
 }
+
 
 #' Fit a distribution
 #'
