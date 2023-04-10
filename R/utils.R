@@ -49,7 +49,8 @@ lib_ps<-function(p_list,...,all_yes=F){
     "ggcor"="Github-Yilei/ggcor",
     "chorddiag"="mattflor/chorddiag",
     "inborutils"="inbo/inborutils",
-    "ggradar"="ricardo-bion/ggradar"
+    "ggradar"="ricardo-bion/ggradar",
+    "pairwiseAdonis"="pmartinezarbizu/pairwiseAdonis/pairwiseAdonis"
   )
   p_list=c(p_list,...)
   for (p in p_list) {
