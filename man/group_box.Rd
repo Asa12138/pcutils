@@ -52,6 +52,6 @@ Plot a boxplot
 a=data.frame(a=1:18,b=runif(18,0,5))
 group_box(a,group = rep(c("a","b","c"),each=6),p_value1=F,p_value2=T)
 multitest(a$a,group = rep(c("a","b","c"),each=6))
-group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),p_value2=T,mode=3,comparisons=list(c("a","b")))
+group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),p_value2=T,mode=3,comparisons=list(c("a","b")))+mytheme
 
 }

@@ -4,7 +4,7 @@
 \alias{sanxian}
 \title{Three-line table}
 \usage{
-sanxian(aa, digits = 3, nrow = 10, ncol = 10, plot = F, ...)
+sanxian(aa, digits = 3, nrow = 10, ncol = 10, fig = F, ...)
 }
 \arguments{
 \item{aa}{a dataframe}
@@ -15,9 +15,9 @@ sanxian(aa, digits = 3, nrow = 10, ncol = 10, plot = F, ...)
 
 \item{ncol}{show how many columns}
 
-\item{plot}{print a plot or html table}
-
 \item{...}{additional arguments e.g.(rows=NULL)}
+
+\item{plot}{print a plot or html table}
 }
 \value{
 a ggplot

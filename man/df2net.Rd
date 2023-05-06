@@ -18,6 +18,6 @@ Transfer a dataframe to a network edgelist.
 \examples{
 cbind(taxonomy,num=rowSums(otutab))[1:20,]->test
 df2net(test)->ttt
-plot(ttt,vertex.color=tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
-
+library(igraph)
+plot(ttt,vertex.color=MetaNet:::tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
 }

@@ -25,7 +25,7 @@ dabiao<-function(str,n=80,char="=",mode=c("middle", "left", "right")){
 #' @export
 #'
 copy_vector=function(vec){
-  library("clipr")
+  lib_ps("clipr")
   clipr::write_clip(paste0('c("',paste0(vec,collapse = '","'),'")'))
   print("copy done, just Ctrl+V")
 }
@@ -50,7 +50,8 @@ lib_ps<-function(p_list,...,all_yes=F){
     "chorddiag"="mattflor/chorddiag",
     "inborutils"="inbo/inborutils",
     "ggradar"="ricardo-bion/ggradar",
-    "pairwiseAdonis"="pmartinezarbizu/pairwiseAdonis/pairwiseAdonis"
+    "pairwiseAdonis"="pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
+    "Vennerable"="js229/Vennerable"
   )
   p_list=c(p_list,...)
   for (p in p_list) {
@@ -97,29 +98,6 @@ del_ps<-function(p_list,...){
   for (p in p_list){
     detach(p,character.only = T)
   }
-}
-
-#' @title Min_Max scale
-#'
-#' @param x a numeric vector
-#' @param min_s scale min
-#' @param max_s scale max
-#' @param n linear transfer for n=1; the slope will change if n>1 or n<1
-#' @param plot whether plot the transfer?
-#'
-#' @return a numeric vector
-#' @export
-#'
-#' @examples
-#' x=runif(10)
-#' mmscale(x,5,10)
-mmscale<-function(x,min_s=0,max_s=1,n=1,plot=F){
-  if(n<=0)stop("n should bigger than 0")
-  if((max(x)-min(x))==0)return(rep((min_s+max_s)/2,length(x)))
-  x2=((x-min(x))^n)
-  y=min_s+(x2)/(max(x2))*(max_s-min_s)
-  if(plot)plot(y~x)
-  y
 }
 
 #' @title Three-line table
@@ -183,8 +161,16 @@ rgb2code<-function(x,rev=F){
 }
 
 #' @export
+is.ggplot.color <- function(x) {
+  is.col <- grepl("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", x)
+  is.name <- x %in% colors() | x %in% rainbow(7) | x %in% terrain.colors(6) |
+    x %in% heat.colors(12) | x %in% topo.colors(10) | x %in% viridisLite::inferno(12)
+  (is.col | is.name| is.na(x))#NA也可以接受
+}
+
+#' @export
 add_alpha<-function(color,alpha=0.3){
-  color=col2rgb(color)%>%t%>%rgb(.,, maxColorValue = 255)
+  color=col2rgb(color)%>%t%>%rgb(., maxColorValue = 255)
   paste0(color,as.hexmode(ceiling(255*alpha)))
 }
 
@@ -223,6 +209,7 @@ plotpdf<-function(plist,file='new',width=8,height=7,brower="/Applications/Micros
 #'
 #' @export
 plotgif<-function(plist,file='new',mode="gif"){
+  lib_ps("animation")
   if(mode=="gif"){ animation::saveGIF(
       for (i in plist){
         print(i)
@@ -441,7 +428,7 @@ trans_format<-function(file,to_format,format=NULL,...,brower="/Applications/Micr
   if(format=="png"){
     img=png::readPNG(file)
     g <- grid::rasterGrob(img, interpolate=TRUE)
-    p=qplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
+    p=ggplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
     ggplot2::ggsave(p, filename = out, device = to_format,...)
     invisible(g)
   }
@@ -483,6 +470,30 @@ get_doi<-function(doi,dir="~/Downloads/",bget_path="~/software/bget_0.3.2_Darwin
 }
 
 #=========statistics==========
+
+#' @title Min_Max scale
+#'
+#' @param x a numeric vector
+#' @param min_s scale min
+#' @param max_s scale max
+#' @param n linear transfer for n=1; the slope will change if n>1 or n<1
+#' @param plot whether plot the transfer?
+#'
+#' @return a numeric vector
+#' @export
+#'
+#' @examples
+#' x=runif(10)
+#' mmscale(x,5,10)
+mmscale<-function(x,min_s=0,max_s=1,n=1,plot=F){
+  if(n<=0)stop("n should bigger than 0")
+  if((max(x)-min(x))==0)return(rep((min_s+max_s)/2,length(x)))
+  x2=((x-min(x))^n)
+  y=min_s+(x2)/(max(x2))*(max_s-min_s)
+  if(plot)plot(y~x)
+  y
+}
+
 
 #' Two-group test
 #'
@@ -722,7 +733,8 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
   metadata = metadata[idx, , drop = F]
   otutab = otutab[, rownames(metadata),drop=F]
   sampFile = as.data.frame(metadata[, groupID], row.names = row.names(metadata))
-  colnames(sampFile)[1] = "group"}
+  colnames(sampFile)[1] = "group"
+  }
   else sampFile =data.frame(row.names =colnames(otutab),group=colnames(otutab))
 
   mean_sort = as.data.frame(otutab[(order(-rowSums(otutab))), ,drop=F])
@@ -738,6 +750,7 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
 
     mean_sort$Taxonomy = rownames(mean_sort)
     data_all = as.data.frame(melt(mean_sort, id.vars = c("Taxonomy")))
+    data_all<-mutate(data_all,variable=factor(variable,levels = unique(sampFile$group)))
     if(relative){
       data_all <- data_all  %>%
         group_by(variable, Taxonomy) %>%
@@ -787,7 +800,7 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
     mat_t = t(mean_sort)
     aggregate(mat_t,by=list(sampFile$group),mean)%>%melt(.,id=1)->data_all
     colnames(data_all)<-c('variable','Taxonomy','value')
-
+    data_all<-mutate(data_all,variable=factor(variable,levels = unique(sampFile$group)))
 
     data_all$value = as.numeric(data_all$value)
     as.factor(data_all$variable)->data_all$variable
@@ -836,11 +849,15 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
 #' @param env2 dataframe2 (default:NULL)
 #' @param mode plot mode (1~3)
 #' @param method one of "pearson","kendall","spearman"
+#' @param heat plot heatmap when columns >30
+#' @param addrect add rect when > addrect, use for mode3
+#' @param ...
 #'
 #' @export
 #'
 #' @examples
 #' data(otutab)
+#' cor_plot(metadata[,3:10])
 #' cor_plot(metadata[,3:10],mode=2)
 #' cor_plot(t(otutab)[,1:50],mode=3)
 cor_plot<-function(env,env2=NULL,mode=1,method = "pearson",heat=T,addrect=5,...){
@@ -951,7 +968,7 @@ else {
 #' a=data.frame(a=1:18,b=runif(18,0,5))
 #' group_box(a,group = rep(c("a","b","c"),each=6),p_value1=F,p_value2=T)
 #' multitest(a$a,group = rep(c("a","b","c"),each=6))
-#' group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),p_value2=T,mode=3,comparisons=list(c("a","b")))
+#' group_box(a[,1,drop=F],group = rep(c("a","b","c"),each=6),p_value2=T,mode=3,comparisons=list(c("a","b")))+mytheme
 #'
 group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
                     alpha=F,method="wilcox",p_value1=F,p_value2=F,comparisons=NULL,
@@ -972,7 +989,7 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
     else if ((!is.null(metadata)&&!is.null(group))){
       if(!all(rownames(metadata)%in%rownames(tab)))message("rownames dont match in tab and metadata")
       tab<-tab[rownames(metadata),,drop=F]
-      md<-data.frame(tab,group=metadata[,group],check.names = F)
+      md<-data.frame(tab,group=metadata[,group,drop=T],check.names = F)
       g_name=group
     }
   }
@@ -1185,10 +1202,11 @@ china_map<-function(dir="~/database/"){
 
   ggplot()+
     #geom_point(aes(x=long,y=lat,col=env1))+
-    geom_sf(data = china,fill=pcutils::get_cols(35),linewidth=1,color="black")+
+    geom_sf(data = china,fill=pcutils::get_cols(35,pal = "col3"),
+            alpha=0.8,linewidth=0.5,color="black")+
     #coord_sf(xlim = c(110,125),ylim = c(30,40))+
     annotation_scale(location = "bl") +
-    #geom_text_repel(aes(x=long,y=lat,label=Id),size=3)+
+    geom_sf_text(data = china,aes(label=name),size=3,family="STKaiti")+
     # spatial-aware automagic north arrow
     annotation_north_arrow(location = "tl", which_north = "false",
                            style = north_arrow_fancy_orienteering)+
@@ -1197,9 +1215,9 @@ china_map<-function(dir="~/database/"){
       #axis.text = element_blank(),
       #axis.ticks = element_blank(),
       axis.title = element_blank(),
-      panel.grid = element_blank(),
+      #panel.grid = element_blank(),
       panel.background = element_blank(),
-      panel.border = element_rect(fill=NA,color="grey10",linetype=1,size=1.),
+      panel.border = element_rect(fill=NA,color="grey10",linetype=1,linewidth=1),
       plot.margin=unit(c(0,0,0,0),"mm"))
 }
 
@@ -1251,10 +1269,12 @@ dna_plot<-function(){
 
 #' @export
 my_cat<-function(mode=1){
-  if(mode==1){  lib_ps("RImagePalette","png")
-  p1=png::readPNG(system.file("data/smallguodong.ppp",package = "pcutils"))
-  graphics::plot(1:2, type = "n", axes = F, ylab = "n", xlab = "n",ann = FALSE)
-  graphics::rasterImage(p1, 1, 1, 2, 2)}
+  if(mode==1){
+    lib_ps("RImagePalette","png")
+    p1=png::readPNG(system.file("data/smallguodong.ppp",package = "pcutils"))
+    g <- grid::rasterGrob(p1, interpolate=TRUE)
+    ggplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
+  }
 
   if(mode==2){  lib_ps("ggimage","ggplot2")
   t<-seq(0, 2*pi, 0.08)
@@ -1274,8 +1294,8 @@ my_cat<-function(mode=1){
 #' @examples
 #' cbind(taxonomy,num=rowSums(otutab))[1:20,]->test
 #' df2net(test)->ttt
-#' plot(ttt,vertex.color=tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
-#'
+#' library(igraph)
+#' plot(ttt,vertex.color=MetaNet:::tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
 df2net=function(test){
   if(!is.numeric(test[,ncol(test)]))test$num=1
   nc=ncol(test)
@@ -1336,7 +1356,6 @@ if(F){
 #'
 #' @examples
 #' data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)%>%my_sankey(.,"gg",num=T)
-#' data("otutab",package = "MetaNet")
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
 #' my_sankey(test)->p
 #' plotpdf(p)
@@ -1411,8 +1430,8 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),...){
 #' @export
 #'
 #' @examples
-#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_cicro()
-my_cicro=function(df,reorder=T,colors=NULL,mode=c("circlize","chorddiag"),...){
+#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo()
+my_circo=function(df,reorder=T,colors=NULL,mode=c("circlize","chorddiag"),...){
   mode=match.arg(mode,c("circlize","chorddiag"))
   colnames(df)=c("from","to","count")
 
@@ -1484,7 +1503,10 @@ my_synteny<-function(){
 #'
 #' @examples
 #'aa=list(a=1:3,b=3:7,c=2:4)
-#'venn(aa)
+#'venn(aa,mode="venn")
+#'venn(aa,mode="venn2",type="ChowRuskey")
+#'venn(aa,mode="upset")
+#'venn(otutab,mode="flower")
 venn <- function(object,...){
   UseMethod("venn", object)
 }
@@ -1505,11 +1527,13 @@ venn_cal<-function(otu_time){
 venn.list<-function(aa,mode="venn",...){
   if(is.null(names(aa)))names(aa)=seq_along(aa)
   if(length(aa)>4&&mode=="venn")print("venn < 4, recommend upset or flower")
-  if(mode=="venn")lib_ps("ggvenn");ggvenn::ggvenn(aa)->p
+  if(mode=="venn"){lib_ps("ggvenn");ggvenn::ggvenn(aa)->p}
   if(mode=="venn2"){
+    if(!requireNamespace("RBGL"))BiocManager::install("RBGL")
+    if(!requireNamespace("graph"))BiocManager::install("graph")
     lib_ps("Vennerable")
     Vennerable::Venn(aa)->aap
-    plot(aap,...)
+    Vennerable::plot(aap,...)
     # plot(aap,type="triangles")
     # plot(aap, doWeights = FALSE)
     # plot(aap, doWeights = FALSE,type="ellipses")

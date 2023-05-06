@@ -22,12 +22,19 @@ cor_plot(
 \item{mode}{plot mode (1~3)}
 
 \item{method}{one of "pearson","kendall","spearman"}
+
+\item{heat}{plot heatmap when columns >30}
+
+\item{addrect}{add rect when > addrect, use for mode3}
+
+\item{...}{}
 }
 \description{
 Plot correlation
 }
 \examples{
 data(otutab)
+cor_plot(metadata[,3:10])
 cor_plot(metadata[,3:10],mode=2)
 cor_plot(t(otutab)[,1:50],mode=3)
 }
