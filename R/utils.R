@@ -10,7 +10,8 @@
 #' @param mode "middle", "left" or "right"
 #'
 #' @export
-dabiao<-function(str="",n=80,char="=",mode=c("middle", "left", "right")){
+dabiao<-function(str="",...,n=80,char="=",mode=c("middle", "left", "right")){
+  str=paste0(c(str,...),collapse = "")
   mode=match.arg(mode,c("middle", "left", "right"))
   if(n<nchar(str))n=nchar(str)+2
   x=(n-nchar(str))%/%2
@@ -463,11 +464,11 @@ write_fasta=function(df, file_path) {
   # 逐行写入FASTA格式数据
   for (i in 1:nrow(df)) {
     # 获取序列ID和序列
-    sequence_id <- df$Sequence_ID[i]
-    sequence <- df$Sequence[i]
+    sequence_id <- df[i,1]
+    sequence <- df[i,2]
 
     # 写入序列ID
-    writeLines(paste(">", sequence_id), file_conn)
+    writeLines(paste0(">", sequence_id), file_conn)
 
     # 将序列拆分为每行70个字符，并写入文件
     split_sequence <- strsplit(sequence, split = "")
