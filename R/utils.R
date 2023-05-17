@@ -10,14 +10,15 @@
 #' @param mode "middle", "left" or "right"
 #'
 #' @export
-dabiao<-function(str,n=80,char="=",mode=c("middle", "left", "right")){
+dabiao<-function(str="",n=80,char="=",mode=c("middle", "left", "right")){
   mode=match.arg(mode,c("middle", "left", "right"))
   if(n<nchar(str))n=nchar(str)+2
   x=(n-nchar(str))%/%2
+  x2=n-nchar(str)-x
   switch (mode,
-          "left" = {xx=paste0(str,strrep(char,2*x))},
-          "middle" = {xx=paste0(strrep(char,x),str,strrep(char,x))},
-          "right" = {xx=paste0(strrep(char,2*x),str)}
+          "left" = {xx=paste0(str,strrep(char,x+x2))},
+          "middle" = {xx=paste0(strrep(char,x),str,strrep(char,x2))},
+          "right" = {xx=paste0(strrep(char,x+x2),str)}
   )
   cat(xx,"\n")
 }
@@ -341,6 +342,31 @@ grepl.data.frame<-function(pattern, x, ...) {
   y
 }
 
+#' Split Composite Names
+#'
+#' @param x character vector
+#' @param split character to split each element of vector on, see \code{\link[base]{strsplit}}
+#' @param ... other arguments are passed to strsplit
+#'
+#' @return dataframe
+#' @export
+#'
+#' @examples
+#' strsplit2(c("a;b","c;d"),";")
+strsplit2=function (x, split, ...)
+{
+  x <- as.character(x)
+  n <- length(x)
+  s <- strsplit(x, split = split, ...)
+  nc <- unlist(lapply(s, length))
+  out <- matrix("", n, max(nc))
+  for (i in 1:n) {
+    if (nc[i])
+      out[i, 1:nc[i]] <- s[[i]]
+  }
+  as.data.frame(out)
+}
+
 #' Read some special format file
 #'
 #' @param file file path
@@ -361,7 +387,12 @@ read.file<-function(file,format=NULL,just_print=F){
   }
   else{
     if(is.null(format))format=tools::file_ext(file)
-    format=match.arg(format,c("blast","diamond","jpg","png","pdf","svg"))
+    format=match.arg(format,c("blast","diamond","jpg","png","pdf","svg","fa","fasta","fna"))
+
+    if(format%in%c("fa","fasta","fna")){
+      df=read_fasta(file)
+      return(df)
+    }
 
     if(format%in%c("blast","diamond")){
       df=read.table(file,sep = "\t",
@@ -387,6 +418,72 @@ read.file<-function(file,format=NULL,just_print=F){
   }
 }
 
+#' Read fasta
+#' @export
+read_fasta=function(fasta_file){
+  fasta_data <- readLines(fasta_file)
+  # 创建空的数据框
+  df <- data.frame(stringsAsFactors = FALSE)
+
+  # 设置初始值
+  current_id <- ""
+  current_seq <- ""
+
+  # 逐行读取FASTA数据
+  for (line in fasta_data) {
+    if (startsWith(line, ">")) {
+      # 如果行以">"开头，则说明是序列名称行
+      # 将上一个序列的名称和序列添加到数据框
+      if (current_id != "") {
+        df <- rbind(df, c(current_id, current_seq))
+      }
+      # 更新当前序列的名称和序列
+      current_id <- gsub(">", "", line)
+      current_seq <- ""
+    } else {
+      # 否则，将行添加到当前序列中
+      current_seq <- paste(current_seq, line, sep = "")
+    }
+  }
+
+  # 添加最后一个序列到数据框
+  df <- rbind(df, c(current_id, current_seq))
+
+  # 设置列名
+  colnames(df) <- c("Sequence_ID", "Sequence")
+  df
+}
+
+#' write a dataframe to fasta
+#' @export
+write_fasta=function(df, file_path) {
+  # 打开文件进行写入
+  file_conn <- file(file_path, "w")
+
+  # 逐行写入FASTA格式数据
+  for (i in 1:nrow(df)) {
+    # 获取序列ID和序列
+    sequence_id <- df$Sequence_ID[i]
+    sequence <- df$Sequence[i]
+
+    # 写入序列ID
+    writeLines(paste(">", sequence_id), file_conn)
+
+    # 将序列拆分为每行70个字符，并写入文件
+    split_sequence <- strsplit(sequence, split = "")
+    split_sequence <- unlist(split_sequence)
+    num_chunks <- ceiling(length(split_sequence) / 70)
+    for (j in 1:num_chunks) {
+      start_index <- (j - 1) * 70 + 1
+      end_index <- min(j * 70, length(split_sequence))
+      chunk <- paste(split_sequence[start_index:end_index], collapse = "")
+      writeLines(chunk, file_conn)
+    }
+  }
+
+  # 关闭文件连接
+  close(file_conn)
+}
 
 #' Transfer the format of file
 #'
@@ -451,7 +548,6 @@ trans_format<-function(file,to_format,format=NULL,...,brower="/Applications/Micr
 
 }
 
-
 #' Download supplemental materials according to a doi
 #'
 #' @param doi doi
@@ -468,6 +564,172 @@ get_doi<-function(doi,dir="~/Downloads/",bget_path="~/software/bget_0.3.2_Darwin
   system(command)
 
 }
+#=========project==========
+
+#' Make a R-analysis project
+#'
+#' @param pro_n project name
+#' @param root_dir root directory
+#' @param bib cite papers bib, from Zotero
+#' @param csl cite papers format, default science.csl
+#'
+#' @export
+#'
+make_project=function(pro_n,root_dir='~/Documents/R/',
+                      bib='~/Documents/R/pc_blog/content/bib/My Library.bib',
+                      csl='~/Documents/R/pc_blog/content/bib/science.csl'){
+  #pro_n='test'
+  if(substr(root_dir,nchar(root_dir),nchar(root_dir))=="/")pro_dir=paste0(root_dir,pro_n)
+  else pro_dir=paste0(root_dir,"/",pro_n)
+
+  if (dir.exists(pro_dir))stop('directory exsit, try other name')
+  dir.create(pro_dir)
+  lapply(c('data','temp','result','summary','analysis'),FUN = \(x)dir.create(paste(pro_dir,x,sep = '/')))
+  lapply(c('R_config.R',paste0(pro_n,'.Rproj')),FUN = \(x)file.create(paste(pro_dir,'analysis',x,sep = '/')))
+  if(file.exists(bib)){file.copy(bib,paste(pro_dir,'analysis',"My_Library.bib",sep = '/'))}
+  if(file.exists(csl)){file.copy(csl,paste(pro_dir,'analysis',"my.csl",sep = '/'))}
+
+cat('Version: 1.0
+
+RestoreWorkspace: Default
+SaveWorkspace: Default
+AlwaysSaveHistory: Default
+
+EnableCodeIndexing: Yes
+UseSpacesForTab: Yes
+NumSpacesForTab: 2
+Encoding: UTF-8
+
+RnwWeave: Sweave
+LaTeX: XeLaTeX',file=paste(pro_dir,'analysis',paste0(pro_n,'.Rproj'),sep = '/'))
+
+cat('devtools::load_all("~/Documents/R/pctax/")
+devtools::load_all("~/Documents/R/pcutils/")
+Packages <- c("dplyr", "reshape2","ggsci","ggpubr","RColorBrewer","cowplot","readr","tibble","vegan","ggrepel")
+lib_ps(Packages)
+kin_col=c(k__Bacteria="#a6bce3",k__Fungi="#fdbf6f",k__Metazoa="#fb9a99",k__Viridiplantae="#a9d483",
+          k__Archaea="#1f78b4",k__Eukaryota_others="#8dd3c7",k__Viruses="#bda7c9")
+
+add_theme()',file=paste(pro_dir,'analysis','R_config.R',sep = '/'))
+
+print(paste0("Set `",pro_n,"` sucessfully! Open project at directory: `",pro_dir,"`"))
+}
+
+#' Add an analysis for a project
+#'
+#' @param analysis_n analysis name
+#' @param title file title
+#' @param author author
+#' @param theme 1~10
+#'
+#' @export
+#'
+add_analysis=function(analysis_n,title=analysis_n,author="Peng Chen",
+                      theme=1){
+  pro_n=list.files(pattern = "*.Rproj")
+  pro_n=gsub(".Rproj","",pro_n)
+  if(length(pro_n)!=1)stop("make sure there is a *.Rproj file in your `getwd()`")
+  print(paste0("Add ",analysis_n," for project ",pro_n))
+
+  #rmdls=list.files(pattern = "*.Rmd")%>%gsub(".Rmd","",.)
+  if(file.exists(paste0(analysis_n,".Rmd")))stop(paste0(analysis_n,".Rmd already exists!"))
+  file.create(paste0(analysis_n,".Rmd"))
+  if(dir.exists(analysis_n))stop(paste0(analysis_n," directory already exists!"))
+  dir.create(analysis_n)
+
+  my_bib="\nbibliography: My_Library.bib"
+  if(!file.exists("My_Library.bib"))my_bib=""
+
+  my_csl="\ncsl: ./my.csl"
+  if(!file.exists("my.csl"))my_csl="\nbiblio-style: apa"
+
+  output_theme=c("
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true","
+output:
+  rmdformats::html_clean:
+    toc: true
+    toc_depth: 3","
+output:
+  rmdformats::readthedown:
+    toc_depth: 3","
+output:
+  rmdformats::robobook:
+    toc_depth: 3","
+output:
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 3
+    theme: cayman","
+output:
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 3
+    theme: tactile","
+output:
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 3
+    theme: architect","
+output:
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 3
+    theme: leonids","
+output:
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 3
+    theme: hpstr","
+output:
+  tufte::tufte_html:
+    toc: true
+    toc_depth: 3")[theme]
+
+  cat('---
+title: "',title,'"
+author:
+  - ',author,'
+date: ',date(),my_bib,'
+link-citations: yes',my_csl,output_theme,'
+editor_options:
+  markdown:
+    wrap: 150
+---
+
+```{r setup, include = FALSE}
+path <- "',getwd(),'"
+knitr::opts_chunk$set(eval=T, #在块中运行代码(default = TRUE)
+                      highlight = T, #高亮显示
+                      echo = T, #是否在输出中包含源代码
+                      tidy=T, #是否整理代码
+                      error = T, #是否在输出中包含错误信息
+                      warning = F, #是否在输出中包含警告(default = TRUE)
+                      message  = F, #是否在输出中包含参考的信息
+                      cache=T, #是否缓存
+                      collapse = F #输出在一块里
+                      )
+knitr::opts_knit$set(root.dir = path)
+```
+安装并导入所有依赖包,数据导入:
+```{r import,echo=T, message=FALSE, warning=FALSE, results="hide"}
+source("./R_config.R")
+output="',analysis_n,'/"
+```
+# Header1
+```{r test,echo=T,fig.cap="Test fig"}
+a=data.frame(type=letters[1:6],num=c(1,3,3,4,5,10))
+gghuan(a)+scale_fill_manual(values=get_cols(6,"col3"))
+ggsave("',paste0(analysis_n,"/test.pdf"),'")
+```
+
+',file=paste0(analysis_n,".Rmd"),sep='')
+
+}
+
 
 #=========statistics==========
 
