@@ -319,6 +319,34 @@ remove.outliers <- function(x, factor = 1.5) {
 }
 
 
+#' Like uniq -c in shell
+#'
+#' @param plot_df two columns: first is type, second is number
+#'
+#' @export
+#'
+#' @examples
+#' count2(data.frame(group= c("A", "A", "B", "C", "C", "A"),value =c(2, 2, 2, 1, 3, 1)))
+count2=function(plot_df){
+  res=data.frame()
+  type_p=plot_df[1,1]
+  n=0
+  for (i in 1:nrow(plot_df)) {
+    type=plot_df[i,1]
+    if(type_p==type){
+      n=n+plot_df[i,2]
+    }
+    else{
+      res=rbind(res,data.frame(type=type_p,n=n))
+      n=plot_df[i,2]
+    }
+    type_p=type
+  }
+  res=rbind(res,data.frame(type=type_p,n=n))
+  colnames(res)=colnames(plot_df)[1:2]
+  res
+}
+
 #' Grepl applied on a data.frame
 #'
 #' @param pattern search pattern
@@ -354,7 +382,7 @@ grepl.data.frame<-function(pattern, x, ...) {
 #'
 #' @examples
 #' strsplit2(c("a;b","c;d"),";")
-strsplit2=function (x, split, ...)
+strsplit2=function (x, split,colnames=NULL, ...)
 {
   x <- as.character(x)
   n <- length(x)
@@ -365,7 +393,9 @@ strsplit2=function (x, split, ...)
     if (nc[i])
       out[i, 1:nc[i]] <- s[[i]]
   }
-  as.data.frame(out)
+  out=as.data.frame(out)
+  if(!is.null(colnames))colnames(out)=colnames
+  out
 }
 
 #' Read some special format file
@@ -1344,26 +1374,26 @@ gghuan<-function(tab,reorder=T,mode="1",topN=5,name=T,percentage=T){
   colnames(tab)[1]->g_name
   colnames(tab)<-c("type","n")
   plot_df<-tab%>%group_by(type)%>%
-    summarise(mean=mean(n))
+    summarise(sum=sum(n))
 
   if(reorder){
-    plot_df$type=reorder(plot_df$type,plot_df$mean)
-    plot_df<-arrange(plot_df,-mean)
+    plot_df$type=reorder(plot_df$type,plot_df$sum)
+    plot_df<-arrange(plot_df,-sum)
   }
 
   if(nrow(plot_df)>topN){
     plot_df=rbind(head(plot_df,topN),
                   data.frame(type="others",
-                             mean=sum(plot_df$mean[(topN+1):nrow(plot_df)])))
+                             sum=sum(plot_df$sum[(topN+1):nrow(plot_df)])))
 
     plot_df$type=relevel(factor(plot_df$type),"others")
   }
-  mutate(plot_df,fraction=mean/sum(mean))->plot_df
+  mutate(plot_df,fraction=sum/sum(sum))->plot_df
 
   plot_df$ymax = cumsum(plot_df$fraction)
   plot_df$ymin = c(0, head(plot_df$ymax, n = -1))
   if(percentage)plot_df$rate_per<-paste(as.character(round(100*plot_df$fraction,1)),'%',sep='')
-  else plot_df$rate_per=plot_df$mean
+  else plot_df$rate_per=plot_df$sum
   if(mode==3){
     #ggpie::ggpie
     labs=paste0(plot_df$type,"\n",plot_df$rate_per)
@@ -1389,6 +1419,54 @@ gghuan<-function(tab,reorder=T,mode="1",topN=5,name=T,percentage=T){
     theme(axis.ticks=element_blank()) + ## 去掉左上角的坐标刻度线
     theme(panel.border=element_blank(),legend.position = "none")## 去掉最外层的正方形边框
   return(plt)
+}
+
+#' gghuan2 for multi-columns
+#'
+#' @param tab a dataframe with hierarchical structure
+#' @param break default 0.2
+#' @param name label the name
+#' @param number label the number
+#' @param percentage label the percentage
+#' @param text_col defalut, black
+#'
+#' @return ggplot
+#' @export
+#'
+#' @examples
+#' data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)%>%gghuan2()
+gghuan2=function(tab=NULL,`break`=0.2,name=T,number=T,percentage=F,text_col="black"){
+  if(!is.numeric(tab[,ncol(tab)]))stop("the last column must be numeric")
+  if((`break`<0)|`break`>=1)stop("`break` should be [0,1)")
+  plot_df_res=data.frame()
+  for (i in seq_len(ncol(tab)-1)) {
+    plot_df=tab[,c(i,ncol(tab))]
+    colnames(plot_df)<-c("type","n")
+    count2(plot_df)->plot_df
+    mutate(plot_df,fraction=n/sum(n))->plot_df
+    plot_df$ymax = cumsum(plot_df$fraction)
+    plot_df$ymin = c(0, head(plot_df$ymax, n = -1))
+    plot_df$xmax=i+1
+    plot_df$xmin=i+`break`
+
+    plot_df$lab=""
+    if(percentage)plot_df$lab<-paste0(as.character(round(100*plot_df$fraction,1)),'%',plot_df$lab)
+    if(number) plot_df$lab=paste0(plot_df$n,"\n",plot_df$lab)
+    if(name)plot_df$lab=paste0(plot_df$type,"\n",plot_df$lab)
+
+    plot_df_res=rbind(plot_df_res,plot_df)
+  }
+
+  ggplot(data = plot_df_res, aes(fill = type, ymax = ymax, ymin = ymin, xmax = xmax, xmin = xmin)) +
+    geom_rect(alpha=0.8) +xlim(c(0, i+2)) +
+    coord_polar(theta = "y") +
+    geom_text(aes(x = (xmin+xmax)/2, y = ((ymin+ymax)/2),label = lab) ,size=3.6,col=text_col)+
+    theme_light() +
+    labs(x = "", y = "",fill="") +
+    theme(panel.grid=element_blank()) + ## 去掉白色外框
+    theme(axis.text=element_blank()) + ## 把图旁边的标签去掉
+    theme(axis.ticks=element_blank()) + ## 去掉左上角的坐标刻度线
+    theme(panel.border=element_blank(),legend.position = "none")## 去掉最外层的正方形边框
 }
 
 #' Fit a linear model and plot
