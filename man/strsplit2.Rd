@@ -4,7 +4,7 @@
 \alias{strsplit2}
 \title{Split Composite Names}
 \usage{
-strsplit2(x, split, ...)
+strsplit2(x, split, colnames = NULL, ...)
 }
 \arguments{
 \item{x}{character vector}

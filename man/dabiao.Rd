@@ -4,7 +4,7 @@
 \alias{dabiao}
 \title{Print with =}
 \usage{
-dabiao(str = "", n = 80, char = "=", mode = c("middle", "left", "right"))
+dabiao(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"))
 }
 \arguments{
 \item{str}{output strings}

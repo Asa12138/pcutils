@@ -418,7 +418,14 @@ read.file<-function(file,format=NULL,just_print=F){
   }
   else{
     if(is.null(format))format=tools::file_ext(file)
-    format=match.arg(format,c("blast","diamond","jpg","png","pdf","svg","fa","fasta","fna"))
+    format=match.arg(format,c("blast","diamond","jpg","png","pdf","svg","fa","fasta","fna","gff","gtf"))
+
+    if(format%in%c("gff","gtf")){
+      # 读取GFF文件
+      df <- read.delim(file, header = FALSE, stringsAsFactors = FALSE,comment.char = "#",
+                       col.names = c("seqid", "source", "feature", "start", "end", "score", "strand", "phase", "attributes"))
+      return(df)
+    }
 
     if(format%in%c("fa","fasta","fna")){
       df=read_fasta(file)
