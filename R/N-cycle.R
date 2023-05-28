@@ -19,7 +19,7 @@ N_path1=tibble::tribble(
        "NO2-",      "NH4+",                "ANRA",                "ANRA2",         3L,     "up",
        "NO2-",      "NH4+",                "DNRA",                "DNRA2",         2L,     "up",
          "NO",       "N2O",     "Denitrification",     "Denitrification3",         1L,   "down",
-         "NO",      "co-N",             "Anammox",             "Anammox1",         5L,   "down",
+         "NO",      "co-N",             "Anammox",             "Anammox1",         8L,   "down",
         "N2O",        "N2",     "Denitrification",     "Denitrification4",         1L,   "down",
          "N2",      "NH4+",          "N-fixation",           "N-fixation",         1L,   "down",
        "N2H4",        "N2",             "Anammox",             "Anammox2",         4L,   "down",
@@ -90,7 +90,7 @@ N_path1=tibble::tribble(
                "N-fixation",                 "nifK",  -1.4,   1.4,
                "N-fixation",                 "nifW",  -1.7,   1.4,
                  "Anammox1",                 "hzsA",  -0.8,  2.25,
-                 "Anammox1",                 "hzsB",  -1.2,   2.4,
+                 "Anammox1",                 "hzsB",  -1.2,  2.25,
                  "Anammox1",                 "hzsC",  -0.8,     2,
                  "Anammox2",                  "hdh",  -1.2,   1.2,
                  "Anammox2",                  "hzo",  -0.9,   1.2,
@@ -115,8 +115,8 @@ N_path1=tibble::tribble(
   N_genes=left_join(N_genes,N_path1%>%distinct(Pathway,Pathway2))
 }
 
-N_path1%>%dplyr::left_join(.,rbind(N_df,list(-2,2.5,NA,"co-N",NA))[,c("N","X","Y")],by=c("from"="N"))%>%rename(X1=X,Y1=Y)%>%
-  dplyr::left_join(.,rbind(N_df,list(-2,2.5,NA,"co-N",NA))[,c("N","X","Y")],by=c("to"="N"))%>%rename(X2=X,Y2=Y)->N_path
+N_path1%>%dplyr::left_join(.,rbind(N_df,list(-2,2,NA,"co-N",NA))[,c("N","X","Y")],by=c("from"="N"))%>%rename(X1=X,Y1=Y)%>%
+  dplyr::left_join(.,rbind(N_df,list(-2,2,NA,"co-N",NA))[,c("N","X","Y")],by=c("to"="N"))%>%rename(X2=X,Y2=Y)->N_path
 
 N_path%>%mutate(Y1=ifelse(up_down=="down",Y1+0.1,ifelse(up_down=="up",Y1-0.1,Y1)))%>%
   mutate(Y2=ifelse(up_down=="down",Y2+0.1,ifelse(up_down=="up",Y2-0.1,Y2)))->N_path
@@ -182,7 +182,9 @@ p1=ggplot()+geom_curve(aes(x = X1, y = Y1, xend = X2, yend = Y2,color = Pathway)
     geom_curve(aes(x = X1, y = Y1, xend = X2, yend = Y2,color = Pathway),linewidth=line_width,
                data = filter(N_path,curvature==4),curvature=0.2,arrow=arrow(length = unit(arrow_size, "inches"),type="closed"))+
     geom_curve(aes(x = X1, y = Y1, xend = X2, yend = Y2,color = Pathway),linewidth=line_width,
-               data = filter(N_path,curvature==5),curvature=0)+
+               data = filter(N_path,curvature==5),curvature=0.2)+
+    geom_curve(aes(x = X1, y = Y1, xend = X2, yend = Y2,color = Pathway),linewidth=line_width,
+               data = filter(N_path,curvature==8),curvature=-0.2)+
     scale_color_manual(name="Pathway",values = path_col,guide=guide_legend(nrow=4))+ylim(-2,3.5)+
     theme_pubr()+scale_x_reverse(breaks =(+5):(-3),labels = c(N_df$`oxidation state`[1:9]))
 

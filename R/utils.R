@@ -398,6 +398,26 @@ strsplit2=function (x, split,colnames=NULL, ...)
   out
 }
 
+#' explode a dataframe if there are split charter in one column
+#'
+#' @param df
+#' @param colummn
+#' @param split
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' df=data.frame(a=1:2,b=c("a,b","c"),c=3:4)
+#' explode(df,"b",",")
+explode=function(df,colummn,split=","){
+  lib_ps("tidyr","dplyr")
+  df=as_tibble(df)
+  df[[colummn]]=strsplit(df[,colummn,drop=T],split = split)
+  unnest(df,all_of(colummn))%>%as.data.frame()
+}
+
+
 #' Read some special format file
 #'
 #' @param file file path
@@ -1621,14 +1641,15 @@ my_cat<-function(mode=1){
     lib_ps("RImagePalette","png")
     p1=png::readPNG(system.file("data/smallguodong.ppp",package = "pcutils"))
     g <- grid::rasterGrob(p1, interpolate=TRUE)
-    ggplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
+    p=ggplot() +annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +theme_void()
   }
 
   if(mode==2){  lib_ps("ggimage","ggplot2")
   t<-seq(0, 2*pi, 0.08)
   d=data.frame(x=2*(sin(t)-0.5*sin(2*t)),y=2*(cos(t)-0.5*cos(2*t)))
-  ggplot(d, aes(x, y)) +
+  p=ggplot(d, aes(x, y)) +
     ggimage::geom_image(image = system.file("data/smallguodong.ppp",package = "pcutils"), size = .05)+theme_void()}
+  p
 }
 
 
@@ -1691,7 +1712,6 @@ if(F){
     geom_node_point(aes(filter = igraph::degree(ttt, mode = 'out') == 0),
                     color = 'steelblue', size = 1) +
     ggforce::theme_no_axes()
-
 }
 
 #' My Sankey plot
@@ -1707,7 +1727,7 @@ if(F){
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
 #' my_sankey(test)->p
 #' plotpdf(p)
-my_sankey=function(test,mode=c("sankeyD3","ggsankey"),...){
+my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
   mode=match.arg(mode,c("sankeyD3","ggsankey"))
   lib_ps("dplyr")
   nc=ncol(test)
@@ -1758,15 +1778,16 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),...){
       }
     else df$label=df$node
 
-    p=ggplot(df, aes(x = x, next_x = next_x, node = node, next_node = next_node, label = label,value=value)) +
-      geom_sankey(aes(fill = factor(node)),flow.alpha = .6,node.color = "gray30",space = 1) +
+    p=ggplot(df, aes(x = x, next_x = next_x, node = node, next_node = next_node, label = label,fill = factor(node),value=value)) +
+      geom_sankey(flow.alpha = .6,node.color = "gray30",space = space) +
       scale_fill_manual(values = get_cols(nlevels(factor(df$node))))+
-      geom_sankey_text(size = 3, color = "black",space = 1) +
+      geom_sankey_text(size = 3, color = "black",space = space) +
       theme_sankey(base_size = 18) +
       labs(x = NULL) +
       theme(legend.position = "none",plot.title = element_text(hjust = .5))
     return(p)
   }
+
 }
 
 #' My cicro plot
