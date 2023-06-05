@@ -5,3 +5,4 @@
 .Rhistory
 README.md
 images/
+^data-raw$

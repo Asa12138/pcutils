@@ -33,7 +33,7 @@ copy_vector=function(vec){
 }
 
 
-#' Library packages or install
+#' Attach packages or install packages have not benn installed
 #'
 #' @param p_list a vector of packages list
 #'
@@ -48,6 +48,7 @@ lib_ps<-function(p_list,...,all_yes=F){
     "sankeyD3"="fbreitwieser/sankeyD3",
     "pctax"="Asa12138/pctax",
     "MetaNet"="Asa12138/MetaNet",
+    "ReporterScore"="Asa12138/ReporterScore",
     "ggcor"="Github-Yilei/ggcor",
     "chorddiag"="mattflor/chorddiag",
     "inborutils"="inbo/inborutils",
@@ -400,9 +401,9 @@ strsplit2=function (x, split,colnames=NULL, ...)
 
 #' explode a dataframe if there are split charter in one column
 #'
-#' @param df
-#' @param colummn
-#' @param split
+#' @param df dataframe
+#' @param colummn colummn
+#' @param split split string
 #'
 #' @return
 #' @export
@@ -1014,6 +1015,20 @@ toXY <- function(geo){
 
 
 #=========some plot===========
+
+#' Scale a legend size
+#'
+#' @param scale default: 1.
+#'
+#' @export
+#'
+legend_size=function(scale=1){
+  theme(legend.title = element_text(size = 12*scale),
+        legend.text = element_text(size=10*scale),
+        legend.key.size = unit(7*scale,"mm"))
+}
+
+
 #' Plot a stack plot
 #'
 #' @param otutab otutab
@@ -1027,6 +1042,8 @@ toXY <- function(geo){
 #' @param flow should plot a flow plot?
 #' @param others should plot others?
 #' @param pmode fill/stack/dodge
+#' @param stack_order the order of stack fill
+#' @param number show the number?
 #'
 #' @export
 #'
@@ -1043,17 +1060,18 @@ toXY <- function(geo){
 #'   coord_flip()+ scale_y_continuous(expand=c(0,0)) +xlab("")->pp2
 #' pp2%>%aplot::insert_left(p1, width=.3)
 #'
-stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=F,relative=T,
-                     style = "group", sorted = "abundance",flow=F,others=T,pmode='stack',legend_title=NULL,number=F) {
+stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=F,relative=T,stack_order=NULL,legend_title = "",
+                     style = "group", sorted = "abundance",flow=F,others=T,pmode='stack',number=F,format_params=list(digits=3)) {
   #用来画物种堆积图，适合处理各种OTU类似数据，输入metatab作为分组依据。style可以选择group或者sample
   #others=T用来选择是否画出除TopN外的其他，pmode可选择fill/stack/dodge
   lib_ps("ggplot2", "reshape2","scales")
 
-  if(!is.null(metadata)){idx = rownames(metadata) %in% colnames(otutab)
-  metadata = metadata[idx, , drop = F]
-  otutab = otutab[, rownames(metadata),drop=F]
-  sampFile = as.data.frame(metadata[, groupID], row.names = row.names(metadata))
-  colnames(sampFile)[1] = "group"
+  if(!is.null(metadata)){
+    idx = rownames(metadata) %in% colnames(otutab)
+    metadata = metadata[idx, , drop = F]
+    otutab = otutab[, rownames(metadata),drop=F]
+    sampFile = as.data.frame(metadata[, groupID], row.names = row.names(metadata))
+    colnames(sampFile)[1] = "group"
   }
   else sampFile =data.frame(row.names =colnames(otutab),group=colnames(otutab))
 
@@ -1070,7 +1088,6 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
 
     mean_sort$Taxonomy = rownames(mean_sort)
     data_all = as.data.frame(melt(mean_sort, id.vars = c("Taxonomy")))
-    data_all<-mutate(data_all,variable=factor(variable,levels = unique(sampFile$group)))
     if(relative){
       data_all <- data_all  %>%
         group_by(variable, Taxonomy) %>%
@@ -1082,9 +1099,15 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
     if (sorted == "abundance") {
       data_all$Taxonomy = factor(data_all$Taxonomy, levels = rownames(mean_sort))
     }
-
+    if(!is.null(stack_order))data_all$Taxonomy = factor(data_all$Taxonomy, levels = stack_order)
+    if(shunxu==1)data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy==rownames(mean_sort)[1])%>%
+                                                                                arrange(value)%>%as.data.frame())[,1]%>%as.character()))
+    else if(shunxu%in%data_all$Taxonomy)data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy==shunxu)%>%
+                                                                                      arrange(value)%>%as.data.frame())[,1]%>%as.character()))
     data_all = merge(data_all, sampFile, by.x = "variable",
                      by.y = "row.names")
+    data_all<-mutate(data_all,group=factor(group,levels = unique(sampFile$group)))
+
     if (!others){
       data_all<-data_all[data_all$Taxonomy!='Other',]
     }
@@ -1112,15 +1135,15 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
     }
     if(relative)p=p+scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
     else p=p+ylab("Counts")
-    if(number)p=p+geom_text(aes(label=value),position = pmode)
-    p+guides(fill=guide_legend(title = legend_title))
+    if(number)p=p+geom_text(aes(label=do.call(format,append(list(value),format_params))),position = pmode)
+    p+guides(fill=guide_legend(title = groupID))
   }
 
   else {
     mat_t = t(mean_sort)
     aggregate(mat_t,by=list(sampFile$group),mean)%>%melt(.,id=1)->data_all
     colnames(data_all)<-c('variable','Taxonomy','value')
-    data_all<-mutate(data_all,variable=factor(variable,levels = unique(sampFile$group)))
+    #data_all<-mutate(data_all,variable=factor(variable,levels = unique(sampFile$group)))
 
     data_all$value = as.numeric(data_all$value)
     as.factor(data_all$variable)->data_all$variable
@@ -1138,9 +1161,10 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
     if (sorted == "abundance") {
       data_all$Taxonomy = factor(data_all$Taxonomy, levels = rownames(mean_sort))
     }
+    if(!is.null(stack_order))data_all$Taxonomy = factor(data_all$Taxonomy, levels = stack_order)
     if(shunxu==1)data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy==rownames(mean_sort)[1])%>%
                                                                                 arrange(value)%>%as.data.frame())[,1]%>%as.character()))
-    if(shunxu=='other')data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy=='Other')%>%
+    else if(shunxu%in%data_all$Taxonomy)data_all<-mutate(data_all,variable=factor(variable,levels = (data_all%>%filter(Taxonomy==shunxu)%>%
                                                                                       arrange(value)%>%as.data.frame())[,1]%>%as.character()))
     if(!flow){
       p = ggplot(data_all, aes(x = variable, y = value, fill = Taxonomy)) +
@@ -1157,7 +1181,7 @@ stackplot<-function (otutab, metadata=NULL, topN = 8, groupID = "Group", shunxu=
 
     if(relative)p=p+scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
     else p=p+ylab("Counts")
-    if(number)p=p+geom_text(aes(label=value),position = pmode)
+    if(number)p=p+geom_text(aes(label=do.call(format,append(list(value),format_params))),position = pmode)
     p+guides(fill=guide_legend(title = legend_title))
   }
 
@@ -1350,10 +1374,15 @@ group_box<-function(tab,group=NULL,metadata=NULL,mode=1,facet=T,
   else {ylab=colnames(tab)[1];p=p+ylab(ylab)}
 
 #p-value?
-  if(p_value1) p=p+stat_compare_means(show.legend = FALSE,label.x = 1,label.y.npc = 0.95)
-  if(p_value2){
+  if(is.character(p_value1)|p_value1==T) {
+    if(p_value1==T)p_value1=NULL
+    md%>%summarise(low=min(value),high=max(value))->aa
+    p=p+stat_compare_means(show.legend = FALSE,method = p_value1,label.x = 1,label.y.npc = 1)
+  }
+  if(is.character(p_value2)|p_value2==T){
+    if(p_value2==T)p_value2=NULL
     if(is.null(comparisons)){
-      p=p+stat_compare_means(show.legend = FALSE,
+      p=p+stat_compare_means(show.legend = FALSE,method =p_value2 ,
                             comparisons = combn(levels(md$group),2)%>%split(col(.)),...)
     }
     else{
@@ -1730,6 +1759,7 @@ if(F){
 my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
   mode=match.arg(mode,c("sankeyD3","ggsankey"))
   lib_ps("dplyr")
+  test=as.data.frame(test)
   nc=ncol(test)
   if(nc<3)stop("as least 3-columns dataframe")
   if(!is.numeric(test[,nc]))stop("the last column must be numeric")
