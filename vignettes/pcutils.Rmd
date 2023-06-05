@@ -1,14 +1,39 @@
+---
+title: "pcutils"
+output:
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 3
+    theme: tactile
+vignette: >
+  %\VignetteIndexEntry{pcutils}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup,include=FALSE}
+library(pcutils)
+```
+
 # pcutils
 
 `pcutils` contains many useful tools or functions for statistics or visualization. I always use this package for productivity.
 
 ## install
 
-```         
+```{r eval=FALSE}
 install.packages("devtools")
 devtools::install_github('Asa12138/pcutils',dependencies=T)
 library(pcutils)
 ```
+
 ## project
 
 -   `make_project` build a R project for me
@@ -57,7 +82,10 @@ library(pcutils)
 
 ## Visualization
 
-![](inst/images/pcutils1.png)
+```{r echo=FALSE}
+fname <- system.file("images/pcutils1.png", package="pcutils")
+knitr::include_graphics(fname)
+```
 
 -   `stackplot` plot a bar plot or stack bar plot easily
 
@@ -71,7 +99,11 @@ library(pcutils)
 
 -   `china_map` plot a china map
 
-![](inst/images/pcutils2.png)
+```{r echo=FALSE}
+fname <- system.file("images/pcutils2.png", package="pcutils")
+knitr::include_graphics(fname)
+```
+
 
 -   `my_sankey` plot a sankey plot
 

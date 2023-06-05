@@ -1692,7 +1692,7 @@ my_cat<-function(mode=1){
 #' @examples
 #' cbind(taxonomy,num=rowSums(otutab))[1:20,]->test
 #' df2net(test)->ttt
-#' library(igraph)
+#' require(igraph)
 #' plot(ttt,vertex.color=MetaNet:::tidai(V(ttt)$level,get_cols(7)),layout=layout_as_tree(ttt),vertex.size=mmscale(V(ttt)$weight,5,13))
 df2net=function(test){
   if(!is.numeric(test[,ncol(test)]))test$num=1
@@ -1706,13 +1706,13 @@ df2net=function(test){
 
   #merge to two columns
   links=data.frame()
-  nodes=data.frame(name=unique(test[,1]),level=colnames(test)[1],weight=aggregate(test[,ncol(test)],by=list(test[,1]),sum)[["x"]])
+  nodes=data.frame(name=unique(test[,1]),level=colnames(test)[1],weight=stats::aggregate(test[,ncol(test)],by=list(test[,1]),sum)[["x"]])
   for (i in 1:(nc-2)){
     test[,c(i,i+1,nc)]->tmp
     colnames(tmp)=c("from","to","weight")
     tmp=group_by(tmp,from,to)%>%summarise(weight=sum(weight),.groups="keep")
     links=rbind(links,tmp)
-    nodes=rbind(nodes,data.frame(name=unique(tmp$to),level=colnames(test)[i+1],weight=aggregate(tmp$weight,by=list(tmp$to),sum)[["x"]]))
+    nodes=rbind(nodes,data.frame(name=unique(tmp$to),level=colnames(test)[i+1],weight=stats::aggregate(tmp$weight,by=list(tmp$to),sum)[["x"]]))
   }
   igraph::graph_from_data_frame(as.data.frame(links),vertices = nodes)
 }

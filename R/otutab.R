@@ -42,3 +42,13 @@ NULL
 #'}
 #'
 NULL
+
+#'@title My cat.
+#'@description my little cat named Guo Dong which drawn by my girlfriend.
+#'
+#'@docType data
+#'@name little_guodong
+#'@usage otutab
+#'@format rastergrob object.
+#'
+NULL

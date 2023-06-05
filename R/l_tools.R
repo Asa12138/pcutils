@@ -502,6 +502,33 @@ grepl.data.frame <- function(pattern, x, ...) {
   y
 }
 
+#' Group your data
+#'
+#' @param otutab dataframe
+#' @param group group vector
+#' @param margin 1 for row and 2 for column(default: 2)
+#' @param act do (default: mean)
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' hebing(otutab,metadata$Group)
+hebing<-function(otutab,group,margin=2,act='mean'){
+  if (margin==2) {
+    stats::aggregate(t(otutab),FUN=act,by=list(factor(group)))->a
+    a[,-1]->a
+    data.frame(t(a))->a
+    levels(factor(group))->colnames(a)
+  }
+  else{
+    stats::aggregate(otutab,FUN=act,by=list(factor(group)))->a
+    a[,-1]->a
+    levels(factor(group))->rownames(a)
+  }
+  return(a)
+}
+
 #' Split Composite Names
 #'
 #' @param x character vector
