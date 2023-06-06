@@ -694,7 +694,7 @@ read_fasta <- function(fasta_file) {
 #' @export
 write_fasta <- function(df, file_path) {
   file_conn <- file(file_path, "w")
-
+  df=as.data.frame(df)
   for (i in 1:nrow(df)) {
     sequence_id <- df[i, 1]
     sequence <- df[i, 2]
