@@ -20,5 +20,6 @@ ggplot
 Pie plot
 }
 \examples{
+data(otutab)
 tax_pie(otutab,topN = 7)
 }

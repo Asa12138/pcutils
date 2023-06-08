@@ -9,11 +9,12 @@ install.packages("devtools")
 devtools::install_github('Asa12138/pcutils',dependencies=T)
 library(pcutils)
 ```
+
 ## project
 
--   `make_project` build a R project for me
+-   `make_project` build a R project
 
--   `add_analysis` create a specific Rmd file for me
+-   `add_analysis` create a specific Rmd file
 
 ## little tools
 
@@ -57,7 +58,7 @@ library(pcutils)
 
 ## Visualization
 
-![](inst/images/pcutils1.png)
+![](images/pcutils1.png)
 
 -   `stackplot` plot a bar plot or stack bar plot easily
 
@@ -71,7 +72,7 @@ library(pcutils)
 
 -   `china_map` plot a china map
 
-![](inst/images/pcutils2.png)
+![](images/pcutils2.png)
 
 -   `my_sankey` plot a sankey plot
 

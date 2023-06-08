@@ -36,9 +36,9 @@ library(pcutils)
 
 ## project
 
--   `make_project` build a R project for me
+-   `make_project` build a R project
 
--   `add_analysis` create a specific Rmd file for me
+-   `add_analysis` create a specific Rmd file
 
 ## little tools
 
@@ -82,11 +82,6 @@ library(pcutils)
 
 ## Visualization
 
-```{r echo=FALSE}
-fname <- system.file("images/pcutils1.png", package="pcutils")
-knitr::include_graphics(fname)
-```
-
 -   `stackplot` plot a bar plot or stack bar plot easily
 
 -   `cor_plot` plot a correlation plot
@@ -98,12 +93,6 @@ knitr::include_graphics(fname)
 -   `my_lm` fit a linear model and plot
 
 -   `china_map` plot a china map
-
-```{r echo=FALSE}
-fname <- system.file("images/pcutils2.png", package="pcutils")
-knitr::include_graphics(fname)
-```
-
 
 -   `my_sankey` plot a sankey plot
 

@@ -7,9 +7,6 @@
 \format{
 rastergrob object.
 }
-\usage{
-otutab
-}
 \description{
 my little cat named Guo Dong which drawn by my girlfriend.
 }

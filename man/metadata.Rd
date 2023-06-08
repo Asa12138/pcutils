@@ -12,9 +12,6 @@ contains an otutab, metadata and a taxonomy table.
 \item{taxonomy}{contians taxonomy table}
 }
 }
-\usage{
-otutab
-}
 \description{
 an otutab, metadata and a taxonomy table.
 }

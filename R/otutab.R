@@ -3,7 +3,6 @@
 #'
 #'@docType data
 #'@name otutab
-#'@usage otutab
 #'@format contains an otutab, metadata and a taxonomy table.
 #'\describe{
 #' \item{otutab}{contians otutable rawdata}
@@ -18,7 +17,6 @@ NULL
 #'
 #'@docType data
 #'@name metadata
-#'@usage otutab
 #'@format contains an otutab, metadata and a taxonomy table.
 #'\describe{
 #' \item{otutab}{contians otutable rawdata}
@@ -33,7 +31,6 @@ NULL
 #'
 #'@docType data
 #'@name taxonomy
-#'@usage otutab
 #'@format contains an otutab, metadata and a taxonomy table.
 #'\describe{
 #' \item{otutab}{contians otutable rawdata}
@@ -48,7 +45,6 @@ NULL
 #'
 #'@docType data
 #'@name little_guodong
-#'@usage otutab
 #'@format rastergrob object.
 #'
 NULL

@@ -33,6 +33,7 @@ match_df <- function(otutab, metadata) {
 #' venn(aa, mode = "venn")
 #' venn(aa, mode = "venn2", type = "ChowRuskey")
 #' venn(aa, mode = "upset")
+#' data(otutab)
 #' venn(otutab, mode = "flower")
 venn <- function(...) {
   UseMethod("venn")
@@ -953,7 +954,8 @@ my_cat <- function(mode = 1) {
 #' @export
 #'
 #' @examples
-#'tax_pie(otutab,topN = 7)
+#' data(otutab)
+#' tax_pie(otutab,topN = 7)
 tax_pie<-function(otutab,topN=6,...){
   lib_ps("ggpubr",library = F)
   if(is.vector(otutab)){
@@ -980,6 +982,7 @@ tax_pie<-function(otutab,topN=6,...){
 #' @export
 #'
 #' @examples
+#' data(otutab)
 #' tax_radar(otutab[1:20,1:3])
 tax_radar<-function(otu_time,...){
   lib_ps("ggradar","scales",library = F)
@@ -995,7 +998,8 @@ tax_radar<-function(otu_time,...){
 #' @export
 #'
 #' @examples
-#'tax_wordcloud(taxonomy$Genus)
+#' data(otutab)
+#' tax_wordcloud(taxonomy$Genus)
 tax_wordcloud<-function(str_vector){
   lib_ps("wordcloud2",library = F)
   remove_unclassfied<-\ (taxdf) {
@@ -1058,6 +1062,7 @@ triangp<-function(otutab,group,scale=F,class=NULL){
 #' @examples
 #' data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)%>%
 #'    my_sankey(.,"gg",num=TRUE)
+#' data(otutab)
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
 #' my_sankey(test)->p
 my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
@@ -1196,7 +1201,6 @@ my_synteny<-function(){
   rsvg::rsvg_svg("chromosome.svg",file = "chromosome.svg")
   read.file("chromosome.svg")
 }
-
 #=======some tips========
 
 #' How to use parallel
@@ -1210,7 +1214,7 @@ how_to_use_parallel=function(){
   }
   {
   if(threads>1){
-    lib_ps("foreach","doSNOW")
+    pcutils::lib_ps("foreach","doSNOW","snow")
     pb <- utils::txtProgressBar(max =reps, style = 3)
     opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
     cl <- snow::makeCluster(threads)
@@ -1221,12 +1225,14 @@ how_to_use_parallel=function(){
                              }
     snow::stopCluster(cl)
     gc()
+    pcutils::del_ps("doSNOW","snow","foreach")
   }
   else {
     res <-lapply(1:reps, loop)
   }}
   #simplify method
   res=do.call(c,res)
+  pcutils::del_ps("foreach","doSNOW")
 ',"\n")
 }
 

@@ -15,5 +15,6 @@ tax_radar(otu_time, ...)
 Radar plot
 }
 \examples{
+data(otutab)
 tax_radar(otutab[1:20,1:3])
 }

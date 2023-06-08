@@ -199,6 +199,7 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #' @export
 #'
 #' @examples
+#' data(otutab)
 #' sanxian(otutab)
 sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...) {
   if (nrow(df) > nrow) df <- df[1:nrow, , drop = F]
@@ -690,9 +691,10 @@ read_fasta <- function(fasta_file) {
 #'
 #' @param df dataframe
 #' @param file_path output file path
+#' @param str_per_line how many base or animo acid in one line, if NULL, one sequence in one line.
 #'
 #' @export
-write_fasta <- function(df, file_path) {
+write_fasta <- function(df, file_path, str_per_line=70) {
   file_conn <- file(file_path, "w")
   df=as.data.frame(df)
   for (i in 1:nrow(df)) {
@@ -700,16 +702,21 @@ write_fasta <- function(df, file_path) {
     sequence <- df[i, 2]
 
     writeLines(paste0(">", sequence_id), file_conn)
-
-    split_sequence <- strsplit(sequence, split = "")
-    split_sequence <- unlist(split_sequence)
-    num_chunks <- ceiling(length(split_sequence) / 70)
-    for (j in 1:num_chunks) {
-      start_index <- (j - 1) * 70 + 1
-      end_index <- min(j * 70, length(split_sequence))
-      chunk <- paste(split_sequence[start_index:end_index], collapse = "")
-      writeLines(chunk, file_conn)
-    }
+    if(is.null(str_per_line)){
+      writeLines(sequence, file_conn)
+    } else if(str_per_line>0){
+      split_sequence <- strsplit(sequence, split = "")
+      split_sequence <- unlist(split_sequence)
+      num_chunks <- ceiling(length(split_sequence) / str_per_line)
+      for (j in 1:num_chunks) {
+        start_index <- (j - 1) * str_per_line + 1
+        end_index <- min(j * str_per_line, length(split_sequence))
+        chunk <- paste(split_sequence[start_index:end_index], collapse = "")
+        writeLines(chunk, file_conn)
+      }} else{
+        close(file_conn)
+        stop("str_per_line should be NULL or number bigger than 1.")
+      }
   }
   close(file_conn)
 }
