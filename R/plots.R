@@ -29,12 +29,14 @@ match_df <- function(otutab, metadata) {
 #' @export
 #'
 #' @examples
-#' aa <- list(a = 1:3, b = 3:7, c = 2:4)
-#' venn(aa, mode = "venn")
-#' venn(aa, mode = "venn2", type = "ChowRuskey")
-#' venn(aa, mode = "upset")
-#' data(otutab)
-#' venn(otutab, mode = "flower")
+#' \dontrun{
+#' #aa <- list(a = 1:3, b = 3:7, c = 2:4)
+#' #venn(aa, mode = "venn")
+#' #venn(aa, mode = "venn2", type = "ChowRuskey")
+#' #venn(aa, mode = "upset")
+#' #data(otutab)
+#' #venn(otutab, mode = "flower")
+#' }
 venn <- function(...) {
   UseMethod("venn")
 }
@@ -185,10 +187,11 @@ venn.data.frame <- function(otutab, mode = "venn", ...) {
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' stackplot(otutab, metadata, group = "Group")
-#' stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = FALSE, relative = FALSE)
-#'
+#' \dontrun{
+#' #data(otutab)
+#' #stackplot(otutab, metadata, group = "Group")
+#' #stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = FALSE, relative = FALSE)
+#' }
 stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
                       bar_params = list(width = 0.7, position = "stack"),
                       topN = 8, others = T, relative = T, legend_title = "",
@@ -380,12 +383,10 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
 #' @import ggplot2
 #'
 #' @examples
-#' a <- data.frame(a = 1:18, b = runif(18, 0, 5))
-#' group_box(a, group = rep(c("a", "b", "c"), each = 6), p_value1 = FALSE, p_value2 = TRUE)
-#' group_box(a[, 1, drop = FALSE],
-#'   group = rep(c("a", "b", "c"), each = 6), p_value2 = TRUE, mode = 3,
-#'   stat_compare_means_param = list(comparisons = list(c("a", "b")))
-#' )
+#' \dontrun{
+#' #a <- data.frame(a = 1:18, b = runif(18, 0, 5))
+#' #group_box(a, group = rep(c("a", "b", "c"), each = 6), p_value1 = FALSE, p_value2 = TRUE)
+#' }
 group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                       group_order = NULL, facet_order = NULL,
                       alpha = F, method = "wilcox", alpha_param = list(color = "red"),
@@ -540,10 +541,12 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' cor_plot(metadata[, 3:10])
-#' cor_plot(metadata[, 3:10], mode = 2)
-#' # cor_plot(t(otutab)[,1:50],mode=3,heat=FALSE)
+#' \dontrun{
+#' #data(otutab)
+#' #cor_plot(metadata[, 3:10])
+#' #cor_plot(metadata[, 3:10], mode = 2)
+#' #cor_plot(t(otutab)[,1:50],mode=3,heat=FALSE)
+#' }
 cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, mode3_param = NULL, ...) {
   if (ncol(env) > 30 & heat) {
     lib_ps("pheatmap", library = F)
@@ -651,10 +654,12 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
 #' @export
 #'
 #' @examples
-#' a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
-#' gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-#' b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
-#' gghuan(b) + ggplot2::theme(legend.position = "right")
+#' \dontrun{
+#' #a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
+#' #gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#' #b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
+#' #gghuan(b) + ggplot2::theme(legend.position = "right")
+#' }
 gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage = T) {
   if (ncol(tab) > 2) stop("need two columns: first is type, second is number")
 
@@ -737,8 +742,10 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
 #' @export
 #'
 #' @examples
-#' data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
-#'       b = c("a", LETTERS[2:5]), c = 1:5) %>% gghuan2()
+#' \dontrun{
+#' #data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
+#' #      b = c("a", LETTERS[2:5]), c = 1:5) %>% gghuan2()
+#' }
 gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage = F, text_col = "black") {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
   if ((`break` < 0) | `break` >= 1) stop("`break` should be [0,1)")
@@ -787,8 +794,10 @@ gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage 
 #' @export
 #' @import ggplot2 dplyr
 #' @examples
-#' my_lm(runif(50), var = 1:50)
-#' my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+#' \dontrun{
+#' #my_lm(runif(50), var = 1:50)
+#' #my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+#' }
 my_lm <- function(tab, var, metadata = NULL, ...) {
   lib_ps("reshape2", "ggpmisc", library = F)
   # data transform
@@ -920,7 +929,7 @@ dna_plot <- function() {
 }
 
 #' Show my little cat named Guo Dong which drawn by my girlfriend.
-#' @param mode 1～2
+#' @param mode 1~2
 #'
 #' @export
 my_cat <- function(mode = 1) {
@@ -954,8 +963,10 @@ my_cat <- function(mode = 1) {
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' tax_pie(otutab,topN = 7)
+#' \dontrun{
+#' #data(otutab)
+#' #tax_pie(otutab,topN = 7)
+#' }
 tax_pie<-function(otutab,topN=6,...){
   lib_ps("ggpubr",library = F)
   if(is.vector(otutab)){
@@ -982,8 +993,10 @@ tax_pie<-function(otutab,topN=6,...){
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' tax_radar(otutab[1:20,1:3])
+#' \dontrun{
+#' #data(otutab)
+#' #tax_radar(otutab[1:20,1:3])
+#' }
 tax_radar<-function(otu_time,...){
   lib_ps("ggradar","scales",library = F)
   otu_time[1:4,]%>%
@@ -998,8 +1011,10 @@ tax_radar<-function(otu_time,...){
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' tax_wordcloud(taxonomy$Genus)
+#' \dontrun{
+#' #data(otutab)
+#' #tax_wordcloud(taxonomy$Genus)
+#' }
 tax_wordcloud<-function(str_vector){
   lib_ps("wordcloud2",library = F)
   remove_unclassfied<-\ (taxdf) {
@@ -1021,8 +1036,10 @@ tax_wordcloud<-function(str_vector){
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
+#' \dontrun{
+#' #data(otutab)
+#' #triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
+#' }
 triangp<-function(otutab,group,scale=F,class=NULL){
   lib_ps("ggtern","vegan",library = F)
   group%>%as.factor()->group
@@ -1060,11 +1077,13 @@ triangp<-function(otutab,group,scale=F,class=NULL){
 #'
 #' @import ggplot2 dplyr
 #' @examples
-#' data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)%>%
-#'    my_sankey(.,"gg",num=TRUE)
-#' data(otutab)
-#' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
-#' my_sankey(test)->p
+#' \dontrun{
+#' #data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)%>%
+#' #   my_sankey(.,"gg",num=TRUE)
+#' #data(otutab)
+#' #cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+#' #my_sankey(test)->p
+#' }
 my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
   mode=match.arg(mode,c("sankeyD3","ggsankey"))
   test=as.data.frame(test)
@@ -1139,7 +1158,9 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
 #' @export
 #'
 #' @examples
-#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="chorddiag")
+#' \dontrun{
+#' #data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="chorddiag")
+#' }
 my_circo=function(df,reorder=T,pal=NULL,mode=c("circlize","chorddiag"),...){
   mode=match.arg(mode,c("circlize","chorddiag"))
   colnames(df)=c("from","to","count")

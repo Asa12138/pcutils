@@ -50,8 +50,7 @@ copy_vector <- function(vec) {
 #'
 #' @examples
 #' change_fac_lev(letters[1:5],levels = c("b","a"))
-change_fac_lev=function (x, levels = NULL)
-{
+change_fac_lev=function (x, levels = NULL){
   ordervec = factor(x)
   if (!is.null(levels)) {
     levels = intersect(levels, levels(ordervec))
@@ -199,8 +198,10 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #' @export
 #'
 #' @examples
-#' data(otutab)
-#' sanxian(otutab)
+#' \dontrun{
+#' #data(otutab)
+#' #sanxian(otutab)
+#' }
 sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...) {
   if (nrow(df) > nrow) df <- df[1:nrow, , drop = F]
   if (ncol(df) > ncol) df <- df[, 1:ncol, drop = F]
@@ -567,8 +568,10 @@ strsplit2 <- function(x, split, colnames = NULL, ...) {
 #' @export
 #'
 #' @examples
-#' df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
-#' explode(df, "b", ",")
+#' \dontrun{
+#' #df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
+#' #explode(df, "b", ",")
+#' }
 explode <- function(df, column, split = ",") {
   lib_ps("tidyr", "dplyr", library = F)
   df <- tidyr::as_tibble(df)

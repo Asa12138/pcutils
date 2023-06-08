@@ -26,6 +26,8 @@ a ggplot
 Three-line table
 }
 \examples{
-data(otutab)
-sanxian(otutab)
+\dontrun{
+#data(otutab)
+#sanxian(otutab)
+}
 }

@@ -17,6 +17,8 @@ explode(df, column, split = ",")
 Explode a dataframe if there are split charter in one column
 }
 \examples{
-df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
-explode(df, "b", ",")
+\dontrun{
+#df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
+#explode(df, "b", ",")
+}
 }

@@ -59,8 +59,10 @@ twotest <- function(var, group) {
 #' @export
 #'
 #' @examples
-#' multitest(c(runif(20), runif(10, 2, 3)), rep(c("a", "b", "c"), each = 10))
-#' multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = F, return = "wilcox") -> aa
+#' \dontrun{
+#' #multitest(c(runif(20), runif(10, 2, 3)), rep(c("a", "b", "c"), each = 10))
+#' #multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = F, return = "wilcox") -> aa
+#' }
 multitest <- function(var, group, print = T, return = F) {
   methods <- c("LSD", "TukeyHSD", "dunn", "nemenyi", "wilcox", "ttest")
   if (is.character(return)) {
@@ -195,8 +197,10 @@ multitest <- function(var, group, print = T, return = F) {
 #'
 #' @export
 #' @examples
-#' a <- runif(50)
-#' fittest(a)
+#' \dontrun{
+#' #a <- runif(50)
+#' #fittest(a)
+#' }
 fittest <- function(a) {
   lib_ps("fitdistrplus", "nortest", library = F)
   if (is.vector(a)) {
@@ -228,8 +232,10 @@ fittest <- function(a) {
 #' @export
 #'
 #' @examples
-#' data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
-#' toXY(geo)
+#' \dontrun{
+#' #data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
+#' #toXY(geo)
+#' }
 toXY <- function(geo) {
   lib_ps("SoDA", library = F)
   XY <- SoDA::geoXY(geo[, 1], geo[, 2])

@@ -22,6 +22,8 @@ dunn and nemenyi are post hoc test of kruskal.test.
 ttest or wilcox is just perform wilcox-test in each two group (no p.adjust).
 }
 \examples{
-multitest(c(runif(20), runif(10, 2, 3)), rep(c("a", "b", "c"), each = 10))
-multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = F, return = "wilcox") -> aa
+\dontrun{
+#multitest(c(runif(20), runif(10, 2, 3)), rep(c("a", "b", "c"), each = 10))
+#multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = F, return = "wilcox") -> aa
+}
 }

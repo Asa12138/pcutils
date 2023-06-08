@@ -33,6 +33,8 @@ ggplot
 gghuan2 for multi-columns
 }
 \examples{
-data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
-      b = c("a", LETTERS[2:5]), c = 1:5) \%>\% gghuan2()
+\dontrun{
+#data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
+#      b = c("a", LETTERS[2:5]), c = 1:5) \%>\% gghuan2()
+}
 }

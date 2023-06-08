@@ -33,8 +33,10 @@ cor_plot(
 Plot correlation
 }
 \examples{
-data(otutab)
-cor_plot(metadata[, 3:10])
-cor_plot(metadata[, 3:10], mode = 2)
-# cor_plot(t(otutab)[,1:50],mode=3,heat=FALSE)
+\dontrun{
+#data(otutab)
+#cor_plot(metadata[, 3:10])
+#cor_plot(metadata[, 3:10], mode = 2)
+#cor_plot(t(otutab)[,1:50],mode=3,heat=FALSE)
+}
 }

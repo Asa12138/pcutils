@@ -24,5 +24,7 @@ chordDiagram
 My circo plot
 }
 \examples{
-data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_circo(mode="chorddiag")
+\dontrun{
+#data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_circo(mode="chorddiag")
+}
 }

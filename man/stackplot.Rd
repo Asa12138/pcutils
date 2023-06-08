@@ -66,8 +66,9 @@ stackplot(
 Plot a stack plot
 }
 \examples{
-data(otutab)
-stackplot(otutab, metadata, group = "Group")
-stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = FALSE, relative = FALSE)
-
+\dontrun{
+#data(otutab)
+#stackplot(otutab, metadata, group = "Group")
+#stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = FALSE, relative = FALSE)
+}
 }

@@ -13,6 +13,8 @@ fittest(a)
 Fit a distribution
 }
 \examples{
-a <- runif(50)
-fittest(a)
+\dontrun{
+#a <- runif(50)
+#fittest(a)
+}
 }

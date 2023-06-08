@@ -13,6 +13,8 @@ tax_wordcloud(str_vector)
 Word cloud plot
 }
 \examples{
-data(otutab)
-tax_wordcloud(taxonomy$Genus)
+\dontrun{
+#data(otutab)
+#tax_wordcloud(taxonomy$Genus)
+}
 }

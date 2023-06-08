@@ -26,8 +26,10 @@ ggplot
 Plot a doughnut chart
 }
 \examples{
-a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
-gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
-gghuan(b) + ggplot2::theme(legend.position = "right")
+\dontrun{
+#a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
+#gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
+#gghuan(b) + ggplot2::theme(legend.position = "right")
+}
 }

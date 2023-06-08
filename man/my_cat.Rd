@@ -7,7 +7,7 @@
 my_cat(mode = 1)
 }
 \arguments{
-\item{mode}{1～2}
+\item{mode}{1~2}
 }
 \description{
 Show my little cat named Guo Dong which drawn by my girlfriend.

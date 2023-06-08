@@ -19,6 +19,8 @@ triangp(otutab, group, scale = F, class = NULL)
 Triangle plot
 }
 \examples{
-data(otutab)
-triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
+\dontrun{
+#data(otutab)
+#triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
+}
 }

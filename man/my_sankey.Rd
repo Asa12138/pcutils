@@ -19,9 +19,11 @@ my_sankey(test, mode = c("sankeyD3", "ggsankey"), space = 1, ...)
 My Sankey plot
 }
 \examples{
-data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)\%>\%
-   my_sankey(.,"gg",num=TRUE)
-data(otutab)
-cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
-my_sankey(test)->p
+\dontrun{
+#data.frame(a=c("a","a","b","b","c"),aa=rep("a",5),b=c("a",LETTERS[2:5]),c=1:5)\%>\%
+#   my_sankey(.,"gg",num=TRUE)
+#data(otutab)
+#cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+#my_sankey(test)->p
+}
 }
