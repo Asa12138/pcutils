@@ -57,8 +57,6 @@ a 'ggplot' plot object,
 Plot a boxplot
 }
 \examples{
-\dontrun{
-#a <- data.frame(a = 1:18, b = runif(18, 0, 5))
-#group_box(a, group = rep(c("a", "b", "c"), each = 6), p_value1 = FALSE, p_value2 = TRUE)
-}
+a <- data.frame(a = 1:18, b = runif(18, 0, 5))
+group_box(a, group = rep(c("a", "b", "c"), each = 6))
 }

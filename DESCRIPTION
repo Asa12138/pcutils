@@ -73,7 +73,20 @@ Suggests:
     knitr,
     rmarkdown,
     prettydoc,
-    SoDA
+    SoDA,
+    ggcor,
+    Vennerable,
+    ggradar,
+    ggsankey,
+    sankeyD3,
+    chorddiag
+Remotes:
+    github::davidsjoberg/ggsankey,
+    github::fbreitwieser/sankeyD3,
+    github::Github-Yilei/ggcor,
+    github::mattflor/chorddiag,
+    github::js229/Vennerable,
+    github::ricardo-bion/ggradar
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
