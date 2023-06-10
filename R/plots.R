@@ -383,10 +383,8 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
 #' @import ggplot2
 #'
 #' @examples
-#' \dontrun{
-#' #a <- data.frame(a = 1:18, b = runif(18, 0, 5))
-#' #group_box(a, group = rep(c("a", "b", "c"), each = 6), p_value1 = FALSE, p_value2 = TRUE)
-#' }
+#' a <- data.frame(a = 1:18, b = runif(18, 0, 5))
+#' group_box(a, group = rep(c("a", "b", "c"), each = 6))
 group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                       group_order = NULL, facet_order = NULL,
                       alpha = F, method = "wilcox", alpha_param = list(color = "red"),
@@ -667,12 +665,12 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
   colnames(tab) <- c("type", "n")
 
   plot_df <- tab %>%
-    group_by(type) %>%
-    summarise(sum = sum(n))
+    dplyr::group_by(type) %>%
+    dplyr::summarise(sum = sum(n))
 
   if (reorder) {
     plot_df$type <- stats::reorder(plot_df$type, plot_df$sum)
-    plot_df <- arrange(plot_df, -sum)
+    plot_df <- dplyr::arrange(plot_df, -sum)
   }
 
   if (nrow(plot_df) > topN) {
@@ -686,7 +684,7 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
 
     plot_df$type <- stats::relevel(factor(plot_df$type), "others")
   }
-  mutate(plot_df, fraction = sum / sum(sum)) -> plot_df
+  dplyr::mutate(plot_df, fraction = sum / sum(sum)) -> plot_df
 
   plot_df$ymax <- cumsum(plot_df$fraction)
   plot_df$ymin <- c(0, head(plot_df$ymax, n = -1))
@@ -742,10 +740,8 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
-#' #      b = c("a", LETTERS[2:5]), c = 1:5) %>% gghuan2()
-#' }
+#' data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
+#'      b = c("a", LETTERS[2:5]), c = 1:5) %>% gghuan2()
 gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage = F, text_col = "black") {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
   if ((`break` < 0) | `break` >= 1) stop("`break` should be [0,1)")
@@ -755,7 +751,7 @@ gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage 
     plot_df <- tab[, c(i, ncol(tab))]
     colnames(plot_df) <- c("type", "n")
     count2(plot_df) -> plot_df
-    mutate(plot_df, fraction = n / sum(n)) -> plot_df
+    dplyr::mutate(plot_df, fraction = n / sum(n)) -> plot_df
     plot_df$ymax <- cumsum(plot_df$fraction)
     plot_df$ymin <- c(0, head(plot_df$ymax, n = -1))
     plot_df$xmax <- i + 1
@@ -1000,7 +996,7 @@ tax_pie<-function(otutab,topN=6,...){
 tax_radar<-function(otu_time,...){
   lib_ps("ggradar","scales",library = F)
   otu_time[1:4,]%>%
-    mutate_all(scales::rescale) %>%cbind(tax=rownames(.),.)%>%
+    dplyr::mutate_all(scales::rescale) %>%cbind(tax=rownames(.),.)%>%
     ggradar::ggradar(.,legend.text.size=10,...)
 }
 

@@ -60,7 +60,6 @@ twotest <- function(var, group) {
 #'
 #' @examples
 #' \dontrun{
-#' #multitest(c(runif(20), runif(10, 2, 3)), rep(c("a", "b", "c"), each = 10))
 #' #multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = F, return = "wilcox") -> aa
 #' }
 multitest <- function(var, group, print = T, return = F) {

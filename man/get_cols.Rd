@@ -21,8 +21,8 @@ Get n colors
 }
 \examples{
 get_cols(10, "col2") -> my_cols
-scales::show_col(my_cols)
-scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
+# scales::show_col(my_cols)
+# scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
+# scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
 # scales::show_col(get_cols(4,picture="~/Desktop/test.png"))
 }

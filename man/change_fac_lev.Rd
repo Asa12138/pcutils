@@ -18,5 +18,5 @@ factor
 Change factor levels
 }
 \examples{
-change_fac_lev(letters[1:5],levels = c("b","a"))
+change_fac_lev(letters[1:5],levels = c("c","a"))
 }

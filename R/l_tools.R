@@ -49,7 +49,7 @@ copy_vector <- function(vec) {
 #' @export
 #'
 #' @examples
-#' change_fac_lev(letters[1:5],levels = c("b","a"))
+#' change_fac_lev(letters[1:5],levels = c("c","a"))
 change_fac_lev=function (x, levels = NULL){
   ordervec = factor(x)
   if (!is.null(levels)) {
@@ -263,6 +263,9 @@ rgb2code <- function(x, rev = F) {
 #' @param color characteristic
 #'
 #' @export
+#' @examples
+#' is.ggplot.color("red")
+#'
 is.ggplot.color <- function(color) {
   is.col <- grepl("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|[A-Fa-f0-9]{8})$", color)
   is.name <- color %in% grDevices::colors()
@@ -274,6 +277,8 @@ is.ggplot.color <- function(color) {
 #' @param alpha alpha, default 0.3
 #'
 #' @export
+#' @examples
+#' add_alpha("red",0.3)
 add_alpha <- function(color, alpha = 0.3) {
   color <- grDevices::col2rgb(color) %>%
     t() %>%
@@ -355,8 +360,8 @@ plotgif <- function(plist, file = "new", mode = "gif") {
 #' @examples
 #' get_cols(10, "col2") -> my_cols
 #' scales::show_col(my_cols)
-#' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-#' scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
+#' # scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
+#' # scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
 #' # scales::show_col(get_cols(4,picture="~/Desktop/test.png"))
 get_cols <- function(n, pal = "col1", picture = NULL) {
   col1 <- c(

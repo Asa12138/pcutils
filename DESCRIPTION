@@ -22,7 +22,9 @@ Imports:
     ggplot2,
     stats,
     utils,
-    grDevices
+    grDevices,
+    reshape2,
+    scales
 Suggests:
     testthat,
     clipr,
@@ -39,7 +41,6 @@ Suggests:
     tidyr,
     RColorBrewer,
     ggsci,
-    scales,
     readr,
     tools,
     graphics,
@@ -50,7 +51,6 @@ Suggests:
     agricolae,
     nortest,
     fitdistrplus,
-    reshape2,
     ggalluvial,
     gghalves,
     pheatmap,
@@ -73,20 +73,7 @@ Suggests:
     knitr,
     rmarkdown,
     prettydoc,
-    SoDA,
-    ggcor,
-    Vennerable,
-    ggradar,
-    ggsankey,
-    sankeyD3,
-    chorddiag
-Remotes:
-    github::davidsjoberg/ggsankey,
-    github::fbreitwieser/sankeyD3,
-    github::Github-Yilei/ggcor,
-    github::mattflor/chorddiag,
-    github::js229/Vennerable,
-    github::ricardo-bion/ggradar
+    SoDA
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

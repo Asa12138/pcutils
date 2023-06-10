@@ -12,3 +12,7 @@ is.ggplot.color(color)
 \description{
 Judge if a characteristic is Rcolor
 }
+\examples{
+is.ggplot.color("red")
+
+}
