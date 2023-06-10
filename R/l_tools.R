@@ -233,6 +233,7 @@ sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...) {
 #' rgb2code("#69C404", rev = TRUE)
 rgb2code <- function(x, rev = F) {
   lib_ps("dplyr", library = F)
+  r=g=b=NULL
   if (rev) {
     if (is.vector(x)) {
       grDevices::col2rgb(x) %>%

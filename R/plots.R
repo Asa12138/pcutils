@@ -206,6 +206,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
   # library(ggplot2)
   # library(dplyr)
   lib_ps("reshape2", "scales", "dplyr", library = F)
+  variable=Taxonomy=value=NULL
   # prepare otutab and sampFile
   if (!is.null(metadata)) {
     match_res <- match_df(otutab, metadata)
@@ -394,6 +395,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
   # data transform
   g_name <- NULL
 
+  value=indexes=variable=high=low=text_param=NULL
   if (is.vector(tab)) {
     tab <- data.frame(value = tab)
   } else {
@@ -546,6 +548,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 #' #gghuan(b) + ggplot2::theme(legend.position = "right")
 #' }
 gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage = T) {
+  type=ymax=ymin=rate_per=fraction=NULL
   if (ncol(tab) > 2) stop("need two columns: first is type, second is number")
 
   colnames(tab)[1] -> g_name
@@ -632,6 +635,7 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
 gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage = F, text_col = "black") {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
   if ((`break` < 0) | `break` >= 1) stop("`break` should be [0,1)")
+  type=ymax=ymin=xmin=xmax=lab=fraction=NULL
 
   plot_df_res <- data.frame()
   for (i in seq_len(ncol(tab) - 1)) {
@@ -685,6 +689,7 @@ my_lm <- function(tab, var, metadata = NULL, ...) {
   lib_ps("reshape2", "ggpmisc", library = F)
   # data transform
   g_name <- NULL
+  value=eq.label=adj.rr.label=p.value.label=NULL
   if (is.vector(tab)) tab <- data.frame(value = tab)
 
   if (is.null(metadata)) {
@@ -735,6 +740,7 @@ my_lm <- function(tab, var, metadata = NULL, ...) {
 #' @export
 #' @import ggplot2
 china_map <- function(dir = "~/database/") {
+  name=NULL
   lib_ps("ggspatial", "sf", library = F)
   china_shp <- paste0(dir, "china.json")
   if (!file.exists(china_shp)) utils::download.file("https://gitcode.net/mirrors/lyhmyd1211/geomapdata_cn/-/raw/master/china.json?inline=false", china_shp)
@@ -791,24 +797,24 @@ dna_plot <- function() {
     ytop <- cos(xx[i] + pi) # yup position
     rr <- sample(1:4, 1) ## ATCG, random select one pair
     if (rr == 1) {
-      segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4) ## A-T
-      segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4) ## A-T
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
     }
     if (rr == 2) {
-      segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4) ## T-A
-      segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4) ## T-A
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
     }
     if (rr == 3) {
-      segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4) ## C-G
-      segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4)
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4) ## C-G
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4)
     }
     if (rr == 4) {
-      segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4) ## G-C
-      segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4)
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4) ## G-C
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4)
     }
   }
-  lines(y1 ~ x, pch = 16, lwd = 8, col = col_DNA)
-  lines(y2 ~ x, pch = 16, lwd = 8, col = col_DNA)
+  graphics::lines(y1 ~ x, pch = 16, lwd = 8, col = col_DNA)
+  graphics::lines(y2 ~ x, pch = 16, lwd = 8, col = col_DNA)
 }
 
 #' Show my little cat named Guo Dong which drawn by my girlfriend.
@@ -816,6 +822,7 @@ dna_plot <- function() {
 #'
 #' @export
 my_cat <- function(mode = 1) {
+  little_guodong=NULL
   data("little_guodong", package = "pcutils", envir = environment())
   if (mode == 1) {
     p <- ggplot() +
@@ -823,6 +830,7 @@ my_cat <- function(mode = 1) {
       theme_void()
   }
   if (mode == 2) {
+    x=y=NULL
     lib_ps("ggimage", library = F)
     t <- seq(0, 2 * pi, 0.08)
     d <- data.frame(x = 2 * (sin(t) - 0.5 * sin(2 * t)), y = 2 * (cos(t) - 0.5 * cos(2 * t)))
@@ -887,47 +895,7 @@ tax_wordcloud<-function(str_vector){
     return(taxdf)
   }
   sort(table(str_vector),decreasing = TRUE)[1:50]%>%as.data.frame()%>%
-    remove_unclassfied()%>%na.omit()%>%wordcloud2::wordcloud2(.,size=.7)
-}
-
-#' Triangle plot
-#'
-#' @param otutab otutab
-#' @param group group
-#' @param scale default:F
-#' @param class point color
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' #data(otutab)
-#' #triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
-#' }
-triangp<-function(otutab,group,scale=F,class=NULL){
-  lib_ps("ggtern","vegan",library = F)
-  group%>%as.factor()->group
-  if (nlevels(group)!=3)stop("group is not 3, can't plot trip")
-  hebing(otutab,group,act = 'mean')->tmp
-
-  if (scale){mutate_all(tmp,scales::rescale)->tmp}
-
-  tmp%>%as.data.frame()%>%mutate(sum=rowSums(.))->tmp1
-  colnames(tmp1)[1:3]<-c('KO','OE','WT')
-
-  if (is.null(class)){
-    p=ggtern::ggtern(tmp1,aes(x=KO,y=OE,z=WT)) +
-      geom_point(aes(size=sum))+#define data geometry
-      labs(x=names(tmp)[1],y=names(tmp)[2],z=names(tmp)[3])
-    return(p)
-  }
-  else {
-    tmp1$class =class
-    p=ggtern::ggtern(tmp1,aes(x=KO,y=OE,z=WT)) +
-      geom_point(aes(size=sum,col=class))+#define data geometry
-      labs(x=names(tmp)[1],y=names(tmp)[2],z=names(tmp)[3])
-    return(p)
-  }
+    remove_unclassfied()%>%stats::na.omit()%>%wordcloud2::wordcloud2(.,size=.7)
 }
 
 #' My circo plot

@@ -87,7 +87,7 @@ multitest <- function(var, group, print = T, return = F) {
   }
 
   # TukeyHSD
-  if ("TukeyHSD" %in% return) tukeyres <- TukeyHSD(ano)
+  if ("TukeyHSD" %in% return) tukeyres <- stats::TukeyHSD(ano)
 
   if (identical(return, "tukeyHSD")) {
     p_mat <- matrix(1, ncol = ntr, nrow = ntr)
@@ -206,8 +206,8 @@ fittest <- function(a) {
     dabiao("1.Basic plot")
     plot(a)
     dabiao("2.QQ plot")
-    qqnorm(a, col = "red", main = "a")
-    qqline(a, col = "blue")
+    stats::qqnorm(a, col = "red", main = "a")
+    stats::qqline(a, col = "blue")
     # fitdistrplus package multiple distribution judgment package multiple distribution judgment
     dabiao("3.fitdistrplus plot")
     fitdistrplus::descdist(a)
@@ -216,7 +216,7 @@ fittest <- function(a) {
     # （1）Shapiro-Wilks test：
     stats::shapiro.test(a) |> print()
     # （2）Kolmogorov-Smirnov(K-S test)
-    stats::ks.test(a, "pnorm", mean = mean(a), sd = sqrt(var(a))) |> print()
+    stats::ks.test(a, "pnorm", mean = mean(a), sd = sqrt(stats::var(a))) |> print()
     # （3）Cramer-Von Mises test（cvm.test）
     nortest::cvm.test(a) |> print()
     # （4）Anderson Darling test
