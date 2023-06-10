@@ -223,21 +223,3 @@ fittest <- function(a) {
     nortest::ad.test(a) |> print()
   }
 }
-
-#' Transfer Geographical latitude and longitude to XY(m)
-#'
-#' @param geo a two-columns dataframe, first is latitude, second is longitude
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' #data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
-#' #toXY(geo)
-#' }
-toXY <- function(geo) {
-  lib_ps("SoDA", library = F)
-  XY <- SoDA::geoXY(geo[, 1], geo[, 2])
-  # geosphere::distm
-  return(as.data.frame(row.names = rownames(geo), XY))
-}
