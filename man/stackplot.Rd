@@ -8,19 +8,19 @@ stackplot(
   otutab,
   metadata = NULL,
   group = "Group",
-  get_data = F,
+  get_data = FALSE,
   bar_params = list(width = 0.7, position = "stack"),
   topN = 8,
-  others = T,
-  relative = T,
+  others = TRUE,
+  relative = TRUE,
   legend_title = "",
-  stack_order = T,
-  group_order = F,
-  facet_order = F,
+  stack_order = TRUE,
+  group_order = FALSE,
+  facet_order = FALSE,
   style = c("group", "sample")[1],
-  flow = F,
+  flow = FALSE,
   flow_params = list(lode.guidance = "frontback", color = "darkgray"),
-  number = F,
+  number = FALSE,
   format_params = list(digits = 2),
   text_params = list(position = position_stack())
 )
@@ -62,13 +62,16 @@ stackplot(
 
 \item{text_params}{parameters parse to \code{\link[ggplot2]{geom_text}}}
 }
+\value{
+a ggplot
+}
 \description{
 Plot a stack plot
 }
 \examples{
-\dontrun{
-#data(otutab)
-#stackplot(otutab, metadata, group = "Group")
-#stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = FALSE, relative = FALSE)
+data(otutab)
+stackplot(otutab, metadata, group = "Group")
+\donttest{
+stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = TRUE, relative = FALSE)
 }
 }

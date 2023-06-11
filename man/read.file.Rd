@@ -4,7 +4,7 @@
 \alias{read.file}
 \title{Read some special format file}
 \usage{
-read.file(file, format = NULL, just_print = F)
+read.file(file, format = NULL, just_print = FALSE)
 }
 \arguments{
 \item{file}{file path}

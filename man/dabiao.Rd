@@ -2,7 +2,7 @@
 % Please edit documentation in R/l_tools.R
 \name{dabiao}
 \alias{dabiao}
-\title{Print with =}
+\title{Print some message with =}
 \usage{
 dabiao(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"))
 }
@@ -17,6 +17,13 @@ dabiao(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"))
 
 \item{mode}{"middle", "left" or "right"}
 }
+\value{
+No return value
+}
 \description{
-Print with =
+Print some message with =
+}
+\examples{
+dabiao("Start running!")
+
 }

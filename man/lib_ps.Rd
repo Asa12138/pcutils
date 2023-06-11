@@ -4,7 +4,7 @@
 \alias{lib_ps}
 \title{Attach packages or install packages have not benn installed}
 \usage{
-lib_ps(p_list, ..., all_yes = F, library = T)
+lib_ps(p_list, ..., all_yes = FALSE, library = TRUE)
 }
 \arguments{
 \item{p_list}{a vector of packages list}
@@ -17,7 +17,4 @@ lib_ps(p_list, ..., all_yes = F, library = T)
 }
 \description{
 Attach packages or install packages have not benn installed
-}
-\examples{
-lib_ps("ggplot2", "dplyr")
 }

@@ -4,7 +4,13 @@
 \alias{my_circo}
 \title{My circo plot}
 \usage{
-my_circo(df, reorder = T, pal = NULL, mode = c("circlize", "chorddiag"), ...)
+my_circo(
+  df,
+  reorder = TRUE,
+  pal = NULL,
+  mode = c("circlize", "chorddiag"),
+  ...
+)
 }
 \arguments{
 \item{df}{dataframe with three column}
@@ -24,7 +30,7 @@ chordDiagram
 My circo plot
 }
 \examples{
-\dontrun{
-#data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_circo(mode="chorddiag")
+\donttest{
+data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_circo(mode="circlize")
 }
 }

@@ -2,7 +2,7 @@
 #' Scale a legend size
 #'
 #' @param scale default: 1.
-#'
+#' @return "theme" "gg"
 #' @export
 #'
 legend_size <- function(scale = 1) {
@@ -16,8 +16,8 @@ legend_size <- function(scale = 1) {
 match_df <- function(otutab, metadata) {
   if (!setequal(rownames(metadata), colnames(otutab))) message("rownames dont match in tab and metadata")
   idx <- rownames(metadata) %in% colnames(otutab)
-  metadata <- metadata[idx, , drop = F]
-  otutab <- otutab[, rownames(metadata), drop = F]
+  metadata <- metadata[idx, , drop = FALSE]
+  otutab <- otutab[, rownames(metadata), drop = FALSE]
   return(list(otutab = otutab, metadata = metadata))
 }
 
@@ -29,13 +29,13 @@ match_df <- function(otutab, metadata) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #aa <- list(a = 1:3, b = 3:7, c = 2:4)
-#' #venn(aa, mode = "venn")
-#' #venn(aa, mode = "venn2", type = "ChowRuskey")
-#' #venn(aa, mode = "upset")
-#' #data(otutab)
-#' #venn(otutab, mode = "flower")
+#' \donttest{
+#' aa <- list(a = 1:3, b = 3:7, c = 2:4)
+#' venn(aa, mode = "venn")
+#' venn(aa, mode = "venn2", type = "ChowRuskey")
+#' venn(aa, mode = "upset")
+#' data(otutab)
+#' venn(otutab, mode = "flower")
 #' }
 venn <- function(...) {
   UseMethod("venn")
@@ -56,20 +56,20 @@ venn_cal <- function(otu_time) {
 #' @param aa list
 #' @param mode "venn","venn2","upset","flower"
 #' @param ... add
-#'
+#' @return a plot
 #' @exportS3Method
 venn.list <- function(aa, mode = "venn", ...) {
   if (is.null(names(aa))) names(aa) <- seq_along(aa)
-  if (length(aa) > 4 && mode == "venn") print("venn < 4, recommend upset or flower")
+  if (length(aa) > 4 && mode == "venn") message("venn < 4, recommend upset or flower")
   if (mode == "venn") {
-    lib_ps("ggvenn", library = F)
+    lib_ps("ggvenn", library = FALSE)
     ggvenn::ggvenn(aa) -> p
     return(p)
   }
   # if (mode == "venn2") {
   #   if (!requireNamespace("RBGL")) BiocManager::install("RBGL")
   #   if (!requireNamespace("graph")) BiocManager::install("graph")
-  #   lib_ps("Vennerable", library = F)
+  #   lib_ps("Vennerable", library = FALSE)
   #   Vennerable::Venn(aa) -> aap
   #   Vennerable::plot(aap)
   #   # plot(aap,type="triangles")
@@ -78,12 +78,15 @@ venn.list <- function(aa, mode = "venn", ...) {
   #   # plot(aap, doWeights = FALSE,type="ChowRuskey")
   # }
   if (mode == "upset") {
-    lib_ps("UpSetR", library = F)
+    lib_ps("UpSetR", library = FALSE)
     UpSetR::upset(UpSetR::fromList(aa), order.by = "freq", nsets = length(aa), nintersects = 30) -> p
     return(p)
   }
   if (mode == "flower") {
-    lib_ps("RColorBrewer", "plotrix", library = F)
+    lib_ps("RColorBrewer", "plotrix", library = FALSE)
+    oldpar <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(oldpar))
+
     otu_num <- length(aa[[1]])
     core_otu_id <- aa[[1]]
     for (i in 2:length(aa)) {
@@ -95,7 +98,7 @@ venn.list <- function(aa, mode = "venn", ...) {
     sample_id <- names(aa)
     n <- length(sample_id)
 
-    ellipse_col <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, "Set3"))(n)
+    ellipse_col <- grDevices::colorRampPalette(get_cols(10))(n)
     start <- 90
     a <- 0.5
     b <- 2.2
@@ -103,7 +106,7 @@ venn.list <- function(aa, mode = "venn", ...) {
     ellipse_col <- ellipse_col
     circle_col <- "white"
 
-    graphics::par(bty = "n", ann = F, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
+    graphics::par(bty = "n", ann = FALSE, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
 
     plot(c(0, 10), c(0, 10), type = "n")
     deg <- 360 / n
@@ -151,7 +154,7 @@ venn.list <- function(aa, mode = "venn", ...) {
 #' @param otutab table
 #' @param mode "venn","venn2","upset","flower"
 #' @param ... add
-#'
+#' @return a plot
 #' @method venn data.frame
 #' @rdname venn
 #' @exportS3Method
@@ -185,27 +188,27 @@ venn.data.frame <- function(otutab, mode = "venn", ...) {
 #'
 #' @import ggplot2
 #' @export
-#'
+#' @return a ggplot
 #' @examples
-#' \dontrun{
-#' #data(otutab)
-#' #stackplot(otutab, metadata, group = "Group")
-#' #stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = FALSE, relative = FALSE)
+#' data(otutab)
+#' stackplot(otutab, metadata, group = "Group")
+#' \donttest{
+#' stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = TRUE, relative = FALSE)
 #' }
-stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
+stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
                       bar_params = list(width = 0.7, position = "stack"),
-                      topN = 8, others = T, relative = T, legend_title = "",
-                      stack_order = T, group_order = F, facet_order = F,
+                      topN = 8, others = TRUE, relative = TRUE, legend_title = "",
+                      stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
                       style = c("group", "sample")[1],
-                      flow = F, flow_params = list(lode.guidance = "frontback", color = "darkgray"),
-                      number = F, format_params = list(digits = 2), text_params = list(position = position_stack())) {
+                      flow = FALSE, flow_params = list(lode.guidance = "frontback", color = "darkgray"),
+                      number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
   # Used to draw species stacking diagrams, suitable for processing various OTU similar data, input metatab as the basis for grouping.
   # style can choose "group" or "sample"
-  # others=T is used to choose whether to draw other than TopN
+  # others=TRUE is used to choose whether to draw other than TopN
   # pmode can choose fill/stack/dodge
   # library(ggplot2)
   # library(dplyr)
-  lib_ps("reshape2", "scales", "dplyr", library = F)
+  lib_ps("reshape2", "scales", "dplyr", library = FALSE)
   variable=Taxonomy=value=NULL
   # prepare otutab and sampFile
   if (!is.null(metadata)) {
@@ -217,7 +220,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
     sampFile <- data.frame(row.names = colnames(otutab), group = colnames(otutab))
   }
 
-  mean_sort <- as.data.frame(otutab[(order(-rowSums(otutab))), , drop = F])
+  mean_sort <- as.data.frame(otutab[(order(-rowSums(otutab))), , drop = FALSE])
 
   if (nrow(mean_sort) > topN) {
     other <- colSums(mean_sort[topN:dim(mean_sort)[1], ])
@@ -310,7 +313,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
           switch = "both", scales = "free", space = "free"
         )
     } else {
-      lib_ps("ggalluvial", library = F)
+      lib_ps("ggalluvial", library = FALSE)
       p <- ggplot(data_all, aes(
         x = variable, y = value, alluvium = Taxonomy, fill = Taxonomy,
         label = do.call(format, append(list(value), format_params))
@@ -337,7 +340,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
       )) +
         do.call(geom_bar, append(list(stat = "identity"), bar_params))
     } else {
-      lib_ps("ggalluvial", library = F)
+      lib_ps("ggalluvial", library = FALSE)
       p <- ggplot(data_all, aes(
         x = variable, y = value, alluvium = Taxonomy, fill = Taxonomy,
         label = do.call(format, append(list(value), format_params))
@@ -377,7 +380,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
 #' @param trend_line add a trend line
 #' @param trend_line_param parameters parse to \code{\link[ggplot2]{geom_smooth}}
 #'
-#' @return a 'ggplot' plot object,
+#' @return a ggplot
 #' @export
 #'
 #' @import dplyr
@@ -388,10 +391,10 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = F,
 #' group_box(a, group = rep(c("a", "b", "c"), each = 6))
 group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                       group_order = NULL, facet_order = NULL,
-                      alpha = F, method = "wilcox", alpha_param = list(color = "red"),
-                      p_value1 = F, p_value2 = F, stat_compare_means_param = NULL,
-                      trend_line = F, trend_line_param = list(color = "blue")) {
-  lib_ps("ggplot2", "dplyr", "reshape2", library = F)
+                      alpha = FALSE, method = "wilcox", alpha_param = list(color = "red"),
+                      p_value1 = FALSE, p_value2 = FALSE, stat_compare_means_param = NULL,
+                      trend_line = FALSE, trend_line_param = list(color = "blue")) {
+  lib_ps("ggplot2", "dplyr", "reshape2", library = FALSE)
   # data transform
   g_name <- NULL
 
@@ -405,16 +408,16 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 
   if (is.null(metadata) && is.null(group)) {
     # a single boxplot
-    md <- data.frame(tab, group = "value", check.names = F)
+    md <- data.frame(tab, group = "value", check.names = FALSE)
   } else {
     if (is.null(metadata) && !is.null(group)) {
-      md <- data.frame(tab, group = group, check.names = F)
+      md <- data.frame(tab, group = group, check.names = FALSE)
     } else if (!is.null(metadata) && !is.null(group)) {
       if (!all(rownames(metadata) %in% rownames(tab))) message("rownames dont match in tab and metadata")
       idx <- rownames(metadata) %in% rownames(tab)
-      metadata <- metadata[idx, , drop = F]
-      tab <- tab[rownames(metadata), , drop = F]
-      md <- data.frame(tab, group = metadata[, group, drop = T], check.names = F)
+      metadata <- metadata[idx, , drop = FALSE]
+      tab <- tab[rownames(metadata), , drop = FALSE]
+      md <- data.frame(tab, group = metadata[, group, drop = TRUE], check.names = FALSE)
       g_name <- group
     }
   }
@@ -437,7 +440,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
       geom_jitter(color = "black", width = 0.15, alpha = 0.8, size = 0.5)
   }
   if (mode == 3) {
-    lib_ps("gghalves", library = F)
+    lib_ps("gghalves", library = FALSE)
     p <- ggplot(md, aes(x = group, y = value, color = group, group = group)) +
       gghalves::geom_half_violin(aes(fill = group), side = "l", trim = FALSE) +
       gghalves::geom_half_point(side = "r", size = 0.5, alpha = 0.8) +
@@ -453,7 +456,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     ylab(label = NULL) + xlab(label = NULL)
 
   # trend line
-  if (trend_line) p <- p + do.call(geom_smooth, update_param(list(mapping = aes(group = 1), method = "glm", se = F, alpha = 0.8), trend_line_param))
+  if (trend_line) p <- p + do.call(geom_smooth, update_param(list(mapping = aes(group = 1), method = "glm", se = FALSE, alpha = 0.8), trend_line_param))
 
   # facet?
   flag <- (ncol(tab) == 1)
@@ -465,9 +468,9 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
   }
 
   # p-value?
-  if (is.character(p_value1) | p_value1 == T) {
-    lib_ps("ggpubr", library = F)
-    if (p_value1 == T) p_value1 <- NULL
+  if (is.character(p_value1) | p_value1 == TRUE) {
+    lib_ps("ggpubr", library = FALSE)
+    if (p_value1 == TRUE) p_value1 <- NULL
     md %>% summarise(low = min(value), high = max(value)) -> aa
     #    p <- p + ggpubr::stat_compare_means(show.legend = FALSE, method = p_value1, label.x = 1, label.y.npc = 1)
     p <- p + do.call(ggpubr::stat_compare_means, update_param(list(
@@ -475,9 +478,9 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     ), stat_compare_means_param))
   }
 
-  if (is.character(p_value2) | p_value2 == T) {
-    lib_ps("ggpubr", library = F)
-    if (p_value2 == T) p_value2 <- NULL
+  if (is.character(p_value2) | p_value2 == TRUE) {
+    lib_ps("ggpubr", library = FALSE)
+    if (p_value2 == TRUE) p_value2 <- NULL
     comparisons <- utils::combn(levels(md$group), 2) %>% split(col(.))
     p <- p + do.call(ggpubr::stat_compare_means, update_param(list(
       show.legend = FALSE, method = p_value2, comparisons = comparisons
@@ -537,17 +540,15 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 #' @param percentage label the percentage
 #'
 #' @import ggplot2 dplyr
-#' @return ggplot
+#' @return a ggplot
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
-#' #gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-#' #b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
-#' #gghuan(b) + ggplot2::theme(legend.position = "right")
-#' }
-gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage = T) {
+#' a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
+#' gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#' b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
+#' gghuan(b) + ggplot2::theme(legend.position = "right")
+gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, percentage = TRUE) {
   type=ymax=ymin=rate_per=fraction=NULL
   if (ncol(tab) > 2) stop("need two columns: first is type, second is number")
 
@@ -585,7 +586,7 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
   }
 
   if (mode == 3) {
-    lib_ps("ggpubr", library = F)
+    lib_ps("ggpubr", library = FALSE)
     labs <- paste0(plot_df$type, "\n", plot_df$rate_per)
     p <- ggpubr::ggpie(plot_df, "fraction", label = labs, fill = "type") + theme(legend.position = "none")
     return(p)
@@ -616,7 +617,7 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
 }
 
 
-#' gghuan2 for multi-columns
+#' gghuan2 for multi-doughnut chart
 #'
 #' @param tab a dataframe with hierarchical structure
 #' @param break default 0.2
@@ -626,13 +627,13 @@ gghuan <- function(tab, reorder = T, mode = "1", topN = 5, name = T, percentage 
 #' @param text_col defalut, black
 #'
 #' @import ggplot2 dplyr
-#' @return ggplot
+#' @return a ggplot
 #' @export
 #'
 #' @examples
 #' data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
 #'      b = c("a", LETTERS[2:5]), c = 1:5) %>% gghuan2()
-gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage = F, text_col = "black") {
+gghuan2 <- function(tab = NULL, `break` = 0.2, name = TRUE, number = TRUE, percentage = FALSE, text_col = "black") {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
   if ((`break` < 0) | `break` >= 1) stop("`break` should be [0,1)")
   type=ymax=ymin=xmin=xmax=lab=fraction=NULL
@@ -681,25 +682,25 @@ gghuan2 <- function(tab = NULL, `break` = 0.2, name = T, number = T, percentage 
 #' @export
 #' @import ggplot2 dplyr
 #' @examples
-#' \dontrun{
-#' #my_lm(runif(50), var = 1:50)
-#' #my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+#' \donttest{
+#' my_lm(runif(50), var = 1:50)
+#' my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
 #' }
 my_lm <- function(tab, var, metadata = NULL, ...) {
-  lib_ps("reshape2", "ggpmisc", library = F)
+  lib_ps("reshape2", "ggpmisc", library = FALSE)
   # data transform
   g_name <- NULL
   value=eq.label=adj.rr.label=p.value.label=NULL
   if (is.vector(tab)) tab <- data.frame(value = tab)
 
   if (is.null(metadata)) {
-    md <- data.frame(tab, var = var, check.names = F)
+    md <- data.frame(tab, var = var, check.names = FALSE)
   } else if (!is.null(metadata)) {
     if (!all(rownames(metadata) %in% rownames(tab))) message("rownames dont match in tab and metadata")
     idx <- rownames(metadata) %in% rownames(tab)
-    metadata <- metadata[idx, , drop = F]
-    tab <- tab[rownames(metadata), , drop = F]
-    md <- data.frame(tab, var = metadata[, var], check.names = F)
+    metadata <- metadata[idx, , drop = FALSE]
+    tab <- tab[rownames(metadata), , drop = FALSE]
+    md <- data.frame(tab, var = metadata[, var], check.names = FALSE)
     g_name <- var
   }
 
@@ -709,7 +710,7 @@ my_lm <- function(tab, var, metadata = NULL, ...) {
   # main plot
   p <- ggplot(md, aes(var, value)) +
     geom_point(...) +
-    geom_smooth(method = "lm", color = "red", se = F, formula = "y~x") +
+    geom_smooth(method = "lm", color = "red", se = FALSE, formula = "y~x") +
     ggpmisc::stat_poly_eq(
       aes(label = paste(after_stat(eq.label), after_stat(adj.rr.label), after_stat(p.value.label), sep = "~~~~~")),
       formula = y ~ x, parse = TRUE, color = "red",
@@ -732,6 +733,7 @@ my_lm <- function(tab, var, metadata = NULL, ...) {
 
 
 # https://cloud.tencent.com/developer/article/1751856
+
 #' Plot china map
 #'
 #' @param dir where to put the china.json file
@@ -741,7 +743,7 @@ my_lm <- function(tab, var, metadata = NULL, ...) {
 #' @import ggplot2
 china_map <- function(dir = "~/database/") {
   name=NULL
-  lib_ps("ggspatial", "sf", library = F)
+  lib_ps("ggspatial", "sf", library = FALSE)
   china_shp <- paste0(dir, "china.json")
   if (!file.exists(china_shp)) utils::download.file("https://gitcode.net/mirrors/lyhmyd1211/geomapdata_cn/-/raw/master/china.json?inline=false", china_shp)
   china <- sf::read_sf(china_shp)
@@ -759,7 +761,7 @@ china_map <- function(dir = "~/database/") {
       style = ggspatial::north_arrow_fancy_orienteering
     ) +
     theme(
-      # aspect.ratio = 1.25, #调节长宽比
+      # aspect.ratio = 1.25,
       # axis.text = element_blank(),
       # axis.ticks = element_blank(),
       axis.title = element_blank(),
@@ -770,56 +772,10 @@ china_map <- function(dir = "~/database/") {
     )
 }
 
-#' Plot a DNA double helix
-#'
-#' @export
-#' @references \code{https://github.com/SherryDong/create_plot_by_R_base}
-dna_plot <- function() {
-  lib_ps("RColorBrewer", library = F)
-  col_DNA <- RColorBrewer::brewer.pal(8, "Set1")[2]
-  # A-green, T-red, C-yellow, G-blue
-  col_ATCG <- c(
-    RColorBrewer::brewer.pal(8, "Accent")[1], RColorBrewer::brewer.pal(11, "Set3")[4],
-    RColorBrewer::brewer.pal(11, "Set3")[2], RColorBrewer::brewer.pal(11, "Paired")[1]
-  )
-  DNA_length <- 4 ## the code only applies when DNA_length%%2==0, if DNA_length%%2==1, need to modify
-  x <- seq(-DNA_length * pi / 2, DNA_length * pi / 2, length.out = 1000) ##
-  y1 <- cos(x) ## backbone up
-  y2 <- cos(x + pi) ## backbone down
-  # get the position of nucleotides
-  xx <- seq(DNA_length * pi / 2, -DNA_length * pi / 2, length.out = DNA_length * 5 + 1)
-  xx <- xx + (xx[2] - xx[1]) / 2
-  # remove the first and the lines in the boundary region
-  xx <- setdiff(xx, c(xx[c(1:DNA_length) * 5 - 2], min(xx)))
-  plot(y1 ~ x, pch = 16, type = "l", xlab = "", ylab = "", xaxt = "n", yaxt = "n", main = "", bty = "n", col = "white")
-  for (i in 1:length(xx)) {
-    ybottom <- cos(xx[i]) # ybottom position
-    ytop <- cos(xx[i] + pi) # yup position
-    rr <- sample(1:4, 1) ## ATCG, random select one pair
-    if (rr == 1) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4) ## A-T
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
-    }
-    if (rr == 2) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4) ## T-A
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
-    }
-    if (rr == 3) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4) ## C-G
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4)
-    }
-    if (rr == 4) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4) ## G-C
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4)
-    }
-  }
-  graphics::lines(y1 ~ x, pch = 16, lwd = 8, col = col_DNA)
-  graphics::lines(y2 ~ x, pch = 16, lwd = 8, col = col_DNA)
-}
 
 #' Show my little cat named Guo Dong which drawn by my girlfriend.
 #' @param mode 1~2
-#'
+#' @return a ggplot
 #' @export
 my_cat <- function(mode = 1) {
   little_guodong=NULL
@@ -831,7 +787,7 @@ my_cat <- function(mode = 1) {
   }
   if (mode == 2) {
     x=y=NULL
-    lib_ps("ggimage", library = F)
+    lib_ps("ggimage", library = FALSE)
     t <- seq(0, 2 * pi, 0.08)
     d <- data.frame(x = 2 * (sin(t) - 0.5 * sin(2 * t)), y = 2 * (cos(t) - 0.5 * cos(2 * t)))
 
@@ -850,30 +806,30 @@ my_cat <- function(mode = 1) {
 #' @param topN topN
 #' @param ... add
 #'
-#' @return ggplot
+#' @return a ggplot
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #data(otutab)
-#' #tax_pie(otutab,topN = 7)
+#' \donttest{
+#' data(otutab)
+#' tax_pie(otutab,topN = 7)
 #' }
 tax_pie<-function(otutab,topN=6,...){
-  lib_ps("ggpubr",library = F)
+  lib_ps("ggpubr",library = FALSE)
   if(is.vector(otutab)){
     otutab->a
     if(!is.null(names(a)))names(a)=seq_along(a)
   }
   else rowSums(otutab)->a
   if(length(a)>topN){
-    sort(a,decreasing = T)[1:topN-1]->b
-    other=sum(sort(a,decreasing = T)[topN:length(a)])
+    sort(a,decreasing = TRUE)[1:topN-1]->b
+    other=sum(sort(a,decreasing = TRUE)[topN:length(a)])
     b<-c(b,other)
     names(b)[length(b)]<-'Others'}
   else b<-a
 
   df=data.frame(va=b,labels = paste0(names(b),"\n(",round(b/sum(b)*100,2),"%)"))
-  ggpubr::ggpie(df,'va',fill=get_cols(length(b)),label = "labels",grepl=T,...)
+  ggpubr::ggpie(df,'va',fill=get_cols(length(b)),label = "labels",grepl=TRUE,...)
 }
 
 #' Word cloud plot
@@ -881,14 +837,14 @@ tax_pie<-function(otutab,topN=6,...){
 #' @param str_vector string vector
 #'
 #' @export
-#'
+#' @return a htmlwidget
 #' @examples
-#' \dontrun{
-#' #data(otutab)
-#' #tax_wordcloud(taxonomy$Genus)
+#' \donttest{
+#' data(otutab)
+#' tax_wordcloud(taxonomy$Genus)
 #' }
 tax_wordcloud<-function(str_vector){
-  lib_ps("wordcloud2",library = F)
+  lib_ps("wordcloud2",library = FALSE)
   remove_unclassfied<-\ (taxdf) {
     taxdf[grepl.data.frame("Unclassified|uncultured|Ambiguous|Unknown|unknown|metagenome|Unassig",
                            taxdf, ignore.case = TRUE)] <- NA
@@ -910,13 +866,13 @@ tax_wordcloud<-function(str_vector){
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="chorddiag")
+#' \donttest{
+#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="circlize")
 #' }
-my_circo=function(df,reorder=T,pal=NULL,mode=c("circlize","chorddiag"),...){
+my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
   mode=match.arg(mode,c("circlize","chorddiag"))
   colnames(df)=c("from","to","count")
-  lib_ps("reshape2","tibble",library = F)
+  lib_ps("reshape2","tibble",library = FALSE)
   if(mode=="chorddiag"){
     #need a square matrix
     all_g=unique(df$from,df$to)
@@ -928,20 +884,20 @@ my_circo=function(df,reorder=T,pal=NULL,mode=c("circlize","chorddiag"),...){
   tab[is.na(tab)]=0
 
   if(reorder){
-    colSums(tab)%>%sort(decreasing = T)%>%names()->s_name
+    colSums(tab)%>%sort(decreasing = TRUE)%>%names()->s_name
     tab=tab[,s_name]
-    rowSums(tab)%>%sort(decreasing = T)%>%names()->s_name
+    rowSums(tab)%>%sort(decreasing = TRUE)%>%names()->s_name
     tab=tab[s_name,]
   }
 
   if(is.null(pal))pal=get_cols(length(unique(c(colnames(tab),rownames(tab)))))
 
   if(mode=="circlize"){
-    lib_ps("circlize",library = F)
+    lib_ps("circlize",library = FALSE)
     circlize::chordDiagram(tab,grid.col = pal,...)
   }
   # if(mode=="chorddiag"){
-  #   lib_ps("chorddiag",library = F)
+  #   lib_ps("chorddiag",library = FALSE)
   #   chorddiag::chorddiag(tab,groupedgeColor= pal,...)
   #   }
 }
@@ -951,8 +907,9 @@ my_circo=function(df,reorder=T,pal=NULL,mode=c("circlize","chorddiag"),...){
 
 #' How to use parallel
 #' @export
+#' @return NULL
 how_to_use_parallel=function(){
-  cat('  #parallel
+  message('  #parallel
   reps=100;threads=1
   #main function
   loop=function(i){
@@ -984,8 +941,9 @@ how_to_use_parallel=function(){
 
 #' How to update parameters
 #' @export
+#' @return NULL
 how_to_update_parameters=function(){
-  cat('point_params = list(size=5,color="red")
+  message('point_params = list(size=5,color="red")
 ggplot(data.frame(x=1:5,y=5:1), aes(x = x, y = y))+
   do.call(geom_point, update_param(list(size=2,color="blue",alpha=0.5), point_params))')
 }

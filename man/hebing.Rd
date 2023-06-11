@@ -7,13 +7,16 @@
 hebing(otutab, group, margin = 2, act = "mean")
 }
 \arguments{
-\item{otutab}{dataframe}
+\item{otutab}{data.frame}
 
 \item{group}{group vector}
 
 \item{margin}{1 for row and 2 for column(default: 2)}
 
 \item{act}{do (default: mean)}
+}
+\value{
+data.frame
 }
 \description{
 Group your data

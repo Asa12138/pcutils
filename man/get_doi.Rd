@@ -17,6 +17,9 @@ get_doi(
 
 \item{bget_path}{your bget_path}
 }
+\value{
+file at work directory
+}
 \description{
 Download supplemental materials according to a doi
 }

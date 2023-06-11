@@ -16,7 +16,7 @@ strsplit2(x, split, colnames = NULL, ...)
 \item{...}{other arguments are passed to \code{\link[base]{strsplit}}}
 }
 \value{
-dataframe
+data.frame
 }
 \description{
 Split Composite Names

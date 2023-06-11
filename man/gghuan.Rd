@@ -4,7 +4,14 @@
 \alias{gghuan}
 \title{Plot a doughnut chart}
 \usage{
-gghuan(tab, reorder = T, mode = "1", topN = 5, name = T, percentage = T)
+gghuan(
+  tab,
+  reorder = TRUE,
+  mode = "1",
+  topN = 5,
+  name = TRUE,
+  percentage = TRUE
+)
 }
 \arguments{
 \item{tab}{two columns: first is type, second is number}
@@ -20,16 +27,14 @@ gghuan(tab, reorder = T, mode = "1", topN = 5, name = T, percentage = T)
 \item{percentage}{label the percentage}
 }
 \value{
-ggplot
+a ggplot
 }
 \description{
 Plot a doughnut chart
 }
 \examples{
-\dontrun{
-#a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
-#gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-#b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
-#gghuan(b) + ggplot2::theme(legend.position = "right")
-}
+a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
+gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
+gghuan(b) + ggplot2::theme(legend.position = "right")
 }

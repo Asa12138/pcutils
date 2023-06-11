@@ -9,12 +9,15 @@ tax_wordcloud(str_vector)
 \arguments{
 \item{str_vector}{string vector}
 }
+\value{
+a htmlwidget
+}
 \description{
 Word cloud plot
 }
 \examples{
-\dontrun{
-#data(otutab)
-#tax_wordcloud(taxonomy$Genus)
+\donttest{
+data(otutab)
+tax_wordcloud(taxonomy$Genus)
 }
 }

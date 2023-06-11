@@ -2,17 +2,17 @@
 % Please edit documentation in R/l_tools.R
 \name{write_fasta}
 \alias{write_fasta}
-\title{Write a dataframe to fasta}
+\title{Write a data.frame to fasta}
 \usage{
 write_fasta(df, file_path, str_per_line = 70)
 }
 \arguments{
-\item{df}{dataframe}
+\item{df}{data.frame}
 
 \item{file_path}{output file path}
 
 \item{str_per_line}{how many base or animo acid in one line, if NULL, one sequence in one line.}
 }
 \description{
-Write a dataframe to fasta
+Write a data.frame to fasta
 }

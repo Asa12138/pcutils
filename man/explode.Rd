@@ -2,23 +2,26 @@
 % Please edit documentation in R/l_tools.R
 \name{explode}
 \alias{explode}
-\title{Explode a dataframe if there are split charter in one column}
+\title{Explode a data.frame if there are split charter in one column}
 \usage{
 explode(df, column, split = ",")
 }
 \arguments{
-\item{df}{dataframe}
+\item{df}{data.frame}
 
 \item{column}{column}
 
 \item{split}{split string}
 }
+\value{
+data.frame
+}
 \description{
-Explode a dataframe if there are split charter in one column
+Explode a data.frame if there are split charter in one column
 }
 \examples{
-\dontrun{
-#df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
-#explode(df, "b", ",")
+\donttest{
+df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
+explode(df, "b", ",")
 }
 }

@@ -15,6 +15,9 @@ add_analysis(analysis_n, title = analysis_n, author = "Peng Chen", theme = 1)
 
 \item{theme}{1~10}
 }
+\value{
+No return value
+}
 \description{
 Add an analysis for a project
 }

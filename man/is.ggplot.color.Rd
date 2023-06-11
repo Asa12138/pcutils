@@ -9,10 +9,15 @@ is.ggplot.color(color)
 \arguments{
 \item{color}{characteristic}
 }
+\value{
+TRUE or FALSE
+}
 \description{
 Judge if a characteristic is Rcolor
 }
 \examples{
 is.ggplot.color("red")
-
+is.ggplot.color("notcolor")
+is.ggplot.color(NA)
+is.ggplot.color("#000")
 }

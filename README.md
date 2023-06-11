@@ -6,7 +6,7 @@
 
 ```         
 install.packages("devtools")
-devtools::install_github('Asa12138/pcutils',dependencies=T)
+devtools::install_github('Asa12138/pcutils',dependencies=TRUE)
 library(pcutils)
 ```
 

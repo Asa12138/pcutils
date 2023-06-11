@@ -14,14 +14,14 @@ tax_pie(otutab, topN = 6, ...)
 \item{...}{add}
 }
 \value{
-ggplot
+a ggplot
 }
 \description{
 Pie plot
 }
 \examples{
-\dontrun{
-#data(otutab)
-#tax_pie(otutab,topN = 7)
+\donttest{
+data(otutab)
+tax_pie(otutab,topN = 7)
 }
 }

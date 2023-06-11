@@ -9,6 +9,9 @@ legend_size(scale = 1)
 \arguments{
 \item{scale}{default: 1.}
 }
+\value{
+"theme" "gg"
+}
 \description{
 Scale a legend size
 }

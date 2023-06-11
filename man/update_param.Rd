@@ -11,9 +11,13 @@ update_param(default, update)
 
 \item{update}{update (data.frame, list, vector)}
 }
+\value{
+same class of your input (data.frame, list or vector)
+}
 \description{
 Keep the different parameters while use the same name in update first.
 }
 \examples{
 update_param(list(a=1,b=2),list(b=5,c=5))
+
 }

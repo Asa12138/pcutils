@@ -1,13 +1,16 @@
 # =========little tools=========
-#' Print with =
+#' Print some message with =
 #'
 #' @param str output strings
 #' @param ... strings will be paste together
 #' @param char side chars default:=
 #' @param n the number of output length
 #' @param mode "middle", "left" or "right"
+#' @examples
+#' dabiao("Start running!")
 #'
 #' @export
+#' @return No return value
 dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right")) {
   str <- paste0(c(str, ...), collapse = "")
   mode <- match.arg(mode, c("middle", "left", "right"))
@@ -25,7 +28,7 @@ dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left",
       xx <- paste0(strrep(char, x + x2), str)
     }
   )
-  cat(xx, "\n")
+  message(xx, "\n")
 }
 
 #' Copy a vector
@@ -33,11 +36,11 @@ dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left",
 #' @param vec a R vector object
 #'
 #' @export
-#'
+#' @return No return value
 copy_vector <- function(vec) {
-  lib_ps("clipr", library = F)
+  lib_ps("clipr", library = FALSE)
   clipr::write_clip(paste0('c("', paste0(vec, collapse = '","'), '")'))
-  print("copy done, just Ctrl+V")
+  message("copy done, just Ctrl+V")
 }
 
 #' Change factor levels
@@ -61,6 +64,7 @@ change_fac_lev=function (x, levels = NULL){
 }
 
 #' Update the parameters
+#'
 #' @description
 #' Keep the different parameters while use the same name in update first.
 #'
@@ -68,9 +72,10 @@ change_fac_lev=function (x, levels = NULL){
 #' @param update update (data.frame, list, vector)
 #'
 #' @export
-#'
+#' @return same class of your input (data.frame, list or vector)
 #' @examples
 #' update_param(list(a=1,b=2),list(b=5,c=5))
+#'
 update_param=function(default,update){
   if(is.null(default))return(update)
   if(is.null(update))return(default)
@@ -79,19 +84,19 @@ update_param=function(default,update){
   if(is.data.frame(default)){
     inter = intersect(colnames(update), colnames(default))
     la = setdiff(colnames(default), inter)
-    return(cbind(default[, la, drop = F], update))
+    return(cbind(default[, la, drop = FALSE], update))
   }
   if(is.list(default)){
     if(is.null(names(update))|is.null(names(default)))stop("No name")
     inter = intersect(names(update), names(default))
     la = setdiff(names(default), inter)
-    return(append(default[la, drop = F], update))
+    return(append(default[la, drop = FALSE], update))
   }
   if(is.vector(default)){
     if(is.null(names(update))|is.null(names(default)))stop("No name")
     inter = intersect(names(update), names(default))
     la = setdiff(names(default), inter)
-    return(c(default[la, drop = F], update))
+    return(c(default[la, drop = FALSE], update))
   }
 }
 
@@ -105,9 +110,7 @@ update_param=function(default,update){
 #' @return NULL
 #' @export
 #'
-#' @examples
-#' lib_ps("ggplot2", "dplyr")
-lib_ps <- function(p_list, ..., all_yes = F, library = T) {
+lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
   some_packages <- c(
     "ggsankey" = "davidsjoberg/ggsankey",
     "sankeyD3" = "fbreitwieser/sankeyD3",
@@ -126,7 +129,7 @@ lib_ps <- function(p_list, ..., all_yes = F, library = T) {
   for (p in p_list) {
     if (!requireNamespace(p)) {
       if (!all_yes) {
-        print(paste0(p, ": this package haven't install, should install?"))
+        message(paste0(p, ": this package haven't install, should install?"))
         flag <- readline("yes/no(y/n)?")
       } else {
         flag <- "y"
@@ -144,7 +147,7 @@ lib_ps <- function(p_list, ..., all_yes = F, library = T) {
 
       if (!requireNamespace(p)) {
         if (!all_yes) {
-          print(paste0(p, " is not available in CRAN, try Bioconductor?"))
+          message(paste0(p, " is not available in CRAN, try Bioconductor?"))
           flag <- readline("yes/no(y/n)?")
         }
 
@@ -157,8 +160,7 @@ lib_ps <- function(p_list, ..., all_yes = F, library = T) {
       }
 
       if (!requireNamespace(p)) {
-        cat("\n")
-        stop("please try other way (github...) to install ", p)
+        stop("\nplease try other way (github...) to install ", p)
       }
     }
 
@@ -172,7 +174,7 @@ lib_ps <- function(p_list, ..., all_yes = F, library = T) {
 #' @param p_list a vector of packages list
 #' @param origin keep the original Namespace
 #' @param ... packages
-#'
+#' @return NULL
 #' @export
 del_ps <- function(p_list, ..., origin = NULL) {
   p_list <- c(p_list, ...)
@@ -181,13 +183,13 @@ del_ps <- function(p_list, ..., origin = NULL) {
   p_list <- p_list[p_list %in% all]
   if (!is.null(origin)) p_list <- setdiff(p_list, origin)
   for (p in p_list) {
-    detach(p, character.only = T)
+    detach(p, character.only = TRUE)
   }
 }
 
 #' Three-line table
 #'
-#' @param df a dataframe
+#' @param df a data.frame
 #' @param digits how many digits should remain
 #' @param nrow show how many rows
 #' @param ncol show how many columns
@@ -198,16 +200,16 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #data(otutab)
-#' #sanxian(otutab)
+#' \donttest{
+#' data(otutab)
+#' sanxian(otutab)
 #' }
-sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...) {
-  if (nrow(df) > nrow) df <- df[1:nrow, , drop = F]
-  if (ncol(df) > ncol) df <- df[, 1:ncol, drop = F]
+sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, ...) {
+  if (nrow(df) > nrow) df <- df[1:nrow, , drop = FALSE]
+  if (ncol(df) > ncol) df <- df[, 1:ncol, drop = FALSE]
 
   if (fig) {
-    lib_ps("ggpubr", "dplyr", library = F)
+    lib_ps("ggpubr", "dplyr", library = FALSE)
     df %>%
       dplyr::mutate_if(is.numeric, \(x)round(x, digits = digits)) %>%
       ggpubr::ggtexttable(..., theme = ggpubr::ttheme("blank")) %>%
@@ -215,8 +217,8 @@ sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...) {
       ggpubr::tab_add_hline(at.row = nrow(df) + 1, row.side = "bottom", linewidth = 3) -> p
     return(p)
   } else {
-    lib_ps("kableExtra", library = F)
-    kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+    lib_ps("kableExtra", library = FALSE)
+    kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")
   }
 }
 
@@ -231,8 +233,8 @@ sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...) {
 #' @examples
 #' rgb2code(c(12, 23, 34))
 #' rgb2code("#69C404", rev = TRUE)
-rgb2code <- function(x, rev = F) {
-  lib_ps("dplyr", library = F)
+rgb2code <- function(x, rev = FALSE) {
+  lib_ps("dplyr", library = FALSE)
   r=g=b=NULL
   if (rev) {
     if (is.vector(x)) {
@@ -264,11 +266,14 @@ rgb2code <- function(x, rev = F) {
 #' @param color characteristic
 #'
 #' @export
+#' @return TRUE or FALSE
 #' @examples
 #' is.ggplot.color("red")
-#'
+#' is.ggplot.color("notcolor")
+#' is.ggplot.color(NA)
+#' is.ggplot.color("#000")
 is.ggplot.color <- function(color) {
-  is.col <- grepl("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|[A-Fa-f0-9]{8})$", color)
+  is.col <- grepl("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$", color)
   is.name <- color %in% grDevices::colors()
   (is.col | is.name | is.na(color)) # NA accepted
 }
@@ -276,7 +281,7 @@ is.ggplot.color <- function(color) {
 #' Add alpha for a Rcolor
 #' @param color Rcolor
 #' @param alpha alpha, default 0.3
-#'
+#' @return 8 hex color
 #' @export
 #' @examples
 #' add_alpha("red",0.3)
@@ -296,10 +301,11 @@ add_alpha <- function(color, alpha = 0.3) {
 #' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
 #' @param ... additional arguments
 #'
+#' @return NULL
 #' @export
 plotpdf <- function(plist, file = "new", width = 8, height = 7, brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
   if (inherits(plist, "htmlwidget")) {
-    lib_ps("pagedown", "htmlwidgets", library = F)
+    lib_ps("pagedown", "htmlwidgets", library = FALSE)
     if (!file.exists(brower)) stop(brower, "is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
     suppressMessages(htmlwidgets::saveWidget(plist, "tmppp.html"))
     pagedown::chrome_print("tmppp.html", paste0(file, ".pdf"),
@@ -322,10 +328,10 @@ plotpdf <- function(plist, file = "new", width = 8, height = 7, brower = "/Appli
 #' @param plist plot list
 #' @param file prefix of your .gif file
 #' @param mode "gif" or "html"
-#'
+#' @return NULL
 #' @export
 plotgif <- function(plist, file = "new", mode = "gif") {
-  lib_ps("animation", library = F)
+  lib_ps("animation", library = FALSE)
   if (mode == "gif") {
     animation::saveGIF(
       for (i in plist) {
@@ -336,7 +342,9 @@ plotgif <- function(plist, file = "new", mode = "gif") {
   }
   # transfer pngs to a gif use gifski::gifski()
   if (mode == "html") {
-    nwd <- getwd()
+    oldwd <- getwd()
+    on.exit(setwd(oldwd))
+
     dir.create(paste0(file, "_html"))
     setwd(paste0(file, "_html"))
     animation::saveHTML(
@@ -345,7 +353,6 @@ plotgif <- function(plist, file = "new", mode = "gif") {
       },
       movie.name = paste0(file, ".html")
     )
-    setwd(nwd)
   }
 }
 
@@ -355,15 +362,16 @@ plotgif <- function(plist, file = "new", mode = "gif") {
 #' @param pal col1~3; or a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
 #' @param picture a picture file, colors will be extracted from the picture
 #'
-#' @return n colors
+#' @return a vector of n colors
 #' @export
 #'
 #' @examples
 #' get_cols(10, "col2") -> my_cols
 #' scales::show_col(my_cols)
-#' # scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-#' # scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
-#' # scales::show_col(get_cols(4,picture="~/Desktop/test.png"))
+#' \donttest{
+#' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
+#' scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
+#' }
 get_cols <- function(n, pal = "col1", picture = NULL) {
   col1 <- c(
     "#8dd3c7", "#ffed6f", "#bebada", "#fb8072", "#80b1d3",
@@ -384,7 +392,7 @@ get_cols <- function(n, pal = "col1", picture = NULL) {
   if (length(pal) == 1) pal <- get(pal)
 
   if (!is.null(picture)) {
-    lib_ps("RImagePalette", "tools", "jpeg", "png", library = F)
+    lib_ps("RImagePalette", "tools", "jpeg", "png", library = FALSE)
     type <- tools::file_ext(picture)
     switch(type,
       "jpg" = {
@@ -446,6 +454,7 @@ add_theme <- function(set_theme = NULL) {
 #'
 #' @export
 #'
+#' @return a numeric vector
 #' @examples
 #' remove.outliers(c(1, 10:15))
 remove.outliers <- function(x, factor = 1.5) {
@@ -465,6 +474,7 @@ remove.outliers <- function(x, factor = 1.5) {
 #'
 #' @export
 #'
+#' @return two columns: first is type, second is number
 #' @examples
 #' count2(data.frame(group = c("A", "A", "B", "C", "C", "A"), value = c(2, 2, 2, 1, 3, 1)))
 count2 <- function(df) {
@@ -512,10 +522,11 @@ grepl.data.frame <- function(pattern, x, ...) {
 
 #' Group your data
 #'
-#' @param otutab dataframe
+#' @param otutab data.frame
 #' @param group group vector
 #' @param margin 1 for row and 2 for column(default: 2)
 #' @param act do (default: mean)
+#' @return data.frame
 #'
 #' @export
 #'
@@ -544,7 +555,7 @@ hebing<-function(otutab,group,margin=2,act='mean'){
 #' @param colnames colnames for the result
 #' @param ... other arguments are passed to \code{\link[base]{strsplit}}
 #'
-#' @return dataframe
+#' @return data.frame
 #' @export
 #'
 #' @examples
@@ -565,23 +576,24 @@ strsplit2 <- function(x, split, colnames = NULL, ...) {
   out
 }
 
-#' Explode a dataframe if there are split charter in one column
+#' Explode a data.frame if there are split charter in one column
 #'
-#' @param df dataframe
+#' @param df data.frame
 #' @param column column
 #' @param split split string
 #'
 #' @export
 #'
+#' @return data.frame
 #' @examples
-#' \dontrun{
-#' #df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
-#' #explode(df, "b", ",")
+#' \donttest{
+#' df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
+#' explode(df, "b", ",")
 #' }
 explode <- function(df, column, split = ",") {
-  lib_ps("tidyr", "dplyr", library = F)
+  lib_ps("tidyr", "dplyr", library = FALSE)
   df <- tidyr::as_tibble(df)
-  df[[column]] <- strsplit(df[, column, drop = T], split = split)
+  df[[column]] <- strsplit(df[, column, drop = TRUE], split = split)
   tidyr::unnest(df, dplyr::all_of(column)) %>% as.data.frame()
 }
 
@@ -594,10 +606,10 @@ explode <- function(df, column, split = ",") {
 #' @return data.frame
 #' @export
 #'
-read.file <- function(file, format = NULL, just_print = F) {
+read.file <- function(file, format = NULL, just_print = FALSE) {
   if (just_print) {
     if (file.size(file) > 10000) {
-      print(paste0(file, ": this file is a little big, still open?"))
+      message(paste0(file, ": this file is a little big, still open?"))
       flag <- readline("yes/no(y/n)?")
       if (tolower(flag) %in% c("yes", "y")) {
         cat(readr::read_file(file))
@@ -637,7 +649,7 @@ read.file <- function(file, format = NULL, just_print = F) {
     }
 
     if (format %in% c("jpg", "png")) {
-      lib_ps("jpeg", "png", "graphics", library = F)
+      lib_ps("jpeg", "png", "graphics", library = FALSE)
       switch(format,
         "jpg" = {
           p1 <- jpeg::readJPEG(file)
@@ -646,11 +658,11 @@ read.file <- function(file, format = NULL, just_print = F) {
           p1 <- png::readPNG(file)
         }
       )
-      graphics::plot(1:2, type = "n", axes = F, ylab = "n", xlab = "n", ann = FALSE)
+      graphics::plot(1:2, type = "n", axes = FALSE, ylab = "n", xlab = "n", ann = FALSE)
       graphics::rasterImage(p1, 1, 1, 2, 2)
     }
     if (format == "svg") {
-      lib_ps("grImport2", "ggpubr", library = F)
+      lib_ps("grImport2", "ggpubr", library = FALSE)
       x <- grImport2::readPicture(file)
       g <- grImport2::pictureGrob(x)
       p <- ggpubr::as_ggplot(g)
@@ -665,7 +677,7 @@ read.file <- function(file, format = NULL, just_print = F) {
 #' @export
 read_fasta <- function(fasta_file) {
   fasta_data <- readLines(fasta_file)
-  # create a null dataframe
+  # create a null data.frame
   df <- data.frame(stringsAsFactors = FALSE)
 
   # initialize
@@ -696,9 +708,9 @@ read_fasta <- function(fasta_file) {
   df
 }
 
-#' Write a dataframe to fasta
+#' Write a data.frame to fasta
 #'
-#' @param df dataframe
+#' @param df data.frame
 #' @param file_path output file path
 #' @param str_per_line how many base or animo acid in one line, if NULL, one sequence in one line.
 #'
@@ -749,12 +761,12 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
   if (to_format == "jpeg") to_format <- "jpg"
   if (format == to_format) stop("don not need transfer")
 
-  lib_ps("ggplot2", library = F)
+  lib_ps("ggplot2", library = FALSE)
   if (format == "svg") {
     if (to_format == "html") {
       file.copy(file, out)
     } else {
-      lib_ps("rsvg", "grImport2", library = F)
+      lib_ps("rsvg", "grImport2", library = FALSE)
       rsvg::rsvg_svg(file, file)
       x <- grImport2::readPicture(file)
       g <- grImport2::pictureGrob(x)
@@ -763,7 +775,7 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
     }
   }
   if (format == "pdf") {
-    lib_ps("pdftools", library = F)
+    lib_ps("pdftools", library = FALSE)
     switch(to_format,
       "png" = {
         pdftools::pdf_convert(file, "png", filenames = out)
@@ -779,7 +791,7 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
   # https://phantomjs.org/download.html
   # PhantomJS
   if (format == "png") {
-    lib_ps("png", "grid", library = F)
+    lib_ps("png", "grid", library = FALSE)
     img <- png::readPNG(file)
     g <- grid::rasterGrob(img, interpolate = TRUE)
     p <- ggplot2::ggplot() +
@@ -789,7 +801,7 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
     invisible(g)
   }
   if (format == "jpg") {
-    lib_ps("jpg", "grid", library = F)
+    lib_ps("jpg", "grid", library = FALSE)
     img <- jpeg::readJPEG(file)
     g <- grid::rasterGrob(img, interpolate = TRUE)
     p <- ggplot2::ggplot() +
@@ -822,6 +834,7 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
 #' @param dir dir
 #' @param bget_path your bget_path
 #'
+#' @return file at work directory
 #' @export
 #'
 get_doi <- function(doi, dir = "~/Downloads/", bget_path = "~/software/bget_0.3.2_Darwin_64-bit/bget") {
