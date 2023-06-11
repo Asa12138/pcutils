@@ -11,6 +11,9 @@ remove.outliers(x, factor = 1.5)
 
 \item{factor}{default 1.5}
 }
+\value{
+a numeric vector
+}
 \description{
 Remove outliers
 }

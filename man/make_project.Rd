@@ -20,6 +20,9 @@ make_project(
 
 \item{csl}{cite papers format, default science.csl}
 }
+\value{
+No return value
+}
 \description{
 Make a R-analysis project
 }

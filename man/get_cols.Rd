@@ -14,7 +14,7 @@ get_cols(n, pal = "col1", picture = NULL)
 \item{picture}{a picture file, colors will be extracted from the picture}
 }
 \value{
-n colors
+a vector of n colors
 }
 \description{
 Get n colors
@@ -22,7 +22,8 @@ Get n colors
 \examples{
 get_cols(10, "col2") -> my_cols
 scales::show_col(my_cols)
-# scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-# scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
-# scales::show_col(get_cols(4,picture="~/Desktop/test.png"))
+\donttest{
+scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
+scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
+}
 }

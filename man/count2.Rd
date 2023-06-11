@@ -9,6 +9,9 @@ count2(df)
 \arguments{
 \item{df}{two columns: first is type, second is number}
 }
+\value{
+two columns: first is type, second is number
+}
 \description{
 Like uniq -c in shell to count a vector
 }

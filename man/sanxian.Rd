@@ -4,10 +4,10 @@
 \alias{sanxian}
 \title{Three-line table}
 \usage{
-sanxian(df, digits = 3, nrow = 10, ncol = 10, fig = F, ...)
+sanxian(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, ...)
 }
 \arguments{
-\item{df}{a dataframe}
+\item{df}{a data.frame}
 
 \item{digits}{how many digits should remain}
 
@@ -26,8 +26,8 @@ a ggplot
 Three-line table
 }
 \examples{
-\dontrun{
-#data(otutab)
-#sanxian(otutab)
+\donttest{
+data(otutab)
+sanxian(otutab)
 }
 }

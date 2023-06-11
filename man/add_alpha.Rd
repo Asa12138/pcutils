@@ -11,6 +11,9 @@ add_alpha(color, alpha = 0.3)
 
 \item{alpha}{alpha, default 0.3}
 }
+\value{
+8 hex color
+}
 \description{
 Add alpha for a Rcolor
 }

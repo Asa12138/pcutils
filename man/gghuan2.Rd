@@ -2,14 +2,14 @@
 % Please edit documentation in R/plots.R
 \name{gghuan2}
 \alias{gghuan2}
-\title{gghuan2 for multi-columns}
+\title{gghuan2 for multi-doughnut chart}
 \usage{
 gghuan2(
   tab = NULL,
   `break` = 0.2,
-  name = T,
-  number = T,
-  percentage = F,
+  name = TRUE,
+  number = TRUE,
+  percentage = FALSE,
   text_col = "black"
 )
 }
@@ -27,10 +27,10 @@ gghuan2(
 \item{text_col}{defalut, black}
 }
 \value{
-ggplot
+a ggplot
 }
 \description{
-gghuan2 for multi-columns
+gghuan2 for multi-doughnut chart
 }
 \examples{
 data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),

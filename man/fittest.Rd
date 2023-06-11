@@ -9,12 +9,9 @@ fittest(a)
 \arguments{
 \item{a}{a numeric vector}
 }
+\value{
+distribution
+}
 \description{
 Fit a distribution
-}
-\examples{
-\dontrun{
-#a <- runif(50)
-#fittest(a)
-}
 }

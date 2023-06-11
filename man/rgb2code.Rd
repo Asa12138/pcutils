@@ -4,7 +4,7 @@
 \alias{rgb2code}
 \title{Transform a rgb vector to a Rcolor code}
 \usage{
-rgb2code(x, rev = F)
+rgb2code(x, rev = FALSE)
 }
 \arguments{
 \item{x}{vector or three columns data.frame}

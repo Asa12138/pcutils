@@ -4,7 +4,7 @@
 \alias{mmscale}
 \title{Min_Max scale}
 \usage{
-mmscale(x, min_s = 0, max_s = 1, n = 1, plot = F)
+mmscale(x, min_s = 0, max_s = 1, n = 1, plot = FALSE)
 }
 \arguments{
 \item{x}{a numeric vector}

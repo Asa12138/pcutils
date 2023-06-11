@@ -12,7 +12,7 @@
 #' @examples
 #' x <- runif(10)
 #' mmscale(x, 5, 10)
-mmscale <- function(x, min_s = 0, max_s = 1, n = 1, plot = F) {
+mmscale <- function(x, min_s = 0, max_s = 1, n = 1, plot = FALSE) {
   if (n <= 0) stop("n should bigger than 0")
   if ((max(x) - min(x)) == 0) {
     return(rep((min_s + max_s) / 2, length(x)))
@@ -30,7 +30,7 @@ mmscale <- function(x, min_s = 0, max_s = 1, n = 1, plot = F) {
 #' @param group two-levels group vector
 #'
 #' @export
-#'
+#' @return NULL
 #' @examples
 #' twotest(runif(20), rep(c("a", "b"), each = 10))
 twotest <- function(var, group) {
@@ -50,6 +50,7 @@ twotest <- function(var, group) {
 #' @param return return which method result (tukeyHSD or LSD or wilcox?)
 #' @param print whether print the result
 #'
+#' @return NULL or a dataframe.
 #' @description
 #' anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
 #' LSD and TukeyHSD are post hoc test of anova.
@@ -59,20 +60,18 @@ twotest <- function(var, group) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' #multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = F, return = "wilcox") -> aa
-#' }
-multitest <- function(var, group, print = T, return = F) {
+#' multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = FALSE, return = "wilcox") -> aa
+multitest <- function(var, group, print = TRUE, return = FALSE) {
   methods <- c("LSD", "TukeyHSD", "dunn", "nemenyi", "wilcox", "ttest")
   if (is.character(return)) {
     return <- match.arg(return, methods)
-    print <- F
+    print <- FALSE
   }
   if (print) {
     return <- methods
   }
 
-  lib_ps("agricolae", "PMCMRplus", library = F)
+  lib_ps("agricolae", library = FALSE)
   group <- factor(group)
   means <- stats::aggregate(var, by = list(group), mean)$x
 
@@ -87,7 +86,7 @@ multitest <- function(var, group, print = T, return = F) {
   }
 
   # TukeyHSD
-  if ("TukeyHSD" %in% return) tukeyres <- TukeyHSD(ano)
+  if ("TukeyHSD" %in% return) tukeyres <- stats::TukeyHSD(ano)
 
   if (identical(return, "tukeyHSD")) {
     p_mat <- matrix(1, ncol = ntr, nrow = ntr)
@@ -97,7 +96,10 @@ multitest <- function(var, group, print = T, return = F) {
   }
 
   # dunn
-  if ("dunn" %in% return) dunnres <- PMCMRplus::kwAllPairsDunnTest(var ~ group)
+  if ("dunn" %in% return){
+    lib_ps("PMCMRplus", library = FALSE)
+    dunnres <- PMCMRplus::kwAllPairsDunnTest(var ~ group)
+  }
   if (identical(return, "dunn")) {
     p_mat <- matrix(1, ncol = ntr, nrow = ntr)
     for (i in 1:(ntr - 1)) {
@@ -114,7 +116,10 @@ multitest <- function(var, group, print = T, return = F) {
   }
 
   # nemenyi
-  if ("nemenyi" %in% return) nemenyires <- PMCMRplus::kwAllPairsNemenyiTest(var ~ group)
+  if ("nemenyi" %in% return){
+    lib_ps("PMCMRplus", library = FALSE)
+    nemenyires <- PMCMRplus::kwAllPairsNemenyiTest(var ~ group)
+  }
   if (identical(return, "nemenyi")) {
     p_mat <- matrix(1, ncol = ntr, nrow = ntr)
     for (i in 1:(ntr - 1)) {
@@ -195,28 +200,24 @@ multitest <- function(var, group, print = T, return = F) {
 #' @param a a numeric vector
 #'
 #' @export
-#' @examples
-#' \dontrun{
-#' #a <- runif(50)
-#' #fittest(a)
-#' }
+#' @return distribution
 fittest <- function(a) {
-  lib_ps("fitdistrplus", "nortest", library = F)
+  lib_ps("fitdistrplus", "nortest", library = FALSE)
   if (is.vector(a)) {
     dabiao("1.Basic plot")
     plot(a)
     dabiao("2.QQ plot")
-    qqnorm(a, col = "red", main = "a")
-    qqline(a, col = "blue")
+    stats::qqnorm(a, col = "red", main = "a")
+    stats::qqline(a, col = "blue")
     # fitdistrplus package multiple distribution judgment package multiple distribution judgment
     dabiao("3.fitdistrplus plot")
     fitdistrplus::descdist(a)
-    print("use fitdis(a) to test which distribution. e.g:fitdis(a,'norm')")
+    message("use fitdis(a) to test which distribution. e.g:fitdis(a,'norm')")
     # Whether the statistical test is normal (goodness of fit test)
     # （1）Shapiro-Wilks test：
     stats::shapiro.test(a) |> print()
     # （2）Kolmogorov-Smirnov(K-S test)
-    stats::ks.test(a, "pnorm", mean = mean(a), sd = sqrt(var(a))) |> print()
+    stats::ks.test(a, "pnorm", mean = mean(a), sd = sqrt(stats::var(a))) |> print()
     # （3）Cramer-Von Mises test（cvm.test）
     nortest::cvm.test(a) |> print()
     # （4）Anderson Darling test
@@ -229,11 +230,11 @@ fittest <- function(a) {
 #' @param geo a two-columns dataframe, first is latitude, second is longitude
 #'
 #' @export
-#'
+#' @return data.frame
 #' @examples
-#' \dontrun{
-#' #data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
-#' #toXY(geo)
+#' \donttest{
+#' data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
+#' toXY(geo)
 #' }
 toXY <- function(geo) {
   lib_ps("SoDA", library = F)

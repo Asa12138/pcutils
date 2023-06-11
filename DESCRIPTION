@@ -1,19 +1,25 @@
 Package: pcutils
 Type: Package
-Title: Some useful functions for statistics and visualization
+Title: Some Useful Functions for Statistics and Visualization
 Version: 0.1.1
 Author: Peng Chen [aut, cre]
 Maintainer: Peng Chen <pengchen2001@zju.edu.cn>
 Authors@R:
     person("Peng", "Chen",email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"))
 Description: 
-    `pcutils` contains many useful tools or functions for statistics or visualization. 
-    Some other specialized analysis packages based on these basic functions.
+    Offers a range of utilities and functions for everyday programming tasks. 
+    1.Data Manipulation. Such as grouping and merging, column splitting, and character expansion.
+    2.File Handling. Read and convert files in popular formats, including "blast", "diamond", "fasta", "gff", "gtf", and various image formats like "jpg", "png", "pdf", and "svg". 
+    3.Plotting Assistance. Helpful utilities for generating color palettes, validating color formats, and adding transparency. 
+    4.Statistical Analysis. Includes functions for pairwise comparisons and multiple testing corrections, 
+    enabling perform statistical analyses with ease.
+    5.Graph Plotting, Provides efficient tools for creating doughnut plot and multi-layered doughnut plot;
+    Venn diagrams, including traditional Venn diagrams, upset plots, and flower plots; 
+    Simplified functions for creating stacked bar plots, or a box plot with alphabets group for multiple comparison group.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Lazydata: true
 Depends: 
     R (>= 4.0.0)
 Imports: 
@@ -24,7 +30,8 @@ Imports:
     utils,
     grDevices,
     reshape2,
-    scales
+    scales,
+    agricolae,
 Suggests:
     testthat,
     clipr,
@@ -48,7 +55,6 @@ Suggests:
     pdftools,
     rsvg,
     PMCMRplus,
-    agricolae,
     nortest,
     fitdistrplus,
     ggalluvial,

@@ -23,17 +23,21 @@ venn(...)
 }
 \value{
 a plot
+
+a plot
+
+a plot
 }
 \description{
 Plot a general venn (upset, flower)
 }
 \examples{
-\dontrun{
-#aa <- list(a = 1:3, b = 3:7, c = 2:4)
-#venn(aa, mode = "venn")
-#venn(aa, mode = "venn2", type = "ChowRuskey")
-#venn(aa, mode = "upset")
-#data(otutab)
-#venn(otutab, mode = "flower")
+\donttest{
+aa <- list(a = 1:3, b = 3:7, c = 2:4)
+venn(aa, mode = "venn")
+venn(aa, mode = "venn2", type = "ChowRuskey")
+venn(aa, mode = "upset")
+data(otutab)
+venn(otutab, mode = "flower")
 }
 }

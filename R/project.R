@@ -6,7 +6,7 @@
 #' @param csl cite papers format, default science.csl
 #'
 #' @export
-#'
+#' @return No return value
 make_project <- function(pro_n, root_dir = "~/Documents/R/",
                          bib = "~/Documents/R/pc_blog/content/bib/My Library.bib",
                          csl = "~/Documents/R/pc_blog/content/bib/science.csl") {
@@ -51,7 +51,7 @@ kin_col=c(k__Bacteria="#a6bce3",k__Fungi="#fdbf6f",k__Metazoa="#fb9a99",k__Virid
 
 add_theme()', file = paste(pro_dir, "analysis", "R_config.R", sep = "/"))
 
-  print(paste0("Set `", pro_n, "` sucessfully! Open project at directory: `", pro_dir, "`"))
+  message(paste0("Set `", pro_n, "` sucessfully! Open project at directory: `", pro_dir, "`"))
 }
 
 #' Add an analysis for a project
@@ -62,12 +62,12 @@ add_theme()', file = paste(pro_dir, "analysis", "R_config.R", sep = "/"))
 #' @param theme 1~10
 #'
 #' @export
-#'
+#' @return No return value
 add_analysis <- function(analysis_n, title = analysis_n, author = "Peng Chen", theme = 1) {
   pro_n <- list.files(pattern = "*.Rproj")
   pro_n <- gsub(".Rproj", "", pro_n)
   if (length(pro_n) != 1) stop("make sure there is a *.Rproj file in your `getwd()`")
-  print(paste0("Add ", analysis_n, " for project ", pro_n))
+  message(paste0("Add ", analysis_n, " for project ", pro_n))
 
   # rmdls=list.files(pattern = "*.Rmd")%>%gsub(".Rmd","",.)
   if (file.exists(paste0(analysis_n, ".Rmd"))) stop(paste0(analysis_n, ".Rmd already exists!"))
@@ -82,7 +82,7 @@ add_analysis <- function(analysis_n, title = analysis_n, author = "Peng Chen", t
   if (!file.exists("my.csl")) my_csl <- "\nbiblio-style: apa"
 
   if (theme != 1) {
-    lib_ps("rmdformats", "prettydoc", "tufte", library = F)
+    lib_ps("rmdformats", "prettydoc", "tufte", library = FALSE)
   }
   output_theme <- c("
 output:
@@ -143,25 +143,25 @@ editor_options:
 
 ```{r setup, include = FALSE}
 path <- "', getwd(), '"
-knitr::opts_chunk$set(eval=T, #run code in chunks (default = TRUE)
-                       highlight = T, #highlight display
-                       echo = T, #whether to include the source code in the output
-                       tidy=T, #whether to organize the code
-                       error = T, #Whether to include error information in the output
-                       warning = F, #Whether to include warnings in the output (default = TRUE)
-                       message = F, #whether to include reference information in the output
-                       cache=T, #whether to cache
-                       collapse = F # output in one piece
+knitr::opts_chunk$set(eval=TRUE, #run code in chunks (default = TRUE)
+                       highlight = TRUE, #highlight display
+                       echo = TRUE, #whether to include the source code in the output
+                       tidy=TRUE, #whether to organize the code
+                       error = TRUE, #Whether to include error information in the output
+                       warning = FALSE, #Whether to include warnings in the output (default = TRUE)
+                       message = FALSE, #whether to include reference information in the output
+                       cache=TRUE, #whether to cache
+                       collapse = FALSE # output in one piece
                        )
 knitr::opts_knit$set(root.dir = path)
 ```
 Install and import all dependent packages, data import:
-```{r import,echo=T, message=FALSE, warning=FALSE, results="hide"}
+```{r import,echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
 source("./R_config.R")
 output="', analysis_n, '/"
 ```
 # Header1
-```{r test,echo=T,fig.cap="Test fig"}
+```{r test,echo=TRUE,fig.cap="Test fig"}
 a=data.frame(type=letters[1:6],num=c(1,3,3,4,5,10))
 gghuan(a)+scale_fill_manual(values=get_cols(6,"col3"))
 ggsave("', paste0(analysis_n, "/test.pdf"), '")

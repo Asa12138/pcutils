@@ -11,13 +11,13 @@ group_box(
   mode = 1,
   group_order = NULL,
   facet_order = NULL,
-  alpha = F,
+  alpha = FALSE,
   method = "wilcox",
   alpha_param = list(color = "red"),
-  p_value1 = F,
-  p_value2 = F,
+  p_value1 = FALSE,
+  p_value2 = FALSE,
   stat_compare_means_param = NULL,
-  trend_line = F,
+  trend_line = FALSE,
   trend_line_param = list(color = "blue")
 )
 }
@@ -51,7 +51,7 @@ group_box(
 \item{trend_line_param}{parameters parse to \code{\link[ggplot2]{geom_smooth}}}
 }
 \value{
-a 'ggplot' plot object,
+a ggplot
 }
 \description{
 Plot a boxplot

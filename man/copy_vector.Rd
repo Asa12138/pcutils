@@ -9,6 +9,9 @@ copy_vector(vec)
 \arguments{
 \item{vec}{a R vector object}
 }
+\value{
+No return value
+}
 \description{
 Copy a vector
 }

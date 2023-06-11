@@ -9,12 +9,15 @@ toXY(geo)
 \arguments{
 \item{geo}{a two-columns dataframe, first is latitude, second is longitude}
 }
+\value{
+data.frame
+}
 \description{
 Transfer Geographical latitude and longitude to XY(m)
 }
 \examples{
-\dontrun{
-#data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
-#toXY(geo)
+\donttest{
+data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
+toXY(geo)
 }
 }
