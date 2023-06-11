@@ -504,7 +504,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
           data = aa, mapping = aes(x = variable, y = (high + 0.15 * (high - low)), label = groups),
           inherit.aes = FALSE, color = "red", size = 5, position = position_nudge(x = .1)
         ),
-        text_param
+        alpha_param
       ))
     } else {
       # p <- p + geom_text(
@@ -516,11 +516,10 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
           data = aa, mapping = aes(x = variable, y = (high + 0.05 * (high - low)), label = groups),
           inherit.aes = FALSE, color = "red", size = 5
         ),
-        text_param
+        alpha_param
       ))
     }
   }
-
   return(p)
 }
 
