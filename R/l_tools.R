@@ -107,7 +107,7 @@ update_param=function(default,update){
 #' @param library should library the package or just get Namespace ?
 #' @param ... packages
 #'
-#' @return NULL
+#' @return No return value
 #' @export
 #'
 lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
@@ -174,7 +174,7 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
 #' @param p_list a vector of packages list
 #' @param origin keep the original Namespace
 #' @param ... packages
-#' @return NULL
+#' @return No return value
 #' @export
 del_ps <- function(p_list, ..., origin = NULL) {
   p_list <- c(p_list, ...)
@@ -301,9 +301,9 @@ add_alpha <- function(color, alpha = 0.3) {
 #' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
 #' @param ... additional arguments
 #'
-#' @return NULL
+#' @return No return value
 #' @export
-plotpdf <- function(plist, file = "new", width = 8, height = 7, brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
+plotpdf <- function(plist, file, width = 8, height = 7, brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
   if (inherits(plist, "htmlwidget")) {
     lib_ps("pagedown", "htmlwidgets", library = FALSE)
     if (!file.exists(brower)) stop(brower, "is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
@@ -328,9 +328,9 @@ plotpdf <- function(plist, file = "new", width = 8, height = 7, brower = "/Appli
 #' @param plist plot list
 #' @param file prefix of your .gif file
 #' @param mode "gif" or "html"
-#' @return NULL
+#' @return No return value
 #' @export
-plotgif <- function(plist, file = "new", mode = "gif") {
+plotgif <- function(plist, file, mode = "gif") {
   lib_ps("animation", library = FALSE)
   if (mode == "gif") {
     animation::saveGIF(
@@ -417,7 +417,7 @@ get_cols <- function(n, pal = "col1", picture = NULL) {
 #'
 #' @param set_theme your theme
 #'
-#' @return NULL
+#' @return No return value
 #' @export
 #'
 #' @examples
@@ -713,7 +713,7 @@ read_fasta <- function(fasta_file) {
 #' @param df data.frame
 #' @param file_path output file path
 #' @param str_per_line how many base or animo acid in one line, if NULL, one sequence in one line.
-#'
+#' @return file
 #' @export
 write_fasta <- function(df, file_path, str_per_line=70) {
   file_conn <- file(file_path, "w")

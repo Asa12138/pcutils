@@ -907,7 +907,7 @@ my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
 
 #' How to use parallel
 #' @export
-#' @return NULL
+#' @return No return value
 how_to_use_parallel=function(){
   message('  #parallel
   reps=100;threads=1
@@ -941,7 +941,7 @@ how_to_use_parallel=function(){
 
 #' How to update parameters
 #' @export
-#' @return NULL
+#' @return No return value
 how_to_update_parameters=function(){
   message('point_params = list(size=5,color="red")
 ggplot(data.frame(x=1:5,y=5:1), aes(x = x, y = y))+

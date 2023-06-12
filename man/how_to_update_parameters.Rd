@@ -6,6 +6,9 @@
 \usage{
 how_to_update_parameters()
 }
+\value{
+No return value
+}
 \description{
 How to update parameters
 }

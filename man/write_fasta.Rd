@@ -13,6 +13,9 @@ write_fasta(df, file_path, str_per_line = 70)
 
 \item{str_per_line}{how many base or animo acid in one line, if NULL, one sequence in one line.}
 }
+\value{
+file
+}
 \description{
 Write a data.frame to fasta
 }

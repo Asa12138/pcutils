@@ -16,7 +16,7 @@ multitest(var, group, print = TRUE, return = FALSE)
 \item{return}{return which method result (tukeyHSD or LSD or wilcox?)}
 }
 \value{
-NULL or a dataframe.
+No value or a dataframe.
 }
 \description{
 anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.

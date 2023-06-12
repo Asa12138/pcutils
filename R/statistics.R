@@ -30,7 +30,7 @@ mmscale <- function(x, min_s = 0, max_s = 1, n = 1, plot = FALSE) {
 #' @param group two-levels group vector
 #'
 #' @export
-#' @return NULL
+#' @return No return value
 #' @examples
 #' twotest(runif(20), rep(c("a", "b"), each = 10))
 twotest <- function(var, group) {
@@ -50,7 +50,7 @@ twotest <- function(var, group) {
 #' @param return return which method result (tukeyHSD or LSD or wilcox?)
 #' @param print whether print the result
 #'
-#' @return NULL or a dataframe.
+#' @return No value or a dataframe.
 #' @description
 #' anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
 #' LSD and TukeyHSD are post hoc test of anova.

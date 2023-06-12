@@ -9,6 +9,9 @@ add_theme(set_theme = NULL)
 \arguments{
 \item{set_theme}{your theme}
 }
+\value{
+No return value
+}
 \description{
 Add a global gg_theme and colors for plots
 }
