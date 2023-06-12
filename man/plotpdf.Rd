@@ -6,7 +6,7 @@
 \usage{
 plotpdf(
   plist,
-  file = "new",
+  file,
   width = 8,
   height = 7,
   brower = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
@@ -25,6 +25,9 @@ plotpdf(
 \item{brower}{the path of Google Chrome, Microsoft Edge or Chromium in your computer.}
 
 \item{...}{additional arguments}
+}
+\value{
+No return value
 }
 \description{
 Plot a multi-pages pdf

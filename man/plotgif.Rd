@@ -4,7 +4,7 @@
 \alias{plotgif}
 \title{Plot a gif}
 \usage{
-plotgif(plist, file = "new", mode = "gif")
+plotgif(plist, file, mode = "gif")
 }
 \arguments{
 \item{plist}{plot list}
@@ -12,6 +12,9 @@ plotgif(plist, file = "new", mode = "gif")
 \item{file}{prefix of your .gif file}
 
 \item{mode}{"gif" or "html"}
+}
+\value{
+No return value
 }
 \description{
 Plot a gif

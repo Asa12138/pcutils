@@ -13,6 +13,9 @@ del_ps(p_list, ..., origin = NULL)
 
 \item{origin}{keep the original Namespace}
 }
+\value{
+No return value
+}
 \description{
 Detach packages
 }

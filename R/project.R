@@ -17,7 +17,7 @@ make_project <- function(pro_n, root_dir = "~/Documents/R/",
     pro_dir <- paste0(root_dir, "/", pro_n)
   }
 
-  if (dir.exists(pro_dir)) stop("directory exsit, try other name")
+  if (dir.exists(pro_dir)) stop("directory exist, try other name")
   dir.create(pro_dir)
   lapply(c("data", "temp", "result", "summary", "analysis"), FUN = \(x)dir.create(paste(pro_dir, x, sep = "/")))
   lapply(c("R_config.R", paste0(pro_n, ".Rproj")), FUN = \(x)file.create(paste(pro_dir, "analysis", x, sep = "/")))

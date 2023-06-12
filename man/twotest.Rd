@@ -11,6 +11,9 @@ twotest(var, group)
 
 \item{group}{two-levels group vector}
 }
+\value{
+No return value
+}
 \description{
 Two-group test
 }

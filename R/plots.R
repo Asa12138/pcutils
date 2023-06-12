@@ -853,11 +853,61 @@ tax_wordcloud<-function(str_vector){
   sort(table(str_vector),decreasing = TRUE)[1:50]%>%as.data.frame()%>%
     remove_unclassfied()%>%stats::na.omit()%>%wordcloud2::wordcloud2(.,size=.7)
 }
+
+#' My circo plot
+#
+#' @param df dataframe with three column
+#' @param reorder reorder by number?
+#' @param pal a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
+#' @param mode "circlize","chorddiag"
+#' @param ... \code{\link[circlize]{chordDiagram}}
+#'
+#' @return chordDiagram
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="circlize")
+#' }
+my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
+  mode=match.arg(mode,c("circlize","chorddiag"))
+  colnames(df)=c("from","to","count")
+  lib_ps("reshape2","tibble",library = FALSE)
+  if(mode=="chorddiag"){
+    #need a square matrix
+    all_g=unique(df$from,df$to)
+    expand.grid(all_g,all_g)->tab
+    df=left_join(tab,df,by=c("Var1"="from","Var2"="to"))
+    colnames(df)=c("from","to","count")}
+
+  tab=reshape2::dcast(df,from~to,value.var = "count")%>%tibble::column_to_rownames("from")%>%as.matrix()
+  tab[is.na(tab)]=0
+
+  if(reorder){
+    colSums(tab)%>%sort(decreasing = TRUE)%>%names()->s_name
+    tab=tab[,s_name]
+    rowSums(tab)%>%sort(decreasing = TRUE)%>%names()->s_name
+    tab=tab[s_name,]
+  }
+
+  if(is.null(pal))pal=get_cols(length(unique(c(colnames(tab),rownames(tab)))))
+
+  if(mode=="circlize"){
+    lib_ps("circlize",library = FALSE)
+    circlize::chordDiagram(tab,grid.col = pal,...)
+  }
+  # if(mode=="chorddiag"){
+  #   lib_ps("chorddiag",library = FALSE)
+  #   chorddiag::chorddiag(tab,groupedgeColor= pal,...)
+  #   }
+}
+
+
 #=======some tips========
 
 #' How to use parallel
 #' @export
-#' @return NULL
+#' @return No return value
 how_to_use_parallel=function(){
   message('  #parallel
   reps=100;threads=1
@@ -891,7 +941,7 @@ how_to_use_parallel=function(){
 
 #' How to update parameters
 #' @export
-#' @return NULL
+#' @return No return value
 how_to_update_parameters=function(){
   message('point_params = list(size=5,color="red")
 ggplot(data.frame(x=1:5,y=5:1), aes(x = x, y = y))+

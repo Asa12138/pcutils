@@ -15,6 +15,9 @@ lib_ps(p_list, ..., all_yes = FALSE, library = TRUE)
 
 \item{library}{should library the package or just get Namespace ?}
 }
+\value{
+No return value
+}
 \description{
 Attach packages or install packages have not benn installed
 }

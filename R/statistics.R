@@ -30,7 +30,7 @@ mmscale <- function(x, min_s = 0, max_s = 1, n = 1, plot = FALSE) {
 #' @param group two-levels group vector
 #'
 #' @export
-#' @return NULL
+#' @return No return value
 #' @examples
 #' twotest(runif(20), rep(c("a", "b"), each = 10))
 twotest <- function(var, group) {
@@ -50,7 +50,7 @@ twotest <- function(var, group) {
 #' @param return return which method result (tukeyHSD or LSD or wilcox?)
 #' @param print whether print the result
 #'
-#' @return NULL or a dataframe.
+#' @return No value or a dataframe.
 #' @description
 #' anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
 #' LSD and TukeyHSD are post hoc test of anova.
@@ -223,22 +223,4 @@ fittest <- function(a) {
     # （4）Anderson Darling test
     nortest::ad.test(a) |> print()
   }
-}
-
-#' Transfer Geographical latitude and longitude to XY(m)
-#'
-#' @param geo a two-columns dataframe, first is latitude, second is longitude
-#'
-#' @export
-#' @return data.frame
-#' @examples
-#' \donttest{
-#' data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
-#' toXY(geo)
-#' }
-toXY <- function(geo) {
-  lib_ps("SoDA", library = F)
-  XY <- SoDA::geoXY(geo[, 1], geo[, 2])
-  # geosphere::distm
-  return(as.data.frame(row.names = rownames(geo), XY))
 }
