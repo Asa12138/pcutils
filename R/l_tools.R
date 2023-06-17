@@ -5,13 +5,15 @@
 #' @param ... strings will be paste together
 #' @param char side chars default:=
 #' @param n the number of output length
+#' @param print print or message?
 #' @param mode "middle", "left" or "right"
+#'
 #' @examples
 #' dabiao("Start running!")
 #'
 #' @export
 #' @return No return value
-dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right")) {
+dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"),print=FALSE) {
   str <- paste0(c(str, ...), collapse = "")
   mode <- match.arg(mode, c("middle", "left", "right"))
   if (n < nchar(str)) n <- nchar(str) + 2
@@ -28,7 +30,8 @@ dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left",
            xx <- paste0(strrep(char, x + x2), str)
          }
   )
-  message(xx, "\n")
+  if(print)cat(xx, "\n")
+  else message(xx, "\n")
 }
 
 #' Copy a vector
@@ -595,6 +598,22 @@ explode <- function(df, column, split = ",") {
   df <- tidyr::as_tibble(df)
   df[[column]] <- strsplit(df[, column, drop = TRUE], split = split)
   tidyr::unnest(df, dplyr::all_of(column)) %>% as.data.frame()
+}
+
+#' Squash one column in a data.frame using other columns as id.
+#'
+#' @param df data.frame
+#' @param column column name, not numeric position
+#' @param split split string
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' df <- data.frame(a = c(1:2,1:2), b = letters[1:4])
+#' squash(df, "b", ",")
+squash = function(df, column, split = ",") {
+  stats::aggregate(reformulate(".",response = column),df,paste,collapse = split)
 }
 
 #' Read some special format file

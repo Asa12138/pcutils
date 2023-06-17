@@ -947,3 +947,107 @@ how_to_update_parameters=function(){
 ggplot(data.frame(x=1:5,y=5:1), aes(x = x, y = y))+
   do.call(geom_point, update_param(list(size=2,color="blue",alpha=0.5), point_params))')
 }
+
+#' How to use sbatch
+#' @export
+#' @return No return value
+how_to_use_sbatch=function(mode=1){
+  if(mode==1){
+    message("#!/bin/bash
+#SBATCH --job-name=fastp
+#SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
+#SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
+#SBATCH --partition=cpu
+#SBATCH -N 1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=2G
+#SBATCH --time=14-00:00:00
+echo start: `date +'%Y-%m-%d %T'`
+start=`date +%s`
+####################
+
+do something
+
+####################
+echo end: `date +'%Y-%m-%d %T'`
+end=`date +%s`
+echo TIME:`expr $end - $start`s")
+  }
+  if(mode==2){
+    message("#!/bin/bash
+#SBATCH --job-name=fastp
+#SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
+#SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
+#SBATCH --partition=cpu
+#SBATCH -N 1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=2G
+#SBATCH --time=14-00:00:00
+#SBATCH --array=1-39
+echo start: `date +'%Y-%m-%d %T'`
+start=`date +%s`
+echo \"SLURM_ARRAY_TASK_ID: \" $SLURM_ARRAY_TASK_ID
+samplelist=~/work/st/samplelist
+sample=$(head -n $SLURM_ARRAY_TASK_ID $samplelist | tail -1)
+echo handling: $sample
+####################
+
+fastp -w 2 -i ~/work/st/data/data/${sample}'_1.clean.fq.gz' -o ~/work/st/data/fastp/${sample}_1.fq \
+-I ~/work/st/data/data/${sample}'_2.clean.fq.gz' -O ~/work/st/data/fastp/${sample}_2.fq -j ~/work/st/data/fastp/${sample}.json
+
+####################
+echo end: `date +'%Y-%m-%d %T'`
+end=`date +%s`
+echo TIME:`expr $end - $start`s")
+  }
+  if(mode==3){
+    cat("#!/bin/bash
+#SBATCH --job-name=fastp
+#SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
+#SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
+#SBATCH --partition=cpu
+#SBATCH -N 1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=2G
+#SBATCH --time=14-00:00:00
+#SBATCH --array=1-39
+
+echo start: `date +'%Y-%m-%d %T'`
+start=`date +%s`
+
+echo \"SLURM_ARRAY_TASK_ID: \" $SLURM_ARRAY_TASK_ID
+START=$SLURM_ARRAY_TASK_ID
+NUMLINES=4 #how many sample in one array
+STOP=$((SLURM_ARRAY_TASK_ID*NUMLINES))
+START=\"$(($STOP - $(($NUMLINES - 1))))\"
+
+#set the min and max
+if [ $START -lt 1 ]
+then
+  START=1
+fi
+if [ $STOP -gt 39 ]
+then
+  STOP=39
+fi
+
+echo \"START=$START\"
+echo \"STOP=$STOP\"
+
+samplelist=~/work/st/samplelist
+#############
+for (( N = $START; N <= $STOP; N++ ))
+do
+  sample=$(head -n \"$N\" $samplelist | tail -n 1)
+	echo $sample
+
+  bowtie2 -p 8 -x ~/db/humangenome/hg38 -1 ~/work/st/data/fastp/${sample}_1.fq -2 ~/work/st/data/fastp/${sample}_2.fq \
+  -S ~/work/st/data/rm_human/${sample}.sam --un-conc ~/work/st/data/rm_human/${sample}.fq --very-sensitive
+
+done
+##############
+echo end: `date +'%Y-%m-%d %T'`
+end=`date +%s`
+echo TIME:`expr $end - $start`s")
+  }
+}

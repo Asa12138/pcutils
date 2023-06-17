@@ -4,6 +4,14 @@
 
 ## install
 
+The stable version is available on CRAN:
+
+```
+install.packages("pcutils")
+```
+
+Or try the development version, which contains more functions:
+
 ```         
 install.packages("devtools")
 devtools::install_github('Asa12138/pcutils',dependencies=T)
