@@ -50,17 +50,19 @@ copy_vector <- function(vec) {
 #'
 #' @param x vector
 #' @param levels custom levels
+#' @param last put the custom levels to the last
 #'
 #' @return factor
 #' @export
 #'
 #' @examples
 #' change_fac_lev(letters[1:5],levels = c("c","a"))
-change_fac_lev=function (x, levels = NULL){
+change_fac_lev=function (x, levels = NULL,last=FALSE){
   ordervec = factor(x)
   if (!is.null(levels)) {
     levels = intersect(levels, levels(ordervec))
-    shunxu = c(levels, setdiff(levels(ordervec), levels))
+    if(last) shunxu = c(setdiff(levels(ordervec), levels),levels)
+    else shunxu = c(levels, setdiff(levels(ordervec), levels))
     ordervec = factor(ordervec, levels = shunxu)
   }
   ordervec
@@ -80,6 +82,8 @@ change_fac_lev=function (x, levels = NULL){
 #' update_param(list(a=1,b=2),list(b=5,c=5))
 #'
 update_param=function(default,update){
+  if(length(default)==0)default=NULL
+  if(length(update)==0)update=NULL
   if(is.null(default))return(update)
   if(is.null(update))return(default)
 
@@ -125,7 +129,8 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
     "inborutils" = "inbo/inborutils",
     "ggradar" = "ricardo-bion/ggradar",
     "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
-    "Vennerable" = "js229/Vennerable"
+    "Vennerable" = "js229/Vennerable",
+    "linkET"="Hy4m/linkET"
   )
 
   p_list <- c(p_list, ...)
@@ -428,8 +433,9 @@ get_cols <- function(n, pal = "col1", picture = NULL) {
 add_theme <- function(set_theme = NULL) {
   if (is.null(set_theme)) {
     mytheme <- {
-      ggplot2::theme(text = ggplot2::element_text(family = "sans", size = 14)) +
+      ggplot2::theme_classic(base_size = 13)+
         ggplot2::theme(
+          axis.text = element_text(color = "black"),
           plot.margin = grid::unit(rep(0.5, 4), "lines"),
           strip.background = ggplot2::element_rect(fill = NA)
         )
@@ -551,6 +557,62 @@ hebing<-function(otutab,group,margin=2,act='mean'){
   return(a)
 }
 
+#' Filter your data
+#'
+#' @param tab dataframe
+#' @param sum the rowsum should bigger than sum(default:10)
+#' @param exist the exist number bigger than exist(default:1)
+#'
+#' @return input object
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' guolv(otutab)
+guolv<-function(tab,sum=10,exist=1){
+  tab[rowSums(tab)>sum,]->tab
+  tab[rowSums(tab>0)>exist,]->tab
+  return(tab)
+}
+
+#' Transfer your data
+#'
+#' @param df dataframe
+#' @param method "cpm","minmax","acpm","total","log", "max", "frequency", "normalize", "range", "rank", "rrank",
+#' "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr"
+#' @param margin 1 for row and 2 for column(default: 2)
+#' @param ... additional
+#'
+#' @export
+#' @examples
+#'
+#' data(otutab)
+#' trans(otutab,method="cpm")
+#'
+#' @seealso \code{\link[vegan]{decostand}}
+trans<-function(df,method = "normalize",margin=2,...){
+  all=c("cpm","minmax","acpm","total", "log1","max", "frequency", "normalize", "range", "rank", "rrank",
+        "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr")
+  if (!method%in%all)stop("methods should be one of ",all)
+  if(method=="cpm"){
+    df=apply(df, margin, \(x){x*10**6/sum(x)})
+  }
+  else if(method=="minmax"){
+    df=apply(df,margin,mmscale,...)
+  }
+  else if(method=="acpm"){
+    df=asinh(apply(df, margin, \(x){x*10**6/sum(x)}))
+  }
+  else if(method=="log1"){
+    df=log(df+1,...)
+  }
+  else {
+    lib_ps("vegan",library = F)
+    df=vegan::decostand(df,method = method,margin,...)
+  }
+  return(data.frame(df,check.names = F))
+}
+
 #' Split Composite Names
 #'
 #' @param x character vector
@@ -613,7 +675,7 @@ explode <- function(df, column, split = ",") {
 #' df <- data.frame(a = c(1:2,1:2), b = letters[1:4])
 #' squash(df, "b", ",")
 squash = function(df, column, split = ",") {
-  stats::aggregate(reformulate(".",response = column),df,paste,collapse = split)
+  stats::aggregate(stats::reformulate(".",response = column),df,paste,collapse = split)
 }
 
 #' Read some special format file

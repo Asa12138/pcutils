@@ -210,6 +210,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
   # library(dplyr)
   lib_ps("reshape2", "scales", "dplyr", library = FALSE)
   variable=Taxonomy=value=NULL
+  if(is.numeric(metadata[, group,drop=T]))warning("Recommend categorical variables")
   # prepare otutab and sampFile
   if (!is.null(metadata)) {
     match_res <- match_df(otutab, metadata)
@@ -538,6 +539,9 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 #' @param topN plot how many top items
 #' @param name label the name
 #' @param percentage label the percentage
+#' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
+#' @param text_params2 parameters parse to \code{\link[ggplot2]{geom_text}}, for name=T & mode=1,3
+#' @param bar_params parameters parse to \code{\link[ggplot2]{geom_rect}}, for mode=1,3 or \code{\link[ggplot2]{geom_col}} for mode=2.
 #'
 #' @import ggplot2 dplyr
 #' @return a ggplot
@@ -546,9 +550,14 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 #' @examples
 #' a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
 #' gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-#' b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
-#' gghuan(b) + ggplot2::theme(legend.position = "right")
-gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, percentage = TRUE) {
+#' gghuan(a,bar_params=list(col="black"),
+#'     text_params=list(col="#b15928",size=3),
+#'     text_params2=list(col="#006d2c",size=5))+
+#'   ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#' gghuan(a,mode=2) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#' gghuan(a,mode=3) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, percentage = TRUE,
+                   bar_params=NULL,text_params=NULL,text_params2=NULL) {
   type=ymax=ymin=rate_per=fraction=NULL
   if (ncol(tab) > 2) stop("need two columns: first is type, second is number")
 
@@ -585,28 +594,38 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
     plot_df$rate_per <- plot_df$sum
   }
 
-  if (mode == 3) {
-    lib_ps("ggpubr", library = FALSE)
-    labs <- paste0(plot_df$type, "\n", plot_df$rate_per)
-    p <- ggpubr::ggpie(plot_df, "fraction", label = labs, fill = "type") + theme(legend.position = "none")
-    return(p)
-  }
-
   if (mode == "1") {
     plt <- ggplot(data = plot_df, aes(fill = type, ymax = ymax, ymin = ymin, xmax = 3.2, xmin = 1.7)) +
-      geom_rect(alpha = 0.8) +
+      do.call(geom_rect,update_param(list(alpha = 0.8),bar_params))+
       xlim(c(0, 5)) +
       coord_polar(theta = "y") +
-      geom_text(aes(x = 2.5, y = ((ymin + ymax) / 2), label = rate_per), size = 3.6, col = "white")
-    if (name) plt <- plt + geom_text(aes(x = 3.6, y = ((ymin + ymax) / 2), label = type), size = 4)
+      do.call(geom_text,update_param(list(mapping = aes(x = 2.5, y = ((ymin + ymax) / 2), label = rate_per), size = 3.6, col = "white"),text_params))
+
+    if (name) plt <- plt +do.call(geom_text,update_param(list(mapping = aes(x = 3.6, y = ((ymin + ymax) / 2), label = type), size = 4),text_params2))
+
   }
   if (mode == "2") {
     plt <- ggplot(plot_df, aes(x = type, y = fraction, fill = type)) +
-      geom_col(position = "dodge2", show.legend = TRUE, alpha = .9) +
-      coord_polar() +
-      ylim(-min(plot_df$fraction), max(plot_df$fraction) + 0.2) +
-      geom_text(aes(x = type, y = fraction + 0.1, label = paste0(type, "\n", rate_per)), size = 4)
+      do.call(geom_col,update_param(list(position = "dodge2", show.legend = TRUE, alpha = .9),bar_params))+
+      coord_polar(theta = "x") +
+      ylim(-min(plot_df$fraction), max(plot_df$fraction)) +
+      do.call(geom_text,update_param(list(mapping = aes(x = type, y = fraction,
+                                                        label = paste0(type, ": ", rate_per)), size = 4),text_params))
+
   }
+  if (mode == 3) {
+    # lib_ps("ggpubr", library = FALSE)
+    # labs <- paste0(plot_df$type, "\n", plot_df$rate_per)
+    # p <- ggpubr::ggpie(plot_df, "fraction", label = labs, fill = "type") + theme(legend.position = "none")
+    plt <- ggplot(data = plot_df, aes(fill = type, ymax = ymax, ymin = ymin, xmax = 3.2, xmin = 1.7)) +
+      do.call(geom_rect,update_param(list(alpha = 0.8),bar_params))+
+      xlim(c(1.7, 3.5)) +
+      coord_polar(theta = "y") +
+      do.call(geom_text,update_param(list(mapping = aes(x = 2.8, y = ((ymin + ymax) / 2), label = rate_per), size = 3.6, col = "white"),text_params))
+
+    if (name) plt <- plt +do.call(geom_text,update_param(list(mapping = aes(x = 3.4, y = ((ymin + ymax) / 2), label = type), size = 4),text_params2))
+  }
+
   plt <- plt + theme_light() +
     labs(x = "", y = "", fill = g_name) +
     theme(panel.grid = element_blank()) +
@@ -620,22 +639,23 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
 #' gghuan2 for multi-doughnut chart
 #'
 #' @param tab a dataframe with hierarchical structure
-#' @param break default 0.2
+#' @param space_width the space width between doughnuts (0~1).
 #' @param name label the name
-#' @param number label the number
 #' @param percentage label the percentage
-#' @param text_col defalut, black
+#' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
+#' @param bar_params parameters parse to \code{\link[ggplot2]{geom_rect}}
 #'
 #' @import ggplot2 dplyr
 #' @return a ggplot
 #' @export
 #'
 #' @examples
-#' data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5),
-#'      b = c("a", LETTERS[2:5]), c = 1:5) %>% gghuan2()
-gghuan2 <- function(tab = NULL, `break` = 0.2, name = TRUE, number = TRUE, percentage = FALSE, text_col = "black") {
+#' data.frame(a = c("a", "a", "b", "b", "c"), b = c("a", LETTERS[2:5]),c= rep("a", 5),
+#'      number = 1:5) %>% gghuan2()
+gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
+                    percentage = FALSE,text_params=NULL,bar_params=NULL) {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
-  if ((`break` < 0) | `break` >= 1) stop("`break` should be [0,1)")
+  if ((space_width < 0) | space_width >= 1) stop("space_width should be [0,1)")
   type=ymax=ymin=xmin=xmax=lab=fraction=NULL
 
   plot_df_res <- data.frame()
@@ -647,21 +667,23 @@ gghuan2 <- function(tab = NULL, `break` = 0.2, name = TRUE, number = TRUE, perce
     plot_df$ymax <- cumsum(plot_df$fraction)
     plot_df$ymin <- c(0, head(plot_df$ymax, n = -1))
     plot_df$xmax <- i + 1
-    plot_df$xmin <- i + `break`
+    plot_df$xmin <- i + space_width
 
     plot_df$lab <- ""
     if (percentage) plot_df$lab <- paste0(as.character(round(100 * plot_df$fraction, 1)), "%", plot_df$lab)
-    if (number) plot_df$lab <- paste0(plot_df$n, "\n", plot_df$lab)
+    else plot_df$lab <- plot_df$n
+
     if (name) plot_df$lab <- paste0(plot_df$type, "\n", plot_df$lab)
 
     plot_df_res <- rbind(plot_df_res, plot_df)
   }
 
   ggplot(data = plot_df_res, aes(fill = type, ymax = ymax, ymin = ymin, xmax = xmax, xmin = xmin)) +
-    geom_rect(alpha = 0.8) +
+    do.call(geom_rect,update_param(list(alpha = 0.8),bar_params))+
     xlim(c(0, i + 2)) +
     coord_polar(theta = "y") +
-    geom_text(aes(x = (xmin + xmax) / 2, y = ((ymin + ymax) / 2), label = lab), size = 3.6, col = text_col) +
+    do.call(geom_text,update_param(list(mapping = aes(x = ((xmin + xmax) / 2)+1, y = ((ymin + ymax) / 2), label = lab),
+                                        size = 3,nudge_x = -1),text_params))+
     theme_light() +
     labs(x = "", y = "", fill = "") +
     theme(panel.grid = element_blank()) +
@@ -900,154 +922,4 @@ my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
   #   lib_ps("chorddiag",library = FALSE)
   #   chorddiag::chorddiag(tab,groupedgeColor= pal,...)
   #   }
-}
-
-
-#=======some tips========
-
-#' How to use parallel
-#' @export
-#' @return No return value
-how_to_use_parallel=function(){
-  message('  #parallel
-  reps=100;threads=1
-  #main function
-  loop=function(i){
-    return(mean(rnorm(100)))
-  }
-  {
-  if(threads>1){
-    pcutils::lib_ps("foreach","doSNOW","snow")
-    pb <- utils::txtProgressBar(max =reps, style = 3)
-    opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
-    cl <- snow::makeCluster(threads)
-    doSNOW::registerDoSNOW(cl)
-    res <- foreach::foreach(i = 1:reps,.options.snow = opts,
-                             .packages = c()) %dopar% {
-                               loop(i)
-                             }
-    snow::stopCluster(cl)
-    gc()
-    pcutils::del_ps("doSNOW","snow","foreach")
-  }
-  else {
-    res <-lapply(1:reps, loop)
-  }}
-  #simplify method
-  res=do.call(c,res)
-  pcutils::del_ps("foreach","doSNOW")
-',"\n")
-}
-
-#' How to update parameters
-#' @export
-#' @return No return value
-how_to_update_parameters=function(){
-  message('point_params = list(size=5,color="red")
-ggplot(data.frame(x=1:5,y=5:1), aes(x = x, y = y))+
-  do.call(geom_point, update_param(list(size=2,color="blue",alpha=0.5), point_params))')
-}
-
-#' How to use sbatch
-#' @export
-#' @return No return value
-how_to_use_sbatch=function(mode=1){
-  if(mode==1){
-    message("#!/bin/bash
-#SBATCH --job-name=fastp
-#SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
-#SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
-#SBATCH --partition=cpu
-#SBATCH -N 1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
-#SBATCH --time=14-00:00:00
-echo start: `date +'%Y-%m-%d %T'`
-start=`date +%s`
-####################
-
-do something
-
-####################
-echo end: `date +'%Y-%m-%d %T'`
-end=`date +%s`
-echo TIME:`expr $end - $start`s")
-  }
-  if(mode==2){
-    message("#!/bin/bash
-#SBATCH --job-name=fastp
-#SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
-#SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
-#SBATCH --partition=cpu
-#SBATCH -N 1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
-#SBATCH --time=14-00:00:00
-#SBATCH --array=1-39
-echo start: `date +'%Y-%m-%d %T'`
-start=`date +%s`
-echo \"SLURM_ARRAY_TASK_ID: \" $SLURM_ARRAY_TASK_ID
-samplelist=~/work/st/samplelist
-sample=$(head -n $SLURM_ARRAY_TASK_ID $samplelist | tail -1)
-echo handling: $sample
-####################
-
-fastp -w 2 -i ~/work/st/data/data/${sample}'_1.clean.fq.gz' -o ~/work/st/data/fastp/${sample}_1.fq \
--I ~/work/st/data/data/${sample}'_2.clean.fq.gz' -O ~/work/st/data/fastp/${sample}_2.fq -j ~/work/st/data/fastp/${sample}.json
-
-####################
-echo end: `date +'%Y-%m-%d %T'`
-end=`date +%s`
-echo TIME:`expr $end - $start`s")
-  }
-  if(mode==3){
-    cat("#!/bin/bash
-#SBATCH --job-name=fastp
-#SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
-#SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
-#SBATCH --partition=cpu
-#SBATCH -N 1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
-#SBATCH --time=14-00:00:00
-#SBATCH --array=1-39
-
-echo start: `date +'%Y-%m-%d %T'`
-start=`date +%s`
-
-echo \"SLURM_ARRAY_TASK_ID: \" $SLURM_ARRAY_TASK_ID
-START=$SLURM_ARRAY_TASK_ID
-NUMLINES=4 #how many sample in one array
-STOP=$((SLURM_ARRAY_TASK_ID*NUMLINES))
-START=\"$(($STOP - $(($NUMLINES - 1))))\"
-
-#set the min and max
-if [ $START -lt 1 ]
-then
-  START=1
-fi
-if [ $STOP -gt 39 ]
-then
-  STOP=39
-fi
-
-echo \"START=$START\"
-echo \"STOP=$STOP\"
-
-samplelist=~/work/st/samplelist
-#############
-for (( N = $START; N <= $STOP; N++ ))
-do
-  sample=$(head -n \"$N\" $samplelist | tail -n 1)
-	echo $sample
-
-  bowtie2 -p 8 -x ~/db/humangenome/hg38 -1 ~/work/st/data/fastp/${sample}_1.fq -2 ~/work/st/data/fastp/${sample}_2.fq \
-  -S ~/work/st/data/rm_human/${sample}.sam --un-conc ~/work/st/data/rm_human/${sample}.fq --very-sensitive
-
-done
-##############
-echo end: `date +'%Y-%m-%d %T'`
-end=`date +%s`
-echo TIME:`expr $end - $start`s")
-  }
 }

@@ -4,6 +4,7 @@
 ## usethis namespace: start
 #' @importFrom utils data
 #' @importFrom utils head
+#' @importFrom stats rnorm sd var
 #' @import dplyr
 #' @import ggplot2
 ## usethis namespace: end

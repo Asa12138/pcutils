@@ -43,7 +43,9 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
     pheatmap::pheatmap(a, show_rownames = F, show_colnames = F, border_color = F, ...)
   } else {
     lib_ps("ggcor", library = F)
-    ggcor::set_scale(c("#6D9EC1", "white", "#E46726"), type = "gradient2n")
+    if(isNamespaceLoaded("linkET"))lapply(c("ggcor","linkET"),unloadNamespace)
+
+    ggcor::set_scale(c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F"), type = "gradient2n")
     if (is.null(env2)) {
       if (mode == 1) {
         p <- ggcor::quickcor(env, method = method, cor.test = T) +
@@ -254,7 +256,7 @@ triangp<-function(otutab,group,scale=F,class=NULL){
 #'    my_sankey(.,"gg",num=TRUE)
 #' data(otutab)
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
-#' my_sankey(test)->p
+#' my_sankey(test)
 #' }
 my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
   mode=match.arg(mode,c("sankeyD3","ggsankey"))
@@ -317,6 +319,57 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
       theme(legend.position = "none",plot.title = element_text(hjust = .5))
     return(p)
   }
+}
+
+#' My Sunburst plot
+#'
+#' @param test a dataframe with hierarchical structure
+#' @param ... look for parameters in \code{\link[plotly]{plot_ly}}
+#' @return htmlwidget
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data(otutab)
+#' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+#' my_sunburst(test)
+#' }
+my_sunburst=function(test,...){
+  test=as.data.frame(test)
+  nc=ncol(test)
+  if(nc<3)stop("as least 3-columns dataframe")
+  if(!is.numeric(test[,nc]))stop("the last column must be numeric")
+
+  if(length(unique(test[,1]))>1){
+    test=rbind("Root"="root",test)
+  }
+  lib_ps("plotly",library = F)
+  target=source=weight=NULL
+  #change duplicated data
+
+  # for (i in 1:(nc-1)){
+  #   test[,i]=paste0(test[,i],strrep(" ",i-1))
+  # }
+
+  #merge to two columns
+  links=data.frame()
+  for (i in 1:(nc-2)){
+    test[,c(i,i+1,nc)]->tmp
+    colnames(tmp)=c("source","target","weight")
+    tmp=dplyr::group_by(tmp,source,target)%>%dplyr::summarise(weight=sum(weight),.groups="keep")
+    links=rbind(links,tmp)
+  }
+  fig <- plotly::plot_ly(
+    #定义所有级别各类的标签
+    labels = links$target,
+    #定义所有级别各类的父级，与上面定义的标签一一对应
+    parents = links$source,
+    #定义各分类的值（一一对应）
+    values = links$weight,
+    #指定图表类型：sunburst
+    type = 'sunburst',...
+  )
+  fig
 }
 
 #' My circo plot
@@ -394,4 +447,182 @@ my_synteny<-function(){
   RIdeogram::ideogram(karyotype = modu_sum, synteny =edge_sum)
   rsvg::rsvg_svg("chromosome.svg",file = "chromosome.svg")
   read.file("chromosome.svg")
+}
+
+#' Plot a area plot
+#'
+#'
+#' @param otutab otutab
+#' @param metadata metadata
+#' @param group one group name of columns of metadata
+#' @param get_data just get the formatted data?
+#' @param bar_params parameters parse to \code{\link[ggplot2]{geom_bar}}
+#' @param topN plot how many top species
+#' @param others should plot others?
+#' @param relative transfer to relative or absolute
+#' @param legend_title fill legend_title
+#' @param stack_order the order of stack fill
+#' @param group_order the order of x group
+#' @param facet_order the order of the facet
+#' @param style "group" or "sample"
+#' @param number show the number?
+#' @param format_params parameters parse to \code{\link[base]{format}}
+#' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
+#'
+#' @import ggplot2
+#' @export
+#' @return a ggplot
+#' @examples
+#' data(otutab)
+#' areaplot(otutab, metadata, group = "Id")
+#' \donttest{
+#' areaplot(otutab, metadata, group = "Group", group_order = TRUE, relative = FALSE)
+#' }
+areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
+                      bar_params = list(position = "stack"),
+                      topN = 8, others = TRUE, relative = TRUE, legend_title = "",
+                      stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
+                      style = c("group", "sample")[1],
+                      number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
+  # Used to draw species stacking diagrams, suitable for processing various OTU similar data, input metatab as the basis for grouping.
+  # style can choose "group" or "sample"
+  # others=TRUE is used to choose whether to draw other than TopN
+  # pmode can choose fill/stack/dodge
+  # library(ggplot2)
+  # library(dplyr)
+  lib_ps("reshape2", "scales", "dplyr", library = FALSE)
+  variable=Taxonomy=value=NULL
+  if(is.numeric(metadata[, group,drop=T]))warning("Recommend categorical variables")
+  # prepare otutab and sampFile
+  if (!is.null(metadata)) {
+    match_res <- match_df(otutab, metadata)
+    otutab <- match_res$otutab
+    sampFile <- as.data.frame(match_res$metadata[, group], row.names = row.names(match_res$metadata))
+    colnames(sampFile)[1] <- "group"
+  } else {
+    sampFile <- data.frame(row.names = colnames(otutab), group = colnames(otutab))
+  }
+
+  mean_sort <- as.data.frame(otutab[(order(-rowSums(otutab))), , drop = FALSE])
+
+  if (nrow(mean_sort) > topN) {
+    other <- colSums(mean_sort[topN:dim(mean_sort)[1], ])
+    mean_sort <- mean_sort[1:(topN - 1), ]
+    mean_sort <- rbind(mean_sort, other)
+    rownames(mean_sort)[topN] <- c("Other")
+  }
+
+  if (style == "sample") {
+    mean_sort$Taxonomy <- rownames(mean_sort)
+    data_all <- as.data.frame(reshape2::melt(mean_sort, id.vars = c("Taxonomy")))
+  } else {
+    mat_t <- t(mean_sort)
+    stats::aggregate(mat_t, by = list(sampFile$group), mean) %>% reshape2::melt(., id = 1) -> data_all
+    colnames(data_all) <- c("variable", "Taxonomy", "value")
+    data_all$value <- as.numeric(data_all$value)
+    data_all$variable <- as.factor(data_all$variable)
+  }
+
+  if (relative) {
+    data_all <- data_all %>%
+      dplyr::group_by(variable, Taxonomy) %>%
+      dplyr::summarise(n = sum(value)) %>%
+      dplyr::mutate(value = n / sum(n))
+  }
+
+  if (style == "sample") {
+    data_all <- merge(data_all, sampFile,
+                      by.x = "variable",
+                      by.y = "row.names"
+    )
+
+    group_by(data_all, group, Taxonomy) %>% summarise(value = mean(value)) -> data_all_facet
+    # determine the facet order
+    if (facet_order == 1) {
+      new_lev <- (data_all_facet %>% dplyr::filter(Taxonomy == rownames(mean_sort)[1]) %>%
+                    dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
+      data_all <- dplyr::mutate(data_all, group = factor(group, levels = new_lev))
+    } else if (facet_order[1] %in% data_all$Taxonomy) {
+      new_lev <- (data_all_facet %>% dplyr::filter(Taxonomy == facet_order) %>%
+                    dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
+      data_all <- dplyr::mutate(data_all, group = factor(group, levels = new_lev))
+    } else if (any(facet_order %in% data_all_facet$group)) {
+      data_all <- dplyr::mutate(data_all, group = change_fac_lev(group, levels = facet_order))
+    }
+  }
+
+  if (!others) {
+    data_all <- data_all[data_all$Taxonomy != "Other", ]
+  }
+  # determine the stack order
+  if (stack_order == 1) {
+    data_all$Taxonomy <- factor(data_all$Taxonomy, levels = rownames(mean_sort))
+  } else if (any(stack_order %in% data_all$Taxonomy)) {
+    data_all$Taxonomy <- change_fac_lev(data_all$Taxonomy, levels = stack_order)
+  }
+  # determine the x axis order
+  if (group_order == 1) {
+    new_lev <- (data_all %>% dplyr::filter(Taxonomy == rownames(mean_sort)[1]) %>%
+                  dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
+    data_all <- dplyr::mutate(data_all, variable = factor(variable, levels = new_lev))
+  } else if (group_order[1] %in% data_all$Taxonomy) {
+    new_lev <- (data_all %>% dplyr::filter(Taxonomy == group_order) %>%
+                  dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
+    data_all <- dplyr::mutate(data_all, variable = factor(variable, levels = new_lev))
+  } else if (any(group_order %in% data_all$variable)) {
+    data_all <- dplyr::mutate(data_all, variable = change_fac_lev(variable, levels = group_order))
+  }
+
+  if (get_data) {
+    return(data_all)
+  }
+
+  # plot
+  bar_params <- update_param(NULL, bar_params)
+  format_params <- update_param(list(digits = 2), format_params)
+  text_params <- update_param(list(position = position_stack()), text_params)
+
+  #变为数字向量
+  data_all$variable2=as.numeric(data_all$variable)
+
+  if (style == "sample") {
+    if (T) {
+      p <- ggplot(data_all, aes(
+        x = variable2, y = value, fill = Taxonomy,
+        label = do.call(format, append(list(value), format_params))
+      )) +
+        # geom_bar(stat = "identity",  position = pmode) +
+        do.call(geom_area, bar_params) +
+        facet_grid(~group,
+                   as.table = FALSE,
+                   switch = "both", scales = "free", space = "free"
+        )
+    }
+    p <- p +
+      theme(
+        # strip.background = element_blank(),
+        # axis.ticks.x = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5)
+      ) + xlab(group)
+  } else {
+    if (T) {
+      p <- ggplot(data_all, aes(
+        x = variable2, y = value, fill = Taxonomy,
+        label = do.call(format, append(list(value), format_params))
+      )) +
+        do.call(geom_area, bar_params)
+    }
+  }
+  #强行加上原来的label
+  p=p+scale_x_continuous(breaks = 1:nlevels(data_all$variable),labels = levels(data_all$variable))
+
+  if (relative) {
+    p <- p + scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
+  } else {
+    p <- p + ylab("Number")
+  }
+
+  if (number) p <- p + do.call(geom_text, (text_params))
+
+  p + guides(fill = guide_legend(title = legend_title)) + xlab(group)
 }

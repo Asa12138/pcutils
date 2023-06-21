@@ -30,7 +30,7 @@ library(pcutils)
 
 The stable version is available on CRAN:
 
-```{r}
+```{r eval=FALSE}
 install.packages("pcutils")
 ```
 
