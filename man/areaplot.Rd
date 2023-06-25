@@ -9,7 +9,7 @@ areaplot(
   metadata = NULL,
   group = "Group",
   get_data = FALSE,
-  bar_params = list(width = 0.7, position = "stack"),
+  bar_params = list(position = "stack"),
   topN = 8,
   others = TRUE,
   relative = TRUE,
@@ -64,7 +64,7 @@ Plot a area plot
 }
 \examples{
 data(otutab)
-areaplot(otutab, metadata, group = "Group")
+areaplot(otutab, metadata, group = "Id")
 \donttest{
 areaplot(otutab, metadata, group = "Group", group_order = TRUE, relative = FALSE)
 }

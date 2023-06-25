@@ -204,7 +204,6 @@ how_to_use_parallel=function(loop=function(i){return(mean(rnorm(100)))}){
   }}
   #simplify method
   res=do.call(c,res)
-  pcutils::del_ps("foreach","doSNOW")
 ')
   clipr::write_clip(res_text)
   message(res_text)
