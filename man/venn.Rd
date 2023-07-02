@@ -35,6 +35,7 @@ Plot a general venn (upset, flower)
 \donttest{
 aa <- list(a = 1:3, b = 3:7, c = 2:4)
 venn(aa, mode = "venn")
+venn(aa, mode = "network")
 venn(aa, mode = "venn2", type = "ChowRuskey")
 venn(aa, mode = "upset")
 data(otutab)

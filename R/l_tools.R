@@ -529,6 +529,30 @@ grepl.data.frame <- function(pattern, x, ...) {
   y
 }
 
+#' Gsub applied on a data.frame
+#'
+#' @param pattern search pattern
+#' @param replacement a replacement for matched pattern
+#' @param x your data.frame
+#' @param ... addtitional arguments for gerpl()
+#'
+#' @return a logical data.frame
+#' @export
+#' @examples
+#' matrix(letters[1:6], 2, 3) |> as.data.frame() -> a
+#' gsub.data.frame("c","a", a)
+gsub.data.frame <- function(pattern,replacement, x, ...) {
+  y <- if (length(x)) {
+    do.call("cbind", lapply(x, "gsub", pattern = pattern,replacement=replacement, ...))
+  } else {
+    matrix(FALSE, length(row.names(x)), 0)
+  }
+  if (.row_names_info(x) > 0L) {
+    rownames(y) <- row.names(x)
+  }
+  y
+}
+
 #' Group your data
 #'
 #' @param otutab data.frame
@@ -730,7 +754,7 @@ read.file <- function(file, format = NULL, just_print = FALSE) {
     }
 
     if (format %in% c("jpg", "png")) {
-      lib_ps("jpeg", "png", "graphics", library = FALSE)
+      lib_ps("jpeg", "png", "grid", library = FALSE)
       switch(format,
              "jpg" = {
                p1 <- jpeg::readJPEG(file)
@@ -739,8 +763,11 @@ read.file <- function(file, format = NULL, just_print = FALSE) {
                p1 <- png::readPNG(file)
              }
       )
-      graphics::plot(1:2, type = "n", axes = FALSE, ylab = "n", xlab = "n", ann = FALSE)
-      graphics::rasterImage(p1, 1, 1, 2, 2)
+      g <- grid::rasterGrob(p1, interpolate=TRUE)
+      p=ggplot2::ggplot() +ggplot2::annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +ggplot2::theme_void()
+      return(p)
+      # graphics::plot(1:2, type = "n", axes = FALSE, ylab = "n", xlab = "n", ann = FALSE)
+      # graphics::rasterImage(p1, 1, 1, 2, 2)
     }
     if (format == "svg") {
       lib_ps("grImport2", "ggpubr", library = FALSE)
@@ -748,6 +775,7 @@ read.file <- function(file, format = NULL, just_print = FALSE) {
       g <- grImport2::pictureGrob(x)
       p <- ggpubr::as_ggplot(g)
       p
+      return(p)
     }
   }
 }

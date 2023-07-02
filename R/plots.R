@@ -32,6 +32,7 @@ match_df <- function(otutab, metadata) {
 #' \donttest{
 #' aa <- list(a = 1:3, b = 3:7, c = 2:4)
 #' venn(aa, mode = "venn")
+#' venn(aa, mode = "network")
 #' venn(aa, mode = "venn2", type = "ChowRuskey")
 #' venn(aa, mode = "upset")
 #' data(otutab)
@@ -54,7 +55,7 @@ venn_cal <- function(otu_time) {
 #' @rdname venn
 #'
 #' @param aa list
-#' @param mode "venn","venn2","upset","flower"
+#' @param mode "venn","venn2","upset","flower","network"
 #' @param ... add
 #' @return a plot
 #' @exportS3Method
@@ -147,6 +148,11 @@ venn.list <- function(aa, mode = "venn", ...) {
     })
     plotrix::draw.circle(x = 5, y = 5, r = 1.3, col = circle_col, border = NA)
     graphics::text(x = 5, y = 5, paste("Core:", core_num))
+  }
+  if (mode == "network") {
+    lib_ps("MetaNet",library = FALSE)
+    MetaNet::venn_net(aa)->v_net
+    plot(v_net)
   }
 }
 
@@ -794,6 +800,106 @@ china_map <- function(dir = "~/database/") {
     )
 }
 
+#' Plot the sampling map
+#'
+#' @param metadata metadata must contains "long", "lat", "Group"
+#' @param point_params parameters parse to geom_point
+#' @param mode 1~3
+#' @param shp_file a geojson file parse to `sf::read_sf`
+#' @param crs crs coordinate
+#' @param xlim xlim
+#' @param ylim ylim
+#' @param legend_title legend title
+#'
+#' @return map
+#' @export
+#'
+#' @examples
+#' sample_map(test,mode = 3,xlim = c(100,150),ylim = c(25,50))
+sample_map=function(metadata,point_params=list(),mode=1,legend_title="Group",shp_file=NULL,crs=NULL,xlim=NULL,ylim=NULL){
+  if(mode==3){
+    lib_ps("leaflet","htmltools",library = F)
+    # Prepare the text for the tooltip (HTML style):
+
+    gre_text <- paste(
+      "Group: ", metadata$Group, "<br/>"
+    )%>%
+      lapply(htmltools::HTML)
+
+    if(is.numeric(metadata$Group)) type_col=leaflet::colorNumeric(palette = c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F"),domain =metadata$Group)
+    else type_col=leaflet::colorFactor(palette = get_cols(nlevels(factor(metadata$Group))),domain =metadata$Group)
+
+    long=mean(xlim)
+    lat=mean(ylim)
+    zoom=ceiling(diff(xlim)%/%12)
+    color=fillOpacity=radius=weight=NULL
+    if(length(point_params)>0){
+      color=point_params[["color"]]
+      fillOpacity=point_params[["alpha"]]
+      radius=point_params[["size"]]
+      weight=point_params[["alpha"]]
+    }
+    {
+      if(is.null(color))color="black"
+      if(is.null(fillOpacity))fillOpacity=0.7
+      if(is.null(radius))radius=8
+      if(is.null(weight))weight=1
+    }
+    inter_p=leaflet::leaflet(metadata) %>%
+      #添加图层
+      leaflet::addTiles() %>%
+      #确定中心点
+      leaflet::setView(lng = long, lat = lat, zoom = zoom)%>%
+      #添加散点注释
+      leaflet::addCircleMarkers(lng = ~long, lat = ~lat,fillColor = ~type_col(Group),
+                                fillOpacity = fillOpacity, color=color, radius=radius,weight = weight,
+                                label = gre_text,
+                                labelOptions = leaflet::labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"),
+                                                                      textsize = "13px", direction = "auto")) %>%
+      #添加图例
+      leaflet::addLegend(pal=type_col, values=~Group,title = legend_title, position = "bottomright")
+    return(inter_p)
+  }
+  if(mode==1){
+    lib_ps("maps",library = F)
+    world_map=ggplot2::map_data("world")
+    p=ggplot() +
+      geom_polygon(data = world_map, aes(x = long, y = lat, group = group),
+                   fill = "lightblue", color = "black")+
+      #geom_point(data = metadata,aes(x = long, y = lat, color = Group))+
+      do.call(geom_point,update_param(list(data = metadata,mapping=aes(x = long, y = lat, color = Group)),
+                                      point_params))+
+      guides(color=guide_legend(title = legend_title))+
+      coord_fixed(1.5,xlim=xlim,ylim=ylim)
+  }
+  if(mode==2){
+    lib_ps("sf")
+    if(is.null(shp_file))stop("mode 2 need shp_file")
+    #shp_file="~/database/china.json"
+    mapdata <- sf::read_sf(shp_file)
+    anno_sf=sf::st_as_sf(metadata,coords = c("long", "lat"),crs = 4326)
+
+    p=ggplot()+
+      geom_sf(data = mapdata)+
+      #geom_point(data = metadata,aes(x = long, y = lat, color = Group))+
+      #geom_sf(data = anno_sf,aes(fill=Group),shape=21,colour='black',stroke=.25)+
+      do.call(geom_sf,update_param(list(data = anno_sf,mapping=aes(fill=Group),shape=21,colour='black',stroke=.25),
+                                   point_params))+
+      guides(fill=guide_legend(title = legend_title))+
+      coord_sf(xlim=xlim,ylim=ylim)
+    if(!is.null(crs)){
+      #正确方法是先转换crs，使用转换后的数据
+      data.frame(lon=xlim,lat=ylim)%>%
+        sf::st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+        sf::st_transform(df2_sf,crs=crs)->tranlim
+      xlim=sf::st_coordinates(tranlim)[,"X"]
+      ylim=sf::st_coordinates(tranlim)[,"Y"]
+      p=p+coord_sf(crs = crs,xlim=xlim,ylim=ylim)
+    }
+  }
+
+  return(p)
+}
 
 #' Show my little cat named Guo Dong which drawn by my girlfriend.
 #' @param mode 1~2
@@ -923,3 +1029,14 @@ my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
   #   chorddiag::chorddiag(tab,groupedgeColor= pal,...)
   #   }
 }
+
+pcutils_theme <- {
+  ggplot2::theme_classic(base_size = 13)+
+    ggplot2::theme(
+      axis.text = element_text(color = "black"),
+      plot.margin = grid::unit(rep(0.5, 4), "lines"),
+      strip.background = ggplot2::element_rect(fill = NA)
+    )
+}
+
+bluered=c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F")

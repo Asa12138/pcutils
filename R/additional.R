@@ -45,7 +45,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
     lib_ps("ggcor", library = F)
     if(isNamespaceLoaded("linkET"))lapply(c("ggcor","linkET"),unloadNamespace)
 
-    ggcor::set_scale(c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F"), type = "gradient2n")
+    ggcor::set_scale(bluered, type = "gradient2n")
     if (is.null(env2)) {
       if (mode == 1) {
         p <- ggcor::quickcor(env, method = method, cor.test = T) +
@@ -653,7 +653,7 @@ ggheatmap=function(otutab,pal=NULL,scale="none",
                    row_annotation=NULL,col_annotation=NULL,annotation_pal=NULL){
   lib_ps("ggnewscale","aplot","reshape2","ggtree","ape",library = F)
 
-  if(is.null(pal))pal=c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F")
+  if(is.null(pal))pal=bluered
   else if(length(is.ggplot.color(pal))<2)stop("pal is wrong!")
 
   otutab->d

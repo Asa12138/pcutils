@@ -46,5 +46,6 @@ Heatmap by ggplot
 }
 \examples{
 data(otutab)
-ggheatmap(otutab[1:30,],scale="row",row_annotation = otutab[1:30,1:2],col_annotation = metadata[,c(2,4)])
+ggheatmap(otutab[1:30,],scale="row",row_annotation = otutab[1:30,1:2],
+   col_annotation = metadata[,c(2,4)])
 }
