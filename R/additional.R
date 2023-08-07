@@ -45,13 +45,14 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
     lib_ps("ggcor", library = F)
     if(isNamespaceLoaded("linkET"))lapply(c("ggcor","linkET"),unloadNamespace)
 
-    ggcor::set_scale(bluered, type = "gradient2n")
+    #ggcor::set_scale(bluered, type = "gradient2n")
     if (is.null(env2)) {
       if (mode == 1) {
         p <- ggcor::quickcor(env, method = method, cor.test = T) +
           ggcor::geom_square(data = ggcor::get_data(type = "lower", show.diag = FALSE)) +
           ggcor::geom_mark(data = ggcor::get_data(type = "upper", show.diag = FALSE), size = 2.5) +
-          geom_abline(slope = -1, intercept = ncol(env) + 1)
+          geom_abline(slope = -1, intercept = ncol(env) + 1)+
+          scale_fill_gradientn(colours = bluered,limit=c(-1,1))
         return(p)
       }
 
@@ -64,7 +65,8 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
           ggcor::anno_row_tree() +
           ggcor::anno_col_tree() +
           ggcor::set_p_xaxis() +
-          ggcor::set_p_yaxis()
+          ggcor::set_p_yaxis()+
+          scale_fill_gradientn(colours = bluered,limit=c(-1,1))
         return(p)
       }
 
@@ -99,7 +101,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
             ggcor::geom_square(data = ggcor::get_data(show.diag = FALSE)) +
             ggcor::geom_mark(data = ggcor::get_data(show.diag = FALSE), size = 2.5)
         }
-        return(p)
+        return(p+scale_fill_gradientn(colours = bluered,limit=c(-1,1)))
       }
 
       if (mode == 2) {
@@ -111,7 +113,8 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
           ggcor::anno_row_tree() +
           ggcor::anno_col_tree() +
           ggcor::set_p_xaxis() +
-          ggcor::set_p_yaxis()
+          ggcor::set_p_yaxis()+
+          scale_fill_gradientn(colours = bluered,limit=c(-1,1))
         return(p)
       }
 
@@ -239,12 +242,34 @@ triangp<-function(otutab,group,scale=F,class=NULL){
   }
 }
 
+#多余合并为others
+gettop=\(a,top){
+  nc=ncol(a)
+  if(nc<3)stop("as least 3-columns dataframe")
+  if(!is.numeric(a[,nc]))stop("the last column must be numeric")
+  colnames(a)->cns
+  colnames(a)=c(paste0("f",seq_len(nc-1)),"n")
+  top=rep(top,length.out=nc-1)
+  keep=list()
+  for (i in seq_len(nc-1)) {
+    tmpc=colnames(a)[i]
+    colnames(a)[i]="tmp"
+    a%>%dplyr::group_by(tmp)%>%dplyr::summarise(count=sum(n))%>%dplyr::arrange(-count)%>%head(top[i])%>%dplyr::pull(tmp)->keep[[i]]
+    a=mutate(a,tmp=ifelse(tmp%in%keep[[i]],tmp,"others"))
+    colnames(a)[i]=tmpc
+  }
+  a=a%>%dplyr::group_by_at(seq_len(nc-1))%>%dplyr::summarise(count=sum(n))%>%dplyr::arrange(-count)
+  colnames(a)=cns
+  as.data.frame(a)
+}
+
 #' My Sankey plot
 #'
 #' @param test a dataframe with hierarchical structure
 #' @param ... look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}
 #' @param mode "sankeyD3","ggsankey"
 #' @param space space width for ggsankey
+#' @param topN "all" or numeric vector, determine how many topN shows in each column
 #'
 #' @export
 #'
@@ -258,12 +283,15 @@ triangp<-function(otutab,group,scale=F,class=NULL){
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
 #' my_sankey(test)
 #' }
-my_sankey=function(test,mode=c("sankeyD3","ggsankey"),space=1,...){
+my_sankey=function(test,mode=c("sankeyD3","ggsankey"),topN="all",space=1,...){
   mode=match.arg(mode,c("sankeyD3","ggsankey"))
   test=as.data.frame(test)
   nc=ncol(test)
   if(nc<3)stop("as least 3-columns dataframe")
   if(!is.numeric(test[,nc]))stop("the last column must be numeric")
+  if(!identical(topN,"all")){
+    test=gettop(test,topN)
+  }
 
   target=weight=x=node=value=next_x=next_node=label=NULL
   if(mode=="sankeyD3"){
@@ -341,7 +369,8 @@ my_sunburst=function(test,...){
   if(!is.numeric(test[,nc]))stop("the last column must be numeric")
 
   if(length(unique(test[,1]))>1){
-    test=rbind("Root"="root",test)
+    test=cbind("Root"=" ",test)
+    nc=nc+1
   }
   lib_ps("plotly",library = F)
   target=source=weight=NULL
@@ -366,6 +395,7 @@ my_sunburst=function(test,...){
     parents = links$source,
     #定义各分类的值（一一对应）
     values = links$weight,
+    text = links$weight,
     #指定图表类型：sunburst
     type = 'sunburst',...
   )

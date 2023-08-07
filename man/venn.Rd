@@ -8,7 +8,7 @@
 \usage{
 venn(...)
 
-\method{venn}{list}(aa, mode = "venn", ...)
+\method{venn}{list}(aa, mode = "venn", elements_label = TRUE, ...)
 
 \method{venn}{data.frame}(otutab, mode = "venn", ...)
 }
@@ -18,6 +18,8 @@ venn(...)
 \item{aa}{list}
 
 \item{mode}{"venn","venn2","upset","flower"}
+
+\item{elements_label}{logical, show elements label in network?}
 
 \item{otutab}{table}
 }

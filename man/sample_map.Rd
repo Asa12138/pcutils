@@ -39,5 +39,8 @@ map
 Plot the sampling map
 }
 \examples{
-sample_map(test,mode = 3,xlim = c(100,150),ylim = c(25,50))
+\donttest{
+data(otutab)
+sample_map(metadata,mode = 3,xlim = c(100,150),ylim = c(25,50))
+}
 }

@@ -4,19 +4,19 @@
 \alias{plot.coefficients}
 \title{Plot coefficients as a bar chart or lollipop chart}
 \usage{
-\method{plot}{coefficients}(x, mode = 1, number = FALSE, ...)
+\method{plot}{coefficients}(x, mode = 1, number = FALSE, x_order = NULL, ...)
 }
 \arguments{
+\item{x}{The coefficients to be plotted.}
+
 \item{mode}{The mode of the plot: 1 for bar chart, 2 for lollipop chart.}
 
 \item{number}{show number}
 
-\item{coefficients_df}{The coefficients to be plotted.}
+\item{x_order}{order of variables}
+
+\item{...}{add}
 }
 \description{
 This function takes the coefficients and generates a plot to visualize their magnitudes.
-}
-\examples{
-plot.coefficients(coefficients_df, mode = 1)
-plot.coefficients(coefficients_df, mode = 2,number=TRUE)
 }

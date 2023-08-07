@@ -195,6 +195,124 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
 }
 
 
+#' Performs multiple mean comparisons for a data.frame
+#'
+#' @param df a data.frame
+#' @param group The compare group (categories) in your data, one column name of metadata when metadata exist or a vector whose length equal to columns number of df.
+#' @param metadata sample information dataframe contains group
+#' @param method 	the type of test. Default is wilcox.test. Allowed values include:
+#' \itemize{\item \code{\link[stats]{t.test}} (parametric) and \code{\link[stats]{wilcox.test}} (non-parametric). Perform comparison between two groups of samples. If the grouping variable contains more than two levels, then a pairwise comparison is performed.
+#' \item \code{\link[stats]{anova}} (parametric) and \code{\link[stats]{kruskal.test}} (non-parametric). Perform one-way ANOVA test comparing multiple groups.}
+#' @param threads default 1
+#' @param p.adjust.method p.adjust.method, see \code{\link[stats]{p.adjust}}, default BH.
+#' @param verbose logical
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' group_test(otutab,metadata$Group,method="kruskal.test")
+#' group_test(otutab[,1:12],metadata$Group[1:12],method="wilcox.test")
+group_test=function(df,group,metadata=NULL,method="wilcox.test",
+                    threads=1,p.adjust.method='BH',verbose=TRUE){
+  i=NULL
+  t1 <- Sys.time()
+  if(verbose)pcutils::dabiao("Checking group")
+  if(!is.null(metadata)){
+    if(length(group)!=1)stop("'group' should be one column name of metadata when metadata exsit!")
+    idx = rownames(metadata) %in% colnames(df)
+    metadata = metadata[idx, , drop = FALSE]
+    df = df[, rownames(metadata),drop=FALSE]
+    if(verbose)message(nrow(metadata)," samples are matched for next step.")
+    if(length(idx)<2)stop("too less common samples")
+    sampFile = data.frame(group=metadata[, group], row.names = row.names(metadata))
+  }
+  else {
+    if(length(group)!=ncol(df))stop("'group' length should equal to columns number of df when metadata is NULL!")
+    sampFile =data.frame(row.names =colnames(df),group=group)
+  }
+
+  #df=df[rowSums(df)>0,]
+
+  vs_group=levels(factor(sampFile$group))
+  if(length(vs_group)==1)stop("'group' should be at least two elements factor")
+  if(length(vs_group)>2){
+    if(method%in%c("t.test","wilcox.test"))stop("'group' more than two elements, try 'kruskal.test' or 'anova'")}
+  #calculate each
+  tkodf=t(df)%>%as.data.frame()
+  group=sampFile$group
+
+  res.dt=data.frame("variable"=rownames(df))
+  if(verbose)pcutils::dabiao("Calculating each variable")
+  if(verbose)pcutils::dabiao("Using method: ",method)
+
+  for (i in vs_group) {
+    tmpdf=data.frame(average=apply(df[,which(group==i)],1,mean),sd=apply(df[,which(group==i)],1,sd))
+    colnames(tmpdf)=paste0(colnames(tmpdf),"_",i)
+    res.dt=cbind(res.dt,tmpdf)
+  }
+  if(length(vs_group)==2){
+    res.dt$diff_mean=res.dt[,paste0("average_",vs_group[1])]-res.dt[,paste0("average_",vs_group[2])]
+  }
+  high_group <- apply(res.dt[,paste0("average_",vs_group)], 1, function(a) which(a == max(a))[[1]])
+  res.dt$Highest=vs_group[high_group]
+
+  #parallel
+  reps=nrow(df)
+
+  #main function
+  loop=function(i){
+    val <- tkodf[,i]
+    if(method=="wilcox.test"){
+      pval <- stats::wilcox.test(val~group)$p.value
+    }
+    if(method=="t.test"){
+      pval <- stats::t.test(val~group)$p.value
+    }
+    if(method=="kruskal.test"){
+      pval <- stats::kruskal.test(val~group)$p.value
+    }
+    if(method=="anova"){
+      pval <- stats::lm(val~group) %>% stats::anova(.) %>%.$`Pr(>F)` %>% .[1]
+    }
+    if(verbose&(i%%100==0))message(paste(i,"done."))
+    pval
+  }
+
+  {
+    if(threads>1){
+      pcutils::lib_ps("foreach","doSNOW","snow")
+      pb <- utils::txtProgressBar(max =reps, style = 3)
+      opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
+      cl <- snow::makeCluster(threads)
+      doSNOW::registerDoSNOW(cl)
+      res <- foreach::foreach(i = 1:reps,.options.snow = opts
+      ) %dopar% {
+        loop(i)
+      }
+      snow::stopCluster(cl)
+      gc()
+      pcutils::del_ps("doSNOW","snow","foreach")
+    }
+    else {
+      res <-lapply(1:reps, loop)
+    }}
+  #simplify method
+  res=do.call(c,res)
+  res.dt$p.value=res
+
+  t2 <- Sys.time()
+  stime <- sprintf("%.3f", t2 - t1)
+  resinfo <- paste0('Compared groups: ', paste(vs_group,collapse = ' and '), "\n",
+                    'Total variable number: ', reps, "\n",
+                    'Time use: ', stime, attr(stime, 'units'), "\n")
+
+  message(resinfo)
+  res.dt$q.value <- stats::p.adjust(res.dt$p.value, method = p.adjust.method)
+  return(res.dt)
+}
+
 #' Fit a distribution
 #'
 #' @param a a numeric vector
@@ -247,24 +365,25 @@ if(F){
 #' @return coefficients The coefficients of the linear regression model.
 #' @export
 #' @examples
-#' response <- c(2, 4, 6, 7, 9)
-#' x1 <- c(1, 2, 3, 4, 5)
-#' x2 <- c(2, 3, 6, 8, 9)
-#' x3 <- c(3, 6, 5, 12, 12)
-#' data <- data.frame(response, x1, x2, x3)
+#' data <- data.frame(response=c(2, 4, 6, 7, 9),
+#'                    x1=c(1, 2, 3, 4, 5),
+#'                    x2=c(2, 3, 6, 8, 9),
+#'                    x3=c(3, 6, 5, 12, 12))
 #' coefficients_df <- lm_coefficients(data, response ~ x1 + x2 + x3)
 #' print(coefficients_df)
+#' plot(coefficients_df)
 lm_coefficients <- function(data, formula, each=TRUE) {
   if(each){
     # Get the response variable name
     response_name <- as.character(formula[[2]])
     # Get the predictor variable names
     data=model.frame(formula,data=data)
+    data=trans(data,"standardize")
     predictor_names <- setdiff(colnames(data),response_name)
     coff=c()
     r2=adj_r2=c()
     for (i in predictor_names) {
-      tmplm=lm(as.formula(paste(response_name,i,sep = "~")),data)
+      tmplm=lm(as.formula(paste0("`",response_name,"`~","`",i,"`")),data)
       tmpsumm=summary(tmplm)
       coff=rbind(coff,(tmpsumm$coefficients[2,]))
       r2=c(tmpsumm$r.squared,r2)
@@ -301,18 +420,18 @@ lm_coefficients <- function(data, formula, each=TRUE) {
 #' @description
 #' This function takes the coefficients and generates a plot to visualize their magnitudes.
 #'
-#' @param coefficients_df The coefficients to be plotted.
+#' @param x The coefficients to be plotted.
 #' @param number show number
 #' @param mode The mode of the plot: 1 for bar chart, 2 for lollipop chart.
+#' @param x_order order of variables
+#' @param ... add
 #'
 #' @return NULL
 #' @exportS3Method
 #' @method plot coefficients
-#' @examples
-#' plot.coefficients(coefficients_df, mode = 1)
-#' plot.coefficients(coefficients_df, mode = 2,number=TRUE)
-plot.coefficients <- function(x, mode = 1,number=FALSE,...) {
+plot.coefficients <- function(x, mode = 1,number=FALSE,x_order=NULL,...) {
   coefficients_df=x
+  coefficients_df$variable=change_fac_lev(coefficients_df$variable,x_order)
   if (mode == 1) {
     # Bar chart mode
     p=ggplot(coefficients_df, aes(x = variable, y = coefficient)) +
@@ -355,6 +474,7 @@ plot.coefficients <- function(x, mode = 1,number=FALSE,...) {
 #' @param TopN give top variable importance
 #' @param formula formula
 #'
+#' @export
 #' @examples
 #' data(otutab)
 #' multireg(env1~Group*.,data = metadata[,2:7])
@@ -397,5 +517,5 @@ multireg<-function(formula,data,TopN=3){
     theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),
           axis.text.y = element_text(size=11))
 
-  p1%>%insert_top(p2,height = 0.3)
+  p1%>%aplot::insert_top(p2,height = 0.3)
 }

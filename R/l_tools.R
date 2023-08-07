@@ -42,7 +42,8 @@ dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left",
 #' @return No return value
 copy_vector <- function(vec) {
   lib_ps("clipr", library = FALSE)
-  clipr::write_clip(paste0('c("', paste0(vec, collapse = '","'), '")'))
+  if(is.numeric(vec))clipr::write_clip(paste0('c(', paste0(vec, collapse = ','), ')'))
+  else clipr::write_clip(paste0('c("', paste0(vec, collapse = '","'), '")'))
   message("copy done, just Ctrl+V")
 }
 
@@ -294,10 +295,13 @@ is.ggplot.color <- function(color) {
 #' @examples
 #' add_alpha("red",0.3)
 add_alpha <- function(color, alpha = 0.3) {
+  if((alpha>1)|(alpha<0))stop("alpha should be 0~1")
   color <- grDevices::col2rgb(color) %>%
     t() %>%
     grDevices::rgb(., maxColorValue = 255)
-  paste0(color, as.hexmode(ceiling(255 * alpha)))
+  fix=as.hexmode(ceiling(255 * alpha))
+  if(nchar(fix)==1)fix=paste0("0",fix)
+  paste0(color, fix)
 }
 
 #' Plot a multi-pages pdf

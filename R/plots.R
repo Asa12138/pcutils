@@ -56,15 +56,17 @@ venn_cal <- function(otu_time) {
 #'
 #' @param aa list
 #' @param mode "venn","venn2","upset","flower","network"
+#' @param elements_label logical, show elements label in network?
 #' @param ... add
+#'
 #' @return a plot
 #' @exportS3Method
-venn.list <- function(aa, mode = "venn", ...) {
+venn.list <- function(aa, mode = "venn",elements_label=TRUE,...) {
   if (is.null(names(aa))) names(aa) <- seq_along(aa)
   if (length(aa) > 4 && mode == "venn") message("venn < 4, recommend upset or flower")
   if (mode == "venn") {
     lib_ps("ggvenn", library = FALSE)
-    ggvenn::ggvenn(aa) -> p
+    ggvenn::ggvenn(aa,...) -> p
     return(p)
   }
   # if (mode == "venn2") {
@@ -80,7 +82,7 @@ venn.list <- function(aa, mode = "venn", ...) {
   # }
   if (mode == "upset") {
     lib_ps("UpSetR", library = FALSE)
-    UpSetR::upset(UpSetR::fromList(aa), order.by = "freq", nsets = length(aa), nintersects = 30) -> p
+    UpSetR::upset(UpSetR::fromList(aa), order.by = "freq", nsets = length(aa), nintersects = 30,...) -> p
     return(p)
   }
   if (mode == "flower") {
@@ -152,7 +154,12 @@ venn.list <- function(aa, mode = "venn", ...) {
   if (mode == "network") {
     lib_ps("MetaNet",library = FALSE)
     MetaNet::venn_net(aa)->v_net
-    plot(v_net)
+    MetaNet::get_v(v_net)->tmp_v
+    if(!elements_label){
+      tmp_v$label=ifelse(tmp_v$v_group=="Group",tmp_v$label,NA)
+      igraph::vertex.attributes(v_net)=as.list(tmp_v)
+    }
+    plot(v_net,...)
   }
 }
 
@@ -815,7 +822,10 @@ china_map <- function(dir = "~/database/") {
 #' @export
 #'
 #' @examples
-#' sample_map(test,mode = 3,xlim = c(100,150),ylim = c(25,50))
+#' \donttest{
+#' data(otutab)
+#' sample_map(metadata,mode = 3,xlim = c(100,150),ylim = c(25,50))
+#' }
 sample_map=function(metadata,point_params=list(),mode=1,legend_title="Group",shp_file=NULL,crs=NULL,xlim=NULL,ylim=NULL){
   if(mode==3){
     lib_ps("leaflet","htmltools",library = F)
