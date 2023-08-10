@@ -286,13 +286,13 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     data_all <- data_all[data_all$Taxonomy != "Other", ]
   }
   # determine the stack order
-  if (stack_order == 1) {
+  if (setequal(stack_order,1)){
     data_all$Taxonomy <- factor(data_all$Taxonomy, levels = rownames(mean_sort))
   } else if (any(stack_order %in% data_all$Taxonomy)) {
     data_all$Taxonomy <- change_fac_lev(data_all$Taxonomy, levels = stack_order)
   }
   # determine the x axis order
-  if (group_order == 1) {
+  if (setequal(group_order,1)) {
     new_lev <- (data_all %>% dplyr::filter(Taxonomy == rownames(mean_sort)[1]) %>%
                   dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
     data_all <- dplyr::mutate(data_all, variable = factor(variable, levels = new_lev))
@@ -1050,3 +1050,4 @@ pcutils_theme <- {
 }
 
 bluered=c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F")
+phylo_le=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
