@@ -4,12 +4,14 @@
 \alias{my_sankey}
 \title{My Sankey plot}
 \usage{
-my_sankey(test, mode = c("sankeyD3", "ggsankey"), space = 1, ...)
+my_sankey(test, mode = c("sankeyD3", "ggsankey"), topN = "all", space = 1, ...)
 }
 \arguments{
 \item{test}{a dataframe with hierarchical structure}
 
 \item{mode}{"sankeyD3","ggsankey"}
+
+\item{topN}{"all" or numeric vector, determine how many topN shows in each column}
 
 \item{space}{space width for ggsankey}
 

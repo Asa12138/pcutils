@@ -98,7 +98,12 @@ Suggests:
     ggradar,
     ggsankey,
     sankeyD3,
-    chorddiag
+    chorddiag,
+    stringr,
+    d3treeR,
+    ggraph,
+    ggrepel,
+    treemap
 Remotes:
     github::davidsjoberg/ggsankey,
     github::fbreitwieser/sankeyD3,

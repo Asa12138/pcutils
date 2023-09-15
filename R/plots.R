@@ -14,7 +14,7 @@ legend_size <- function(scale = 1) {
 }
 
 match_df <- function(otutab, metadata) {
-  if (!setequal(rownames(metadata), colnames(otutab))) message("rownames dont match in tab and metadata")
+  if (!setequal(rownames(metadata), colnames(otutab))) message("rownames don't match in tab and metadata")
   idx <- rownames(metadata) %in% colnames(otutab)
   metadata <- metadata[idx, , drop = FALSE]
   otutab <- otutab[, rownames(metadata), drop = FALSE]
@@ -198,6 +198,7 @@ venn.data.frame <- function(otutab, mode = "venn", ...) {
 #' @param number show the number?
 #' @param format_params parameters parse to \code{\link[base]{format}}
 #' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
+#' @param repel use the ggrepel::geom_text_repel instead of geom_text
 #'
 #' @import ggplot2
 #' @export
@@ -214,7 +215,8 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
                       stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
                       style = c("group", "sample")[1],
                       flow = FALSE, flow_params = list(lode.guidance = "frontback", color = "darkgray"),
-                      number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
+                      number = FALSE, repel=FALSE,format_params = list(digits = 2),
+                      text_params = list(position = position_stack())) {
   # Used to draw species stacking diagrams, suitable for processing various OTU similar data, input metatab as the basis for grouping.
   # style can choose "group" or "sample"
   # others=TRUE is used to choose whether to draw other than TopN
@@ -269,7 +271,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
 
     group_by(data_all, group, Taxonomy) %>% summarise(value = mean(value)) -> data_all_facet
     # determine the facet order
-    if (facet_order == 1) {
+    if (setequal(facet_order ,1)) {
       new_lev <- (data_all_facet %>% dplyr::filter(Taxonomy == rownames(mean_sort)[1]) %>%
                     dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
       data_all <- dplyr::mutate(data_all, group = factor(group, levels = new_lev))
@@ -369,11 +371,13 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     p <- p + ylab("Number")
   }
 
-  if (number) p <- p + do.call(geom_text, (text_params))
+  if (number){
+    if(repel)p <- p + do.call(ggrepel::geom_text_repel, (text_params))
+    else p <- p + do.call(geom_text, (text_params))
+  }
 
   p + guides(fill = guide_legend(title = legend_title)) + xlab(group)
 }
-
 
 
 #' Plot a boxplot
@@ -712,6 +716,9 @@ gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
 #' @param var which colname choose for var or a vector
 #' @param metadata the dataframe contains the var
 #' @param ... parameters parse to \code{\link[ggplot2]{geom_point}}
+#' @param formula show formula
+#' @param r2 show r2
+#' @param p_value show p_value
 #'
 #' @return a ggplot
 #' @export
@@ -721,7 +728,7 @@ gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
 #' my_lm(runif(50), var = 1:50)
 #' my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
 #' }
-my_lm <- function(tab, var, metadata = NULL, ...) {
+my_lm <- function(tab, var, metadata = NULL,formula=TRUE,r2=TRUE,p_value=TRUE,...) {
   lib_ps("reshape2", "ggpmisc", library = FALSE)
   # data transform
   g_name <- NULL
@@ -735,24 +742,40 @@ my_lm <- function(tab, var, metadata = NULL, ...) {
     idx <- rownames(metadata) %in% rownames(tab)
     metadata <- metadata[idx, , drop = FALSE]
     tab <- tab[rownames(metadata), , drop = FALSE]
-    md <- data.frame(tab, var = metadata[, var], check.names = FALSE)
+    md <- data.frame(tab, var = metadata[, var,drop=T], check.names = FALSE)
     g_name <- var
   }
 
   if (!all(apply(md, 2, is.numeric))) stop("need numeric")
   md %>% reshape2::melt(., id.vars = "var", variable.name = "indexes") -> md
   md$indexes <- factor(md$indexes, levels = colnames(tab))
+
+  # lab=paste(ifelse(formula,"after_stat(eq.label)",""),
+  #                     ifelse(r2,"after_stat(adj.rr.label)",""),
+  #                     ifelse(p_value,"after_stat(p.value.label)",""),sep = ",")
+  # lab=paste0("paste(",lab,", sep = \"~~~~~\")")
   # main plot
   p <- ggplot(md, aes(var, value)) +
     geom_point(...) +
     geom_smooth(method = "lm", color = "red", se = FALSE, formula = "y~x") +
+    labs(x = NULL, y = NULL)+
+    # ggpmisc::stat_poly_eq(
+    #   aes(label = paste(ifelse(formula,after_stat(eq.label),""),
+    #                     ifelse(r2,after_stat(adj.rr.label),""),
+    #                     ifelse(p_value,after_stat(p.value.label)), sep = "~~~~~")),
+    #   formula = y ~ x, parse = TRUE, color = "red",
+    #   size = 3, # 公式字体大小
+    #   label.x = 0.05, label.y = 1.05
+    # )+
     ggpmisc::stat_poly_eq(
-      aes(label = paste(after_stat(eq.label), after_stat(adj.rr.label), after_stat(p.value.label), sep = "~~~~~")),
+      aes(label = paste(after_stat(eq.label),
+                        after_stat(adj.rr.label),
+                        after_stat(p.value.label), sep = "~~~~~")),
       formula = y ~ x, parse = TRUE, color = "red",
       size = 3, # 公式字体大小
       label.x = 0.05, label.y = 1.05
-    ) + # 位置 ，0-1之间的比例
-    labs(x = NULL, y = NULL)
+    )
+
   # facet?
   flag <- (ncol(tab) == 1)
   if (!flag) {
@@ -1034,10 +1057,10 @@ my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
     lib_ps("circlize",library = FALSE)
     circlize::chordDiagram(tab,grid.col = pal,...)
   }
-  # if(mode=="chorddiag"){
-  #   lib_ps("chorddiag",library = FALSE)
-  #   chorddiag::chorddiag(tab,groupedgeColor= pal,...)
-  #   }
+  if(mode=="chorddiag"){
+    lib_ps("chorddiag",library = FALSE)
+    chorddiag::chorddiag(tab,groupedgeColor= pal,...)
+    }
 }
 
 pcutils_theme <- {

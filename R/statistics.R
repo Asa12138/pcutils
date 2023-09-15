@@ -309,7 +309,7 @@ group_test=function(df,group,metadata=NULL,method="wilcox.test",
                     'Time use: ', stime, attr(stime, 'units'), "\n")
 
   message(resinfo)
-  res.dt$q.value <- stats::p.adjust(res.dt$p.value, method = p.adjust.method)
+  res.dt$p.adjust <- stats::p.adjust(res.dt$p.value, method = p.adjust.method)
   return(res.dt)
 }
 

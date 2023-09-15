@@ -242,6 +242,45 @@ triangp<-function(otutab,group,scale=F,class=NULL){
   }
 }
 
+#' df 2 link
+#'
+#' @param test df
+#' @param fun function to summary the elements number, defalut: `sum`, you can choose `mean`.
+#'
+#' @export
+#' @examples
+#' data(otutab)
+#' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+#' df2link(test)
+#'
+df2link=function(test,fun=sum){
+  if(!is.numeric(test[,ncol(test)]))test$weight=1
+  nc=ncol(test)
+  colnames(test)[nc]="weight"
+  if(nc<3)stop("as least 3-columns dataframe")
+  #change duplicated data
+  #if need tree, use `before_tree()`
+
+  #merge to two columns
+  links=data.frame()
+  tmp_fun_df=stats::aggregate(test$weight,by=list(test[,1,drop=T]),fun)
+  nodes=data.frame(name=tmp_fun_df[["Group.1"]],level=colnames(test)[1],
+                               weight=tmp_fun_df[["x"]])
+
+  for (i in 1:(nc-2)){
+    test[,c(i,i+1,nc)]->tmp
+    colnames(tmp)=c("from","to","weight")
+    tmp=dplyr::group_by(tmp,from,to)%>%dplyr::summarise(weight=fun(weight),.groups="keep")
+    tmp=na.omit(tmp)
+    links=rbind(links,tmp)
+
+    tmp_fun_df=stats::aggregate(tmp$weight,by=list(tmp$to),fun)
+    nodes=rbind(nodes,data.frame(name=tmp_fun_df[["Group.1"]],level=colnames(test)[i+1],
+                                 weight=tmp_fun_df[["x"]]))
+  }
+  return(list(links=links,nodes=nodes))
+}
+
 #多余合并为others
 gettop=\(a,top){
   nc=ncol(a)
@@ -255,7 +294,7 @@ gettop=\(a,top){
     tmpc=colnames(a)[i]
     colnames(a)[i]="tmp"
     a%>%dplyr::group_by(tmp)%>%dplyr::summarise(count=sum(n))%>%dplyr::arrange(-count)%>%head(top[i])%>%dplyr::pull(tmp)->keep[[i]]
-    a=mutate(a,tmp=ifelse(tmp%in%keep[[i]],tmp,"others"))
+    a=mutate(a,tmp=ifelse(tmp%in%keep[[i]],tmp,paste0("other_",cns[i])))
     colnames(a)[i]=tmpc
   }
   a=a%>%dplyr::group_by_at(seq_len(nc-1))%>%dplyr::summarise(count=sum(n))%>%dplyr::arrange(-count)
@@ -364,14 +403,13 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),topN="all",space=1,...){
 #' }
 my_sunburst=function(test,...){
   test=as.data.frame(test)
+  if(length(unique(test[,1]))>1){
+    test=cbind("Root"=" ",test)
+  }
   nc=ncol(test)
   if(nc<3)stop("as least 3-columns dataframe")
   if(!is.numeric(test[,nc]))stop("the last column must be numeric")
 
-  if(length(unique(test[,1]))>1){
-    test=cbind("Root"=" ",test)
-    nc=nc+1
-  }
   lib_ps("plotly",library = F)
   target=source=weight=NULL
   #change duplicated data
@@ -402,6 +440,165 @@ my_sunburst=function(test,...){
   fig
 }
 
+#' My Treemap plot
+#'
+#' @param test a three-columns dataframe with hierarchical structure
+#' @param d3 choose 3D
+#' @param ... look for parameters in \code{\link[plotly]{plot_ly}}
+#'
+#' @return htmlwidget
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data(otutab)
+#' cbind(taxonomy,num=rowSums(otutab))[1:10,c(4,7,8)]->test
+#' my_treemap(test)
+#' }
+my_treemap=function(test,d3=TRUE,...){
+  test=as.data.frame(test)
+  # if(length(unique(test[,1]))>1){
+  #   test=cbind("Root"=" ",test)
+  # }
+  nc=ncol(test)
+  if(nc!=3)stop("supports 3-columns dataframe")
+  if(!is.numeric(test[,nc]))stop("the last column must be numeric")
+
+  lib_ps("treemap",library = F)
+  target=source=weight=NULL
+  #change duplicated data
+
+  # for (i in 1:(nc-1)){
+  #   test[,i]=paste0(test[,i],strrep(" ",i-1))
+  # }
+
+  #merge to two columns
+  links=data.frame()
+  for (i in 1:(nc-2)){
+    test[,c(i,i+1,nc)]->tmp
+    colnames(tmp)=c("source","target","weight")
+    tmp=dplyr::group_by(tmp,source,target)%>%dplyr::summarise(weight=sum(weight),.groups="keep")
+    links=rbind(links,tmp)
+  }
+  fig <- treemap::treemap(
+    dtf = links,
+    #定义所有级别各类的标签
+    index=c("source","target"),
+    #定义各分类的值（一一对应）
+    vSize = "weight",type="index"
+  )
+  if(d3){
+    lib_ps("d3treeR",library = F)
+    fig <- d3treeR::d3tree2( fig ,rootname = colnames(test)[1])
+  }
+  fig
+}
+
+#' My Network plot
+#'
+#' @param test a dataframe with hierarchical structure
+#' @param vertex_anno vertex annotation table
+#' @param vertex_group vertex_group
+#' @param vertex_class vertex_class
+#' @param vertex_size vertex_size
+#' @param ... look for parameters in \code{\link[MetaNet]{c_net_plot}}
+#'
+#' @return metanet
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data(otutab)
+#' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+#' my_network(test)
+#' }
+my_network=function(test,vertex_anno=NULL,
+                    vertex_group = "v_group", vertex_class = "v_class",
+                    vertex_size = "size",...){
+  lib_ps("MetaNet",library = F)
+  test=as.data.frame(test)
+  nc=ncol(test)
+  if(nc<3)stop("as least 3-columns dataframe")
+  if(!is.numeric(test[,nc]))stop("the last column must be numeric")
+  ttt=MetaNet::df2net(test)
+  ttt=MetaNet::c_net_set(ttt,vertex_anno,vertex_group = vertex_group,
+                                                  vertex_class = vertex_class,vertex_size = vertex_size)
+  message("For more details for network visualization, please refer to MetaNet ('https://github.com/Asa12138/MetaNet').")
+  plot(ttt,...)
+}
+
+#' My Circle packing plot
+#'
+#' @param test a dataframe with hierarchical structure
+#' @param anno annotation table for color or fill.
+#' @param mode 1~2
+#' @param Group fill for mode2
+#' @param Score color for mode1
+#' @param label the labels column
+#' @param show_level_name show which level name? a vector contains some column names.
+#' @param show_tip_label show_tip_label, logical
+#' @param str_width str_width
+#'
+#' @return ggplot
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data(otutab)
+#' cbind(taxonomy,weight=rowSums(otutab))[1:10,]->test
+#' my_circle_packing(test)
+#' }
+#'
+my_circle_packing=function(test,anno=NULL,mode=1,
+                           Group = "v_group",Score = "weight",label="label",
+                           show_level_name="all",show_tip_label=TRUE,str_width=10){
+  lib_ps("MetaNet","ggraph",library = F)
+  test=as.data.frame(test)
+  if(length(unique(test[,1]))>1){
+    test=cbind("Root"=" ",test)
+  }
+  nc=ncol(test)
+  if(nc<3)stop("as least 3-columns dataframe")
+  if(!is.numeric(test[,nc]))stop("the last column must be numeric")
+  if(any(test[,nc]<0))stop("the weight must be bigger than 0.")
+  ttt=MetaNet::df2net(test)
+
+  ttt=MetaNet::c_net_set(ttt,anno)
+
+  tmp_v=MetaNet::get_v(ttt)
+  tmp_v$Level=factor(tmp_v$v_class,levels = colnames(test)[-ncol(test)])
+  tmp_v$label=ifelse(is.na(tmp_v[,label]),tmp_v$label,tmp_v[,label])
+  if(!identical(show_level_name,"all")){
+    if(show_tip_label)show_level_name=c(show_level_name,colnames(test)[ncol(test)-1])
+    tmp_v$label=ifelse(tmp_v$level%in%show_level_name,tmp_v$label,NA)
+  }
+  tmp_v$Group=ifelse(tmp_v$Level==colnames(test)[ncol(test)-1],tmp_v[,Group],NA)
+  tmp_v$Score=ifelse(tmp_v$Level==colnames(test)[ncol(test)-1],tmp_v[,Score],NA)
+
+  as.list(tmp_v)->igraph::vertex.attributes(ttt)
+
+  if(mode==1){
+    p=ggraph::ggraph(ttt, layout = 'circlepack',weight=weight) +
+      ggraph::geom_node_circle(aes(fill=Score))+
+      scale_fill_continuous(na.value=NA)
+  }
+  if(mode==2){
+    p=ggraph::ggraph(ttt, layout = 'circlepack',weight=weight) +
+      ggraph::geom_node_circle(aes(fill=Group))+
+      scale_fill_discrete(na.translate = F)
+  }
+  p=p+ggraph::geom_node_circle(aes(color=Level))+
+      ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=Level,
+                                 size = weight),show.legend = F)+
+      # ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=Level,
+      #                            filter=leaf,size = weight),show.legend = F)+
+      # ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=Level,
+      #                            filter=!leaf,size = weight),show.legend = F,nudge_y = 0.5)+
+      theme_void()
+  p
+}
+
+
 #' My circo plot
 #
 #' @param df dataframe with three column
@@ -415,9 +612,11 @@ my_sunburst=function(test,...){
 #'
 #' @examples
 #' \donttest{
-#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="chorddiag")
+#' data(otutab)
+#' cbind(taxonomy,num=rowSums(otutab))[1:10,c(3,7,8)]->test
+#' my_circo(test)
 #' }
-my_circo=function(df,reorder=T,pal=NULL,mode=c("circlize","chorddiag"),...){
+my_circo=function(df,reorder=T,pal=NULL,mode=c("circlize","chorddiag")[1],...){
   mode=match.arg(mode,c("circlize","chorddiag"))
   colnames(df)=c("from","to","count")
   lib_ps("reshape2","tibble",library = F)

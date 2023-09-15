@@ -235,9 +235,10 @@ how_to_use_sbatch=function(mode=1){
 #SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
 #SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
 #SBATCH --partition=cpu
-#SBATCH -N 1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=2g
 #SBATCH --time=14-00:00:00
 echo start: `date +'%Y-%m-%d %T'`
 start=`date +%s`
@@ -257,9 +258,10 @@ echo TIME:`expr $end - $start`s")
 #SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
 #SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
 #SBATCH --partition=cpu
-#SBATCH -N 1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=2g
 #SBATCH --time=14-00:00:00
 #SBATCH --array=1-39
 echo start: `date +'%Y-%m-%d %T'`
@@ -285,9 +287,10 @@ echo TIME:`expr $end - $start`s")
 #SBATCH --output=/share/home/jianglab/pengchen/work/%x_%A_%a.out
 #SBATCH --error=/share/home/jianglab/pengchen/work/%x_%A_%a.err
 #SBATCH --partition=cpu
-#SBATCH -N 1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=2g
 #SBATCH --time=14-00:00:00
 #SBATCH --array=1-39
 
@@ -393,3 +396,253 @@ set_config <- function(item,value) {
   clipr::write_clip(res_text)
   message(res_text)
 }
+
+micro_works={list(
+  "fastp"=paste0('
+  mkdir -p data/fastp
+  ~/miniconda3/envs/waste/bin/fastp -w 8 -i data/rawdata/${sample}_f1.fastq.gz -o data/fastp/${sample}_1.fq.gz \\
+    -I data/rawdata/${sample}_r2.fastq.gz -O data/fastp/${sample}_2.fq.gz -j data/fastp/${i}.json
+'),
+  "rm_human"=paste0('
+  mkdir -p data/rm_human
+  ~/miniconda3/envs/waste/bin/bowtie2 -p 8 -x ~/db/humangenome/hg38 -1 data/fastp/${sample}_1.fq.gz \\
+    -2 data/fastp/${sample}_2.fq.gz -S data/rm_human/${sample}.sam \\
+    --un-conc data/rm_human/${sample}.fq --very-sensitive
+'),
+  "megahit"=paste0('
+  mkdir -p result/megahit
+  mkdir -p result/contigs
+  ~/miniconda3/envs/waste/bin/megahit -t 8 -1 data/rm_human/${sample}.1.fq \\
+    -2 data/rm_human/${sample}.2.fq \\
+    -o result/megahit/${sample} --out-prefix ${sample}
+  mv result/megahit/${sample}/${sample}.contigs.fa result/megahit/contigs/
+'),
+  "prodigal"=paste0("
+  mkdir -p result/prodigal
+  ~/miniconda3/envs/waste/bin/prodigal -i result/megahit/contigs/${sample}.contigs.fa \\
+      -d result/prodigal/${sample}.gene.fa \\
+      -o result/prodigal/${sample}.gene.gff \\
+      -p meta -f gff
+
+  mkdir -p result/prodigal/fullgene
+  grep 'partial=00' result/prodigal/${sample}.gene.fa | cut -f1 -d ' '| sed 's/>//' > result/prodigal/${sample}.fullid
+  seqkit grep -f result/prodigal/${sample}.fullid result/prodigal/${sample}.gene.fa > result/prodigal/fullgene/${sample}.gene.fa
+"),
+  "cluster"=paste0('
+  #修改每条序列的名称，加上样本名
+  for sample in `cat $samplelist`
+  do
+    echo $sample
+    sed -i "/>/s/>/>${sample}_/" result/prodigal/fullgene/${sample}.gene.fa
+  done
+  echo "start merge"
+  cat result/prodigal/fullgene/*.gene.fa > result/prodigal/fullgene/all.fullgene.fa
+  echo "done"
+
+  mkdir -p result/NR
+  mmseqs easy-linclust result/prodigal/fullgene/all.fullgene.fa result/NR/nucleotide mmseqs_tmp \\
+    --min-seq-id 0.9 -c 0.9 --cov-mode 1  --threads 8
+  mv nucleotide_rep_seq.fasta nucleotide.fa
+  ~/miniconda3/envs/waste/bin/seqkit translate result/NR/nucleotide.fa > result/NR/protein.fa
+'),
+  "salmon-index"=paste0('
+  ## 建索引, -t序列, -i 索引，10s
+  mkdir -p result/salmon
+  ~/miniconda3/envs/waste/share/salmon/bin/salmon index \\
+    -t result/NR/nucleotide.fa \\
+    -p 4 \\
+    -i result/salmon/index
+'),
+  "salmon-quant"=paste0('
+  mkdir -p result/salmon/quant
+  ~/miniconda3/envs/waste/share/salmon/bin/salmon quant \\
+      -i result/salmon/index -l A -p 4 --meta \\
+      -1 data/rm_human/${sample}.1.fq \\
+      -2 data/rm_human/${sample}.2.fq \\
+      -o result/salmon/quant/${sample}.quant
+'),
+  "salmon-merge"=paste0("
+  ## 合并
+  ~/miniconda3/envs/waste/share/salmon/bin/salmon quantmerge \\
+      --quants result/salmon/quant/*.quant \\
+      -o result/salmon/gene.TPM
+  ~/miniconda3/envs/waste/share/salmon/bin/salmon quantmerge \\
+      --quants result/salmon/quant/*.quant \\
+      --column NumReads -o result/salmon/gene.count
+  sed -i '1 s/.quant//g' result/salmon/gene.*
+"),
+  "eggnog"=paste0("
+  ## diamond比对基因至eggNOG 5.0数据库, 1~9h，默认diamond 1e-3
+  mkdir -p result/eggnog
+  emapper.py --no_annot --no_file_comments --override \\
+    --data_dir ~/db/eggnog5 \\
+    -i result/NR/protein.fa \\
+    --cpu 16 -m diamond \\
+    -o result/eggnog/protein
+  ## 比对结果功能注释, 1h
+  emapper.py \\
+    --annotate_hits_table result/eggnog/protein.emapper.seed_orthologs \\
+    --data_dir ~/db/eggnog5 \\
+    --cpu 16 --no_file_comments --override \\
+    -o result/eggnog/output
+
+  ## 添表头, 1列为ID，9列KO，16列CAZy，21列COG，22列描述
+  sed '1 i Name\\tortholog\\tevalue\\tscore\\ttaxonomic\\tprotein\\tGO\\tEC\\tKO\\tPathway\\tModule\\tReaction\\trclass\\tBRITE\\tTC\\tCAZy\\tBiGG\\ttax_scope\\tOG\\tbestOG\\tCOG\\tdescription' \\
+    result/eggnog/output.emapper.annotations \\
+    > result/eggnog/eggnog_anno_output
+"),
+  "cazy"=paste0("
+  mkdir -p result/dbcan2
+  diamond blastp   \\
+  	--db ~/db/dbcan2/CAZyDB.07312020  \\
+  	--query result/NR/protein.fa \\
+  	--threads 8 -e 1e-5 --outfmt 6 \\
+  	--max-target-seqs 1 --quiet \\
+  	--out result/dbcan2/gene_diamond.f6
+"),
+  "rgi"=paste0("
+  mkdir -p result/card
+  ~/miniconda3/envs/rgi/bin/rgi main \\
+    --input_sequence result/NR/protein.fa \\
+    --output_file result/card/protein \\
+    --input_type protein --num_threads 8 \\
+    --clean --alignment_tool DIAMOND
+"),
+  "vfdb"=paste0("
+  mkdir -p result/vfdb
+  diamond blastp   \\
+  	--db ~/db/VFDB/VFDB_setB_pro \\
+  	--query result/NR/protein.fa \\
+  	--threads 8 -e 1e-5 --outfmt 6 \\
+  	--max-target-seqs 1 --quiet \\
+  	--out result/vfdb/gene_diamond.f6
+")
+
+)}
+
+#' Microbiome sabtch
+#'
+#' @param work_dir work_dir
+#' @param step "fastp","rm_human","megahit","prodigal","salmon-quant",...
+#' @param all_sample_num all sample number
+#' @param array array number
+#' @param partition partition
+#' @param cpus_per_task cpus_per_task
+#' @param mem mem
+#'
+#' @export
+micro_sbatch=function(work_dir="/share/home/jianglab/pengchen/work/asthma/",
+                      step="fastp",all_sample_num=40,array=1,
+                      partition="cpu",cpus_per_task=8,mem_per_cpu="1G"){
+  num_each_array=ceiling(all_sample_num/array)
+  if(!endsWith(work_dir,"/"))work_dir=paste0(work_dir,"/")
+  array=ifelse(array>1,paste0("1-",array),"1")
+
+  header={paste0("#!/bin/bash
+#SBATCH --job-name=",step,"
+#SBATCH --output=",work_dir,"log/%x_%A_%a.out
+#SBATCH --error=",work_dir,"log/%x_%A_%a.err
+#SBATCH --array=",array,"
+#SBATCH --partition=",partition,"
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1",cpus_per_task,"
+#SBATCH --mem-per-cpu=2g",mem_per_cpu,"
+")}
+
+  set={paste0('samplelist=',work_dir,'samplelist
+
+echo start: `date +"%Y-%m-%d %T"`
+start=`date +%s`
+
+echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+START=$SLURM_ARRAY_TASK_ID
+
+NUMLINES=',num_each_array,' #how many sample in one array
+
+STOP=$((SLURM_ARRAY_TASK_ID*NUMLINES))
+START="$(($STOP - $(($NUMLINES - 1))))"
+
+#set the min and max
+if [ $START -lt 1 ]
+then
+  START=1
+fi
+if [ $STOP -gt ',all_sample_num,' ]
+then
+  STOP=',all_sample_num,'
+fi
+
+echo "START=$START"
+echo "STOP=$STOP"
+')}
+
+  set2={paste0('
+')}
+
+  loop1={paste0('####################
+
+for (( N = $START; N <= $STOP; N++ ))
+do
+  sample=$(head -n "$N" $samplelist | tail -n 1)
+  echo $sample')}
+
+  if(step%in%names(micro_works))work={micro_works[[step]]}
+  else work="
+  do something"
+
+  loop2="done
+"
+
+  end={paste0('
+##############
+echo end: `date +"%Y-%m-%d %T"`
+end=`date +%s`
+echo TIME:`expr $end - $start`s')}
+
+  if(step=="kraken"){
+    res_text=paste0("#!/bin/bash
+#SBATCH --job-name=kraken2M
+#SBATCH --output=",work_dir,"log/%x_%A_%a.out
+#SBATCH --error=",work_dir,"log/%x_%A_%a.err
+#SBATCH --time=14-00:00:00
+#SBATCH --partition=mem
+#SBATCH --cpus-per-task=32
+#SBATCH --mem-per-cpu=100G
+
+fqp=",work_dir,"rm_human
+python /share/home/jianglab/shared/krakenDB/K2ols/kraken2M.py -t 32 \\
+    -i ${fqp} \\
+    -c 0.05 \\
+    -s _1.fastq,_2.fastq \\
+    -o ",work_dir,"result/kraken/ \\
+    -d /share/home/jianglab/shared/krakenDB/mydb2 \\
+    -k ~/miniconda3/envs/waste/bin/kraken2 \\
+    -kt /share/home/jianglab/shared/krakenDB/K2ols/KrakenTools")
+  }
+
+  if(step%in%c("fastp","rm_human","megahit","prodigal","salmon-quant"))
+    res_text=paste0(header,set,set2,loop1,work,loop2,end)
+  else res_text=paste0(header,set,set2,work,end)
+
+  lib_ps("clipr", library = F)
+  clipr::write_clip(res_text)
+  message(res_text)
+}
+
+#' Re-install my packages
+#' @param pkgs pkgs
+#'
+#' @export
+reinstall_my_packages=function(pkgs=c("pcutils","pctax","MetaNet","ReporterScore")){
+  for (i in pkgs) {
+    tryCatch({
+      system(paste0("R CMD install ~/Documents/R/",i))
+    },error=function(e){
+        warning(i, "failed, please check.")
+      }
+             )
+  }
+}
+
+

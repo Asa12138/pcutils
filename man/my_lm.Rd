@@ -4,7 +4,15 @@
 \alias{my_lm}
 \title{Fit a linear model and plot}
 \usage{
-my_lm(tab, var, metadata = NULL, ...)
+my_lm(
+  tab,
+  var,
+  metadata = NULL,
+  formula = TRUE,
+  r2 = TRUE,
+  p_value = TRUE,
+  ...
+)
 }
 \arguments{
 \item{tab}{your dataframe}
@@ -12,6 +20,12 @@ my_lm(tab, var, metadata = NULL, ...)
 \item{var}{which colname choose for var or a vector}
 
 \item{metadata}{the dataframe contains the var}
+
+\item{formula}{show formula}
+
+\item{r2}{show r2}
+
+\item{p_value}{show p_value}
 
 \item{...}{parameters parse to \code{\link[ggplot2]{geom_point}}}
 }

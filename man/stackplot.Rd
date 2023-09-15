@@ -21,6 +21,7 @@ stackplot(
   flow = FALSE,
   flow_params = list(lode.guidance = "frontback", color = "darkgray"),
   number = FALSE,
+  repel = FALSE,
   format_params = list(digits = 2),
   text_params = list(position = position_stack())
 )
@@ -57,6 +58,8 @@ stackplot(
 \item{flow_params}{parameters parse to \code{\link[ggalluvial]{geom_flow}}}
 
 \item{number}{show the number?}
+
+\item{repel}{use the ggrepel::geom_text_repel instead of geom_text}
 
 \item{format_params}{parameters parse to \code{\link[base]{format}}}
 
