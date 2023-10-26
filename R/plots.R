@@ -961,6 +961,43 @@ my_cat <- function(mode = 1) {
   p
 }
 
+#' Give you a rose
+#'
+#' @param color "skyblue3"
+#'
+#' @return NULL
+#' @export
+#' @references https://mp.weixin.qq.com/s/W-BYPR3UXL120XWpTmN3rA
+give_you_a_rose=function(color="skyblue3"){
+  lib_ps("plot3D",library = F)
+  #生成绘图数据
+  x<-seq(0,24)/24
+  t<-seq(0,575,by=0.5)/575*20*pi+4*pi
+  grid<-expand.grid(x=x,t=t)
+  x<-matrix(grid$x,ncol=25,byrow=T)
+  t<-matrix(grid$t,ncol = 25,byrow = T)
+  p<-(pi/2)*exp(-t/(8*pi))
+  change<-sin(15*t)/150
+  u<-1-(1-(3.6*t)%%(2*pi)/pi)^4/2+change
+  y<-2*(x^2-x)^2*sin(p)
+  r<-u*(x*sin(p)+y*cos(p))
+  #绘图
+  plot3D::persp3D(x=r*cos(t),y=r*sin(t),z=u*(x*cos(p)-y*sin(p)),
+          main="To you",
+          #xlim=c(-0.5,0.5),ylim=c(-0.5,0.5),zlim=c(0,1),
+          xlab="Love youself",
+          ylab="Love youself",
+          zlab="Love youself",
+          col = colorRampPalette(c("#e4e9f6",color))(100),
+          border = "grey85",
+          lwd=0.1,
+          facets = T,
+          colkey = F,
+          bty="b2",
+          theta = -60,phi = 45)
+  print("give you a rose 🌹")
+}
+
 #' Pie plot
 #'
 #' @param otutab otutab

@@ -1,0 +1,57 @@
+#!/bin/bash
+#SBATCH --job-name=kraken2
+#SBATCH --output=/data/home/jianglab/pengchen/work/tanshangjin/log/%x_%A_%a.out
+#SBATCH --error=/data/home/jianglab/pengchen/work/tanshangjin/log/%x_%A_%a.err
+#SBATCH --array=4
+#SBATCH --partition=mem
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=30G
+samplelist=/data/home/jianglab/pengchen/work/tanshangjin/samplelist
+
+echo start: `date +"%Y-%m-%d %T"`
+start=`date +%s`
+
+####################
+echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+START=$SLURM_ARRAY_TASK_ID
+
+NUMLINES=5 #how many sample in one array
+
+STOP=$((SLURM_ARRAY_TASK_ID*NUMLINES))
+START="$(($STOP - $(($NUMLINES - 1))))"
+
+#set the min and max
+if [ $START -lt 1 ]
+then
+  START=1
+fi
+if [ $STOP -gt 20 ]
+then
+  STOP=20
+fi
+
+echo "START=$START"
+echo "STOP=$STOP"
+
+####################
+for (( N = $START; N <= $STOP; N++ ))
+do
+  sample=$(head -n "$N" $samplelist | tail -n 1)
+  echo $sample
+  mkdir -p result/kraken2
+  ~/miniconda3/envs/waste/bin/kraken2 --threads 8 \
+    --db ~/db/kraken2/stand_krakenDB \
+    --confidence 0.05 \
+    --output result/kraken2/${sample}.output \
+    --report result/kraken2/${sample}.kreport \
+    --paired --gzip-compressed \
+    all_data/${sample}_1.fq.gz \
+    all_data/${sample}_2.fq.gz
+done
+
+##############
+echo end: `date +"%Y-%m-%d %T"`
+end=`date +%s`
+echo TIME:`expr $end - $start`s

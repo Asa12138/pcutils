@@ -1,3 +1,32 @@
+common_list=list(
+  taxaclass=c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
+)
+
+print_authors_affiliation=function(authors=c("jc","pc")){
+  affiliations=c(
+    "1"="Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310058, China",
+    "2"="State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, National Clinical Research Center for Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
+    "3"="Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
+    "4"="BGI Research, Wuhan, Hubei 430074, China",
+    "5"="BGI Research, Shenzhen, Guangdong 518083, China")
+  author_list=list(
+    jc=1:3,
+    pc=c(1,2),
+    lye=1,
+    lz=1,
+    jlyq=1,
+    hzn=1,
+    cq=c(1,2),
+    tsj=4:5
+  )
+  pa=affiliations[author_list[authors]%>%Reduce(union,.)]
+  for (i in seq_along(pa)) {
+    pa[i]=paste0("$^",i,"$",pa[i])
+  }
+  paste0(pa,collapse = "\n\n")%>%clipr::write_clip()
+  message(paste0(pa,collapse = "\n\n"))
+}
+
 # =========little tools=========
 #' Print some message with =
 #'
@@ -131,7 +160,8 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
     "ggradar" = "ricardo-bion/ggradar",
     "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
     "Vennerable" = "js229/Vennerable",
-    "linkET"="Hy4m/linkET"
+    "linkET"="Hy4m/linkET",
+    "deeplr"="paulcbauer/deeplr"
   )
 
   p_list <- c(p_list, ...)
@@ -603,6 +633,28 @@ guolv<-function(tab,sum=10,exist=1){
   return(tab)
 }
 
+#' Remove the low relative items in each column
+#'
+#' @param otutab otutab
+#' @param relative_threshold threshold, default: 1e-4
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' rm_low(otutab)
+rm_low=function(otutab,relative_threshold=1e-4){
+  #colSums(otutab)%>%summary()
+
+  f_mpa=otutab
+  f_mpa_r <- as.data.frame(apply(f_mpa,2, function(x) x/sum(x)))#正确形式
+  #f_mpa_r=f_mpa/colSums(f_mpa),错误,不能这样除
+  f_mpa[f_mpa_r<relative_threshold]=0
+  f_mpa=f_mpa[rowSums(f_mpa)>0,]
+  f_mpa
+}
+
 #' Transfer your data
 #'
 #' @param df dataframe
@@ -621,7 +673,8 @@ guolv<-function(tab,sum=10,exist=1){
 trans<-function(df,method = "normalize",margin=2,...){
   all=c("cpm","minmax","acpm","total", "log1","max", "frequency", "normalize", "range", "rank", "rrank",
         "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr")
-  if (!method%in%all)stop("methods should be one of ",all)
+  if(is.vector(df))df=data.frame(value=df)
+  if (!method%in%all)stop("methods should be one of ",paste0(all,collapse = ", "))
   if(method=="cpm"){
     df=apply(df, margin, \(x){x*10**6/sum(x)})
   }
@@ -667,6 +720,16 @@ strsplit2 <- function(x, split, colnames = NULL, ...) {
   out <- as.data.frame(out)
   if (!is.null(colnames)) colnames(out) <- colnames
   out
+}
+
+#' Transpose data.frame
+#'
+#' @param data data.frame
+#'
+#' @return
+#' @export
+t2=function(data){
+  as.data.frame(t(data),optional = T)
 }
 
 #' Explode a data.frame if there are split charter in one column
@@ -955,5 +1018,71 @@ get_doi <- function(doi, dir = "~/Downloads/", bget_path = "~/software/bget_0.3.
   doi <- sub("https://doi.org/", "", doi)
   command <- paste0(bget_path, " doi ", doi, " -t2 --suppl --full-text -o ", dir)
   system(command)
+}
+
+#' Search and browse the web for specified terms
+#'
+#' This function takes a vector of search terms, an optional search engine (default is Google),
+#' and an optional base URL to perform web searches. It opens the default web browser
+#' with search results for each term.
+#'
+#' @param search_terms A character vector of search terms to be searched.
+#' @param engine A character string specifying the search engine to use (default is "google").
+#'               Supported engines: "google", "bing".
+#' @param base_url A character string specifying the base URL for web searches. If not provided,
+#'                the function will use a default URL based on the chosen search engine.
+#'
+#' @examples
+#' \dontrun{
+#' search_terms <- c(
+#'   "s__Pandoraea_pnomenusa",
+#'   "s__Alicycliphilus_sp._B1"
+#' )
+#'
+#' # Using Google search engine
+#' search_browse(search_terms, engine = "google")
+#'
+#' # Using Bing search engine
+#' search_browse(search_terms, engine = "bing")
+#' }
+#'
+#' @export
+search_browse = function(search_terms, engine = "google", base_url = NULL) {
+  if(length(search_terms)>30)stop("too many search_terms, please cut down to 30.")
+  # 如果未提供基础URL，则根据搜索引擎设置默认URL
+  if (is.null(base_url)) {
+    if (engine == "google") {
+      base_url <- "https://www.google.com/search?q="
+    } else if (engine == "bing") {
+      base_url <- "https://www.bing.com/search?q="
+    } else {
+      stop("Unsupported search engine. Supported engines: 'google', 'bing'")
+    }
+  }
+
+  search_terms=gsub("_"," ",search_terms)
+  # 循环遍历搜索每个元素
+  for (term in search_terms) {
+    # 构建搜索 URL
+    search_url <- paste0(base_url, URLencode(term))
+
+    # 在默认浏览器中打开搜索页面
+    browseURL(search_url)
+  }
+}
+
+#' translator
+#'
+#' @param words words
+#'
+#' @export
+#'
+#' @examples
+#' translator(c("中国","if"))
+translator=function(words){
+  if(!requireNamespace("ecce"))remotes::install_gitlab("chuxinyuan/ecce")
+  lib_ps("ecce")
+  # Example-1
+  sapply(words, \(i)translate(i)%>%.$Explains)
 }
 

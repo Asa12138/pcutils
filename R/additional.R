@@ -288,6 +288,7 @@ gettop=\(a,top){
   if(!is.numeric(a[,nc]))stop("the last column must be numeric")
   colnames(a)->cns
   colnames(a)=c(paste0("f",seq_len(nc-1)),"n")
+  a=mutate_at(a,seq_len(nc-1),as.character)
   top=rep(top,length.out=nc-1)
   keep=list()
   for (i in seq_len(nc-1)) {
@@ -309,6 +310,8 @@ gettop=\(a,top){
 #' @param mode "sankeyD3","ggsankey"
 #' @param space space width for ggsankey
 #' @param topN "all" or numeric vector, determine how many topN shows in each column
+#' @param width width
+#' @param str_width str_width
 #'
 #' @export
 #'
@@ -322,7 +325,7 @@ gettop=\(a,top){
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
 #' my_sankey(test)
 #' }
-my_sankey=function(test,mode=c("sankeyD3","ggsankey"),topN="all",space=1,...){
+my_sankey=function(test,mode=c("sankeyD3","ggsankey"),topN="all",space=1,width=0.1,str_width=20,...){
   mode=match.arg(mode,c("sankeyD3","ggsankey"))
   test=as.data.frame(test)
   nc=ncol(test)
@@ -378,8 +381,9 @@ my_sankey=function(test,mode=c("sankeyD3","ggsankey"),topN="all",space=1,...){
     }
     else df$label=df$node
 
-    p=ggplot(df, aes(x = x, next_x = next_x, node = node, next_node = next_node, label = label,fill = factor(node),value=value)) +
-      ggsankey::geom_sankey(flow.alpha = .6,node.color = "gray30",space = space) +
+    p=ggplot(df, aes(x = x, next_x = next_x, node = node, next_node = next_node,
+                     label = stringr::str_wrap(label, width = str_width),fill = factor(node),value=value)) +
+      ggsankey::geom_sankey(flow.alpha = .6,node.color = "gray30",space = space,width=width) +
       ggsankey::geom_sankey_text(size = 3, color = "black",space = space) +
       ggsankey::theme_sankey(base_size = 18) +
       labs(x = NULL) + scale_fill_manual(values = get_cols(nlevels(factor(df$node))))+

@@ -1,3 +1,4 @@
+
 #' Make a R-analysis project
 #'
 #' @param pro_n project name
@@ -408,6 +409,33 @@ micro_works={list(
   ~/miniconda3/envs/waste/bin/bowtie2 -p 8 -x ~/db/humangenome/hg38 -1 data/fastp/${sample}_1.fq.gz \\
     -2 data/fastp/${sample}_2.fq.gz -S data/rm_human/${sample}.sam \\
     --un-conc data/rm_human/${sample}.fq --very-sensitive
+  rm data/rm_human/${sample}.sam
+'),
+  "kraken"=paste0('
+  mkdir -p result/kraken
+  python /share/home/jianglab/shared/krakenDB/K2ols/kraken2M.py -t 16 \\
+      -i data/rm_human \\
+      -c 0.05 \\
+      -s .1.fq,.2.fq \\
+      -o result/kraken \\
+      -d /share/home/jianglab/shared/krakenDB/mydb2 \\
+      -k ~/miniconda3/envs/waste/bin/kraken2 \\
+      -kt /share/home/jianglab/shared/krakenDB/K2ols/KrakenTools
+  mkdir -p result/kraken/kreport
+  mv result/kraken/*_kreport.txt result/kraken/kreport/
+  python ~/db/script/format_kreports.py -i result/kraken/kreport \\
+      -kt /share/home/jianglab/shared/krakenDB/K2ols/KrakenTools --save-name2taxid
+'),
+  "kraken2"=paste0('
+  mkdir -p result/kraken2
+  ~/miniconda3/envs/waste/bin/kraken2 --threads 8 \\
+    --db ~/db/kraken2/stand_krakenDB \\
+    --confidence 0.05 \\
+    --output result/kraken2/${sample}.output \\
+    --report result/kraken2/${sample}.kreport \\
+    --paired \\
+    data/rm_human/${sample}.1.fq \\
+    data/rm_human/${sample}.2.fq
 '),
   "megahit"=paste0('
   mkdir -p result/megahit
@@ -442,11 +470,16 @@ micro_works={list(
   mkdir -p result/NR
   mmseqs easy-linclust result/prodigal/fullgene/all.fullgene.fa result/NR/nucleotide mmseqs_tmp \\
     --min-seq-id 0.9 -c 0.9 --cov-mode 1  --threads 8
-  mv nucleotide_rep_seq.fasta nucleotide.fa
+  # ~/miniconda3/envs/waste/bin/cd-hit-est -i result/prodigal/fullgene/all.fullgene.fa \\
+  #   -o result/NR/nucleotide.fa \\
+  #   -aS 0.9 -c 0.9 -G 0 -g 0 -T 0 -M 0
+  mv result/NR/nucleotide_rep_seq.fasta result/NR/nucleotide.fa
   ~/miniconda3/envs/waste/bin/seqkit translate result/NR/nucleotide.fa > result/NR/protein.fa
+  sed \'s/\\*//g\' result/NR/protein.fa > result/NR/protein_no_end.fa
 '),
   "salmon-index"=paste0('
   ## 建索引, -t序列, -i 索引，10s
+  # 大点内存
   mkdir -p result/salmon
   ~/miniconda3/envs/waste/share/salmon/bin/salmon index \\
     -t result/NR/nucleotide.fa \\
@@ -454,6 +487,7 @@ micro_works={list(
     -i result/salmon/index
 '),
   "salmon-quant"=paste0('
+  # 大点内存
   mkdir -p result/salmon/quant
   ~/miniconda3/envs/waste/share/salmon/bin/salmon quant \\
       -i result/salmon/index -l A -p 4 --meta \\
@@ -462,6 +496,17 @@ micro_works={list(
       -o result/salmon/quant/${sample}.quant
 '),
   "salmon-merge"=paste0("
+  ls result/salmon/quant/*.quant/*.sf |awk -F'/' '{print $(NF-1)}' |sed 's/.quant//' >tmp_finished
+  diff_rows -f samplelist -s tmp_finished >tmp_diff
+  # 计算结果的行数
+  line_count=$( cat tmp_diff| wc -l)
+
+  # 检查行数是否大于1，如果是则终止脚本
+  if [ \"$line_count\" -gt 1 ]; then
+    echo 'sf文件和samplelist数量不一致。'
+    exit 1
+  fi
+
   ## 合并
   ~/miniconda3/envs/waste/share/salmon/bin/salmon quantmerge \\
       --quants result/salmon/quant/*.quant \\
@@ -472,6 +517,7 @@ micro_works={list(
   sed -i '1 s/.quant//g' result/salmon/gene.*
 "),
   "eggnog"=paste0("
+  conda activate func
   ## diamond比对基因至eggNOG 5.0数据库, 1~9h，默认diamond 1e-3
   mkdir -p result/eggnog
   emapper.py --no_annot --no_file_comments --override \\
@@ -495,15 +541,16 @@ micro_works={list(
   mkdir -p result/dbcan2
   diamond blastp   \\
   	--db ~/db/dbcan2/CAZyDB.07312020  \\
-  	--query result/NR/protein.fa \\
+  	--query result/NR/protein_no_end.fa \\
   	--threads 8 -e 1e-5 --outfmt 6 \\
   	--max-target-seqs 1 --quiet \\
   	--out result/dbcan2/gene_diamond.f6
 "),
   "rgi"=paste0("
+  #conda activate rgi
   mkdir -p result/card
   ~/miniconda3/envs/rgi/bin/rgi main \\
-    --input_sequence result/NR/protein.fa \\
+    --input_sequence result/NR/protein_no_end.fa \\
     --output_file result/card/protein \\
     --input_type protein --num_threads 8 \\
     --clean --alignment_tool DIAMOND
@@ -512,15 +559,58 @@ micro_works={list(
   mkdir -p result/vfdb
   diamond blastp   \\
   	--db ~/db/VFDB/VFDB_setB_pro \\
-  	--query result/NR/protein.fa \\
+  	--query result/NR/protein_no_end.fa \\
   	--threads 8 -e 1e-5 --outfmt 6 \\
   	--max-target-seqs 1 --quiet \\
   	--out result/vfdb/gene_diamond.f6
-")
+"),
+  "summary"=paste0("
+  mkdir -p result/summ_table
+  if [ -f result/eggnog/eggnog_anno_output ]; then
+  # 汇总，9列KO，16列CAZy按逗号分隔，21列COG按字母分隔，原始值累加
+  ~/db/script/summarizeAbundance.py \\
+    -i result/salmon/gene.count \\
+    -m result/eggnog/eggnog_anno_output \\
+    -c '9,16,21' -s ',+,+*' -n raw \\
+    -o result/summ_table/eggnog
+  sed -i 's/^ko://' summ_table/eggnog.KO.raw.txt
+  fi
 
+  if [ -f result/card/protein.txt ]; then
+  awk 'BEGIN {FS = \"\\t\"; OFS = \"\\t\"} {split($1, a, \" \"); $1 = a[1]} 1' result/card/protein.txt >result/card/protein_format_id.txt
+  ~/db/script/summarizeAbundance.py \\
+    -i result/salmon/gene.count \\
+    -m result/card/protein_format_id.txt \\
+    -c '11' -s ';' -n raw \\
+    -o result/summ_table/card
+  fi
+
+  if [ -f result/dbcan2/gene_diamond.f6 ]; then
+  # 提取基因与dbcan分类对应表
+  perl ~/db/script/format_dbcan2list.pl \
+    -i result/dbcan2/gene_diamond.f6 \
+    -o result/dbcan2/gene.list
+  # 按对应表累计丰度
+  ~/db/script/summarizeAbundance.py \\
+    -i result/salmon/gene.count \\
+    -m result/dbcan2/gene.list \\
+    -c '2' -s ',' -n raw \\
+    -o result/dbcan2/cazy
+  fi
+
+  if [ -f result/vfdb/gene_diamond.f6 ]; then
+  sed -i '1 i Name\tvf\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore' \\
+    result/vfdb/gene_diamond.f6
+  ~/db/script/summarizeAbundance.py \\
+    -i result/salmon/gene.count \\
+    -m result/vfdb/gene_diamond.f6 \\
+    -c '2' -s ';' -n raw \\
+    -o result/summ_table/card
+  fi
+")
 )}
 
-#' Microbiome sabtch
+#' Microbiome sbatch
 #'
 #' @param work_dir work_dir
 #' @param step "fastp","rm_human","megahit","prodigal","salmon-quant",...
@@ -533,7 +623,7 @@ micro_works={list(
 #' @export
 micro_sbatch=function(work_dir="/share/home/jianglab/pengchen/work/asthma/",
                       step="fastp",all_sample_num=40,array=1,
-                      partition="cpu",cpus_per_task=8,mem_per_cpu="1G"){
+                      partition="cpu",cpus_per_task=1,mem_per_cpu="2G"){
   num_each_array=ceiling(all_sample_num/array)
   if(!endsWith(work_dir,"/"))work_dir=paste0(work_dir,"/")
   array=ifelse(array>1,paste0("1-",array),"1")
@@ -546,8 +636,8 @@ micro_sbatch=function(work_dir="/share/home/jianglab/pengchen/work/asthma/",
 #SBATCH --partition=",partition,"
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=1",cpus_per_task,"
-#SBATCH --mem-per-cpu=2g",mem_per_cpu,"
+#SBATCH --cpus-per-task=",cpus_per_task,"
+#SBATCH --mem-per-cpu=",mem_per_cpu,"
 ")}
 
   set={paste0('samplelist=',work_dir,'samplelist
@@ -555,7 +645,10 @@ micro_sbatch=function(work_dir="/share/home/jianglab/pengchen/work/asthma/",
 echo start: `date +"%Y-%m-%d %T"`
 start=`date +%s`
 
-echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+####################
+')}
+
+  set2={paste0('echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
 START=$SLURM_ARRAY_TASK_ID
 
 NUMLINES=',num_each_array,' #how many sample in one array
@@ -575,14 +668,11 @@ fi
 
 echo "START=$START"
 echo "STOP=$STOP"
+
+####################
 ')}
 
-  set2={paste0('
-')}
-
-  loop1={paste0('####################
-
-for (( N = $START; N <= $STOP; N++ ))
+  loop1={paste0('for (( N = $START; N <= $STOP; N++ ))
 do
   sample=$(head -n "$N" $samplelist | tail -n 1)
   echo $sample')}
@@ -621,9 +711,9 @@ python /share/home/jianglab/shared/krakenDB/K2ols/kraken2M.py -t 32 \\
     -kt /share/home/jianglab/shared/krakenDB/K2ols/KrakenTools")
   }
 
-  if(step%in%c("fastp","rm_human","megahit","prodigal","salmon-quant"))
+  if(step%in%c("fastp","rm_human","kraken2","megahit","prodigal","salmon-quant"))
     res_text=paste0(header,set,set2,loop1,work,loop2,end)
-  else res_text=paste0(header,set,set2,work,end)
+  else res_text=paste0(header,set,work,end)
 
   lib_ps("clipr", library = F)
   clipr::write_clip(res_text)
