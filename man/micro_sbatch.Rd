@@ -2,7 +2,7 @@
 % Please edit documentation in R/project.R
 \name{micro_sbatch}
 \alias{micro_sbatch}
-\title{Microbiome sabtch}
+\title{Microbiome sbatch}
 \usage{
 micro_sbatch(
   work_dir = "/share/home/jianglab/pengchen/work/asthma/",
@@ -10,8 +10,8 @@ micro_sbatch(
   all_sample_num = 40,
   array = 1,
   partition = "cpu",
-  cpus_per_task = 8,
-  mem_per_cpu = "1G"
+  cpus_per_task = 1,
+  mem_per_cpu = "2G"
 )
 }
 \arguments{
@@ -30,5 +30,5 @@ micro_sbatch(
 \item{mem}{mem}
 }
 \description{
-Microbiome sabtch
+Microbiome sbatch
 }

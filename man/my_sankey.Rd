@@ -4,7 +4,15 @@
 \alias{my_sankey}
 \title{My Sankey plot}
 \usage{
-my_sankey(test, mode = c("sankeyD3", "ggsankey"), topN = "all", space = 1, ...)
+my_sankey(
+  test,
+  mode = c("sankeyD3", "ggsankey"),
+  topN = "all",
+  space = 1,
+  width = 0.1,
+  str_width = 20,
+  ...
+)
 }
 \arguments{
 \item{test}{a dataframe with hierarchical structure}
@@ -14,6 +22,10 @@ my_sankey(test, mode = c("sankeyD3", "ggsankey"), topN = "all", space = 1, ...)
 \item{topN}{"all" or numeric vector, determine how many topN shows in each column}
 
 \item{space}{space width for ggsankey}
+
+\item{width}{width}
+
+\item{str_width}{str_width}
 
 \item{...}{look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}}
 }

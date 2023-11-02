@@ -726,6 +726,7 @@ python /share/home/jianglab/shared/krakenDB/K2ols/kraken2M.py -t 32 \\
 #' @export
 reinstall_my_packages=function(pkgs=c("pcutils","pctax","MetaNet","ReporterScore")){
   for (i in pkgs) {
+    devtools::document(paste0("~/Documents/R/",i))
     tryCatch({
       system(paste0("R CMD install ~/Documents/R/",i))
     },error=function(e){

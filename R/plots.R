@@ -303,7 +303,8 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
                   dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
     data_all <- dplyr::mutate(data_all, variable = factor(variable, levels = new_lev))
   } else if (any(group_order %in% data_all$variable)) {
-    data_all <- dplyr::mutate(data_all, variable = change_fac_lev(variable, levels = group_order))
+    #data_all <- dplyr::mutate(data_all, variable = change_fac_lev(variable, levels = group_order))
+    data_all$variable=change_fac_lev(data_all$variable,group_order)
   }
 
   if (get_data) {

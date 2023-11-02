@@ -638,7 +638,6 @@ guolv<-function(tab,sum=10,exist=1){
 #' @param otutab otutab
 #' @param relative_threshold threshold, default: 1e-4
 #'
-#' @return
 #' @export
 #'
 #' @examples
@@ -726,7 +725,6 @@ strsplit2 <- function(x, split, colnames = NULL, ...) {
 #'
 #' @param data data.frame
 #'
-#' @return
 #' @export
 t2=function(data){
   as.data.frame(t(data),optional = T)
