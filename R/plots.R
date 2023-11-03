@@ -13,6 +13,22 @@ legend_size <- function(scale = 1) {
   )
 }
 
+#' Get a ggplot xlim and ylim
+#'
+#' @param p ggplot
+#'
+#' @return list
+#' @export
+#'
+ggplot_lim=function(p){
+  stopifnot(inherits(p,"ggplot"))
+  p1=ggplot_build(p)
+  lims=list(x=p1$layout$panel_scales_x[[1]]$range$range,
+            y=p1$layout$panel_scales_y[[1]]$range$range)
+  lims
+}
+
+
 match_df <- function(otutab, metadata) {
   if (!setequal(rownames(metadata), colnames(otutab))) message("rownames don't match in tab and metadata")
   idx <- rownames(metadata) %in% colnames(otutab)
@@ -956,7 +972,7 @@ my_cat <- function(mode = 1) {
     temp <- tempdir()
     ggsave(filename = paste0(temp, "/", "little_guodong.png"), plot = little_guodong, bg = "transparent")
     p <- ggplot(d, aes(x, y)) +
-      ggimage::geom_image(image = paste0("images/smallguodong.ppp"), size = .05) +
+      ggimage::geom_image(image = paste0(paste0(temp, "/", "little_guodong.png")), size = .05) +
       theme_void()
   }
   p
