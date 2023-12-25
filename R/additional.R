@@ -16,6 +16,8 @@ toXY <- function(geo) {
   return(as.data.frame(row.names = rownames(geo), XY))
 }
 
+#========Common plots=======
+
 #' Plot correlation
 #'
 #' @param env dataframe1
@@ -52,7 +54,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
           ggcor::geom_square(data = ggcor::get_data(type = "lower", show.diag = FALSE)) +
           ggcor::geom_mark(data = ggcor::get_data(type = "upper", show.diag = FALSE), size = 2.5) +
           geom_abline(slope = -1, intercept = ncol(env) + 1)+
-          scale_fill_gradientn(colours = bluered,limit=c(-1,1))
+          scale_fill_gradientn(colours = get_cols(pal = "bluered"),limit=c(-1,1))
         return(p)
       }
 
@@ -66,7 +68,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
           ggcor::anno_col_tree() +
           ggcor::set_p_xaxis() +
           ggcor::set_p_yaxis()+
-          scale_fill_gradientn(colours = bluered,limit=c(-1,1))
+          scale_fill_gradientn(colours = get_cols(pal = "bluered"),limit=c(-1,1))
         return(p)
       }
 
@@ -101,7 +103,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
             ggcor::geom_square(data = ggcor::get_data(show.diag = FALSE)) +
             ggcor::geom_mark(data = ggcor::get_data(show.diag = FALSE), size = 2.5)
         }
-        return(p+scale_fill_gradientn(colours = bluered,limit=c(-1,1)))
+        return(p+scale_fill_gradientn(colours = get_cols(pal = "bluered"),limit=c(-1,1)))
       }
 
       if (mode == 2) {
@@ -114,7 +116,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
           ggcor::anno_col_tree() +
           ggcor::set_p_xaxis() +
           ggcor::set_p_yaxis()+
-          scale_fill_gradientn(colours = bluered,limit=c(-1,1))
+          scale_fill_gradientn(colours = get_cols(pal = "bluered"),limit=c(-1,1))
         return(p)
       }
 
@@ -133,56 +135,9 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = T, m
   }
 }
 
-#' Plot a DNA double helix
-#'
-#' @export
-#' @references \code{https://github.com/SherryDong/create_plot_by_R_base}
-dna_plot <- function() {
-  lib_ps("RColorBrewer", library = F)
-  col_DNA <- RColorBrewer::brewer.pal(8, "Set1")[2]
-  # A-green, T-red, C-yellow, G-blue
-  col_ATCG <- c(
-    RColorBrewer::brewer.pal(8, "Accent")[1], RColorBrewer::brewer.pal(11, "Set3")[4],
-    RColorBrewer::brewer.pal(11, "Set3")[2], RColorBrewer::brewer.pal(11, "Paired")[1]
-  )
-  DNA_length <- 4 ## the code only applies when DNA_length%%2==0, if DNA_length%%2==1, need to modify
-  x <- seq(-DNA_length * pi / 2, DNA_length * pi / 2, length.out = 1000) ##
-  y1 <- cos(x) ## backbone up
-  y2 <- cos(x + pi) ## backbone down
-  # get the position of nucleotides
-  xx <- seq(DNA_length * pi / 2, -DNA_length * pi / 2, length.out = DNA_length * 5 + 1)
-  xx <- xx + (xx[2] - xx[1]) / 2
-  # remove the first and the lines in the boundary region
-  xx <- setdiff(xx, c(xx[c(1:DNA_length) * 5 - 2], min(xx)))
-  plot(y1 ~ x, pch = 16, type = "l", xlab = "", ylab = "", xaxt = "n", yaxt = "n", main = "", bty = "n", col = "white")
-  for (i in 1:length(xx)) {
-    ybottom <- cos(xx[i]) # ybottom position
-    ytop <- cos(xx[i] + pi) # yup position
-    rr <- sample(1:4, 1) ## ATCG, random select one pair
-    if (rr == 1) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4) ## A-T
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
-    }
-    if (rr == 2) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4) ## T-A
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
-    }
-    if (rr == 3) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4) ## C-G
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4)
-    }
-    if (rr == 4) {
-      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4) ## G-C
-      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4)
-    }
-  }
-  graphics::lines(y1 ~ x, pch = 16, lwd = 8, col = col_DNA)
-  graphics::lines(y2 ~ x, pch = 16, lwd = 8, col = col_DNA)
-}
-
 #' Radar plot
 #'
-#' @param otu_time otutab
+#' @param group_df group_df
 #' @param ... add
 #'
 #' @export
@@ -190,21 +145,22 @@ dna_plot <- function() {
 #' @examples
 #' \donttest{
 #' data(otutab)
-#' tax_radar(otutab[1:20,1:3])
+#' tax_radar(otutab[1:6,1:4])
 #' }
-tax_radar<-function(otu_time,...){
+tax_radar<-function(group_df,...){
   lib_ps("ggradar","scales",library = F)
-  otu_time[1:4,]%>%
-    dplyr::mutate_all(scales::rescale) %>%cbind(tax=rownames(.),.)%>%
-    ggradar::ggradar(.,legend.text.size=10,...)
+  if(nrow(group_df)>20|ncol(group_df)>6)stop("too many columns or rows!")
+  else{
+    group_df%>%
+      dplyr::mutate_all(scales::rescale) %>%cbind(tax=rownames(.),.)%>%
+      ggradar::ggradar(.,legend.text.size=10,...)
+  }
 }
 
 
 #' Triangle plot
 #'
-#' @param otutab otutab
-#' @param group group
-#' @param scale default:F
+#' @param group_df group_df
 #' @param class point color
 #'
 #' @export
@@ -212,17 +168,13 @@ tax_radar<-function(otu_time,...){
 #' @examples
 #' \donttest{
 #' data(otutab)
-#' triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
+#' hebing(otutab,metadata$Group,act = 'mean')->tmp
+#' triangp(tmp,class=taxonomy$Phylum)
 #' }
-triangp<-function(otutab,group,scale=F,class=NULL){
-  lib_ps("ggtern","vegan",library = F)
-  group%>%as.factor()->group
-  if (nlevels(group)!=3)stop("group is not 3, can't plot trip")
+triangp<-function(group_df,class=NULL){
+  lib_ps("ggtern",library = F)
+  if (ncol(group_df)!=3)stop("ncol of group_df is not 3, can't plot trip")
   KO=OE=WT=NULL
-
-  hebing(otutab,group,act = 'mean')->tmp
-
-  if (scale){mutate_all(tmp,scales::rescale)->tmp}
 
   tmp%>%as.data.frame()%>%mutate(sum=rowSums(.))->tmp1
   colnames(tmp1)[1:3]<-c('KO','OE','WT')
@@ -240,45 +192,6 @@ triangp<-function(otutab,group,scale=F,class=NULL){
       labs(x=names(tmp)[1],y=names(tmp)[2],z=names(tmp)[3])
     return(p)
   }
-}
-
-#' df 2 link
-#'
-#' @param test df
-#' @param fun function to summary the elements number, defalut: `sum`, you can choose `mean`.
-#'
-#' @export
-#' @examples
-#' data(otutab)
-#' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
-#' df2link(test)
-#'
-df2link=function(test,fun=sum){
-  if(!is.numeric(test[,ncol(test)]))test$weight=1
-  nc=ncol(test)
-  colnames(test)[nc]="weight"
-  if(nc<3)stop("as least 3-columns dataframe")
-  #change duplicated data
-  #if need tree, use `before_tree()`
-
-  #merge to two columns
-  links=data.frame()
-  tmp_fun_df=stats::aggregate(test$weight,by=list(test[,1,drop=T]),fun)
-  nodes=data.frame(name=tmp_fun_df[["Group.1"]],level=colnames(test)[1],
-                               weight=tmp_fun_df[["x"]])
-
-  for (i in 1:(nc-2)){
-    test[,c(i,i+1,nc)]->tmp
-    colnames(tmp)=c("from","to","weight")
-    tmp=dplyr::group_by(tmp,from,to)%>%dplyr::summarise(weight=fun(weight),.groups="keep")
-    tmp=na.omit(tmp)
-    links=rbind(links,tmp)
-
-    tmp_fun_df=stats::aggregate(tmp$weight,by=list(tmp$to),fun)
-    nodes=rbind(nodes,data.frame(name=tmp_fun_df[["Group.1"]],level=colnames(test)[i+1],
-                                 weight=tmp_fun_df[["x"]]))
-  }
-  return(list(links=links,nodes=nodes))
 }
 
 #多余合并为others
@@ -616,6 +529,7 @@ my_circle_packing=function(test,anno=NULL,mode=1,
 #'
 #' @examples
 #' \donttest{
+#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="circlize")
 #' data(otutab)
 #' cbind(taxonomy,num=rowSums(otutab))[1:10,c(3,7,8)]->test
 #' my_circo(test)
@@ -682,184 +596,6 @@ my_synteny<-function(){
   read.file("chromosome.svg")
 }
 
-#' Plot a area plot
-#'
-#'
-#' @param otutab otutab
-#' @param metadata metadata
-#' @param group one group name of columns of metadata
-#' @param get_data just get the formatted data?
-#' @param bar_params parameters parse to \code{\link[ggplot2]{geom_bar}}
-#' @param topN plot how many top species
-#' @param others should plot others?
-#' @param relative transfer to relative or absolute
-#' @param legend_title fill legend_title
-#' @param stack_order the order of stack fill
-#' @param group_order the order of x group
-#' @param facet_order the order of the facet
-#' @param style "group" or "sample"
-#' @param number show the number?
-#' @param format_params parameters parse to \code{\link[base]{format}}
-#' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
-#'
-#' @import ggplot2
-#' @export
-#' @return a ggplot
-#' @examples
-#' data(otutab)
-#' areaplot(otutab, metadata, group = "Id")
-#' \donttest{
-#' areaplot(otutab, metadata, group = "Group", group_order = TRUE, relative = FALSE)
-#' }
-areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
-                      bar_params = list(position = "stack"),
-                      topN = 8, others = TRUE, relative = TRUE, legend_title = "",
-                      stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
-                      style = c("group", "sample")[1],
-                      number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
-  # Used to draw species stacking diagrams, suitable for processing various OTU similar data, input metatab as the basis for grouping.
-  # style can choose "group" or "sample"
-  # others=TRUE is used to choose whether to draw other than TopN
-  # pmode can choose fill/stack/dodge
-  # library(ggplot2)
-  # library(dplyr)
-  lib_ps("reshape2", "scales", "dplyr", library = FALSE)
-  variable=Taxonomy=value=NULL
-  if(is.numeric(metadata[, group,drop=T]))warning("Recommend categorical variables")
-  # prepare otutab and sampFile
-  if (!is.null(metadata)) {
-    match_res <- match_df(otutab, metadata)
-    otutab <- match_res$otutab
-    sampFile <- as.data.frame(match_res$metadata[, group], row.names = row.names(match_res$metadata))
-    colnames(sampFile)[1] <- "group"
-  } else {
-    sampFile <- data.frame(row.names = colnames(otutab), group = colnames(otutab))
-  }
-
-  mean_sort <- as.data.frame(otutab[(order(-rowSums(otutab))), , drop = FALSE])
-
-  if (nrow(mean_sort) > topN) {
-    other <- colSums(mean_sort[topN:dim(mean_sort)[1], ])
-    mean_sort <- mean_sort[1:(topN - 1), ]
-    mean_sort <- rbind(mean_sort, other)
-    rownames(mean_sort)[topN] <- c("Other")
-  }
-
-  if (style == "sample") {
-    mean_sort$Taxonomy <- rownames(mean_sort)
-    data_all <- as.data.frame(reshape2::melt(mean_sort, id.vars = c("Taxonomy")))
-  } else {
-    mat_t <- t(mean_sort)
-    stats::aggregate(mat_t, by = list(sampFile$group), mean) %>% reshape2::melt(., id = 1) -> data_all
-    colnames(data_all) <- c("variable", "Taxonomy", "value")
-    data_all$value <- as.numeric(data_all$value)
-    data_all$variable <- as.factor(data_all$variable)
-  }
-
-  if (relative) {
-    data_all <- data_all %>%
-      dplyr::group_by(variable, Taxonomy) %>%
-      dplyr::summarise(n = sum(value)) %>%
-      dplyr::mutate(value = n / sum(n))
-  }
-
-  if (style == "sample") {
-    data_all <- merge(data_all, sampFile,
-                      by.x = "variable",
-                      by.y = "row.names"
-    )
-
-    group_by(data_all, group, Taxonomy) %>% summarise(value = mean(value)) -> data_all_facet
-    # determine the facet order
-    if (facet_order == 1) {
-      new_lev <- (data_all_facet %>% dplyr::filter(Taxonomy == rownames(mean_sort)[1]) %>%
-                    dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
-      data_all <- dplyr::mutate(data_all, group = factor(group, levels = new_lev))
-    } else if (facet_order[1] %in% data_all$Taxonomy) {
-      new_lev <- (data_all_facet %>% dplyr::filter(Taxonomy == facet_order) %>%
-                    dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
-      data_all <- dplyr::mutate(data_all, group = factor(group, levels = new_lev))
-    } else if (any(facet_order %in% data_all_facet$group)) {
-      data_all <- dplyr::mutate(data_all, group = change_fac_lev(group, levels = facet_order))
-    }
-  }
-
-  if (!others) {
-    data_all <- data_all[data_all$Taxonomy != "Other", ]
-  }
-  # determine the stack order
-  if (stack_order == 1) {
-    data_all$Taxonomy <- factor(data_all$Taxonomy, levels = rownames(mean_sort))
-  } else if (any(stack_order %in% data_all$Taxonomy)) {
-    data_all$Taxonomy <- change_fac_lev(data_all$Taxonomy, levels = stack_order)
-  }
-  # determine the x axis order
-  if (group_order == 1) {
-    new_lev <- (data_all %>% dplyr::filter(Taxonomy == rownames(mean_sort)[1]) %>%
-                  dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
-    data_all <- dplyr::mutate(data_all, variable = factor(variable, levels = new_lev))
-  } else if (group_order[1] %in% data_all$Taxonomy) {
-    new_lev <- (data_all %>% dplyr::filter(Taxonomy == group_order) %>%
-                  dplyr::arrange(value) %>% as.data.frame())[, 1] %>% as.character()
-    data_all <- dplyr::mutate(data_all, variable = factor(variable, levels = new_lev))
-  } else if (any(group_order %in% data_all$variable)) {
-    data_all <- dplyr::mutate(data_all, variable = change_fac_lev(variable, levels = group_order))
-  }
-
-  if (get_data) {
-    return(data_all)
-  }
-
-  # plot
-  bar_params <- update_param(NULL, bar_params)
-  format_params <- update_param(list(digits = 2), format_params)
-  text_params <- update_param(list(position = position_stack()), text_params)
-
-  #变为数字向量
-  data_all$variable2=as.numeric(data_all$variable)
-
-  if (style == "sample") {
-    if (T) {
-      p <- ggplot(data_all, aes(
-        x = variable2, y = value, fill = Taxonomy,
-        label = do.call(format, append(list(value), format_params))
-      )) +
-        # geom_bar(stat = "identity",  position = pmode) +
-        do.call(geom_area, bar_params) +
-        facet_grid(~group,
-                   as.table = FALSE,
-                   switch = "both", scales = "free", space = "free"
-        )
-    }
-    p <- p +
-      theme(
-        # strip.background = element_blank(),
-        # axis.ticks.x = element_blank(),
-        axis.text.x = element_text(angle = 90, vjust = 0.5)
-      ) + xlab(group)
-  } else {
-    if (T) {
-      p <- ggplot(data_all, aes(
-        x = variable2, y = value, fill = Taxonomy,
-        label = do.call(format, append(list(value), format_params))
-      )) +
-        do.call(geom_area, bar_params)
-    }
-  }
-  #强行加上原来的label
-  p=p+scale_x_continuous(breaks = 1:nlevels(data_all$variable),labels = levels(data_all$variable))
-
-  if (relative) {
-    p <- p + scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
-  } else {
-    p <- p + ylab("Number")
-  }
-
-  if (number) p <- p + do.call(geom_text, (text_params))
-
-  p + guides(fill = guide_legend(title = legend_title)) + xlab(group)
-}
-
 #' Heatmap by ggplot
 #'
 #' @param otutab otutab
@@ -886,7 +622,7 @@ ggheatmap=function(otutab,pal=NULL,scale="none",
                    row_annotation=NULL,col_annotation=NULL,annotation_pal=NULL){
   lib_ps("ggnewscale","aplot","reshape2","ggtree","ape",library = F)
 
-  if(is.null(pal))pal=bluered
+  if(is.null(pal))pal=get_cols(pal = "bluered")
   else if(length(is.ggplot.color(pal))<2)stop("pal is wrong!")
 
   otutab->d

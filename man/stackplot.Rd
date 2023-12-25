@@ -2,6 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{stackplot}
 \alias{stackplot}
+\alias{areaplot}
 \title{Plot a stack plot}
 \usage{
 stackplot(
@@ -22,6 +23,25 @@ stackplot(
   flow_params = list(lode.guidance = "frontback", color = "darkgray"),
   number = FALSE,
   repel = FALSE,
+  format_params = list(digits = 2),
+  text_params = list(position = position_stack())
+)
+
+areaplot(
+  otutab,
+  metadata = NULL,
+  group = "Group",
+  get_data = FALSE,
+  bar_params = list(position = "stack"),
+  topN = 8,
+  others = TRUE,
+  relative = TRUE,
+  legend_title = "",
+  stack_order = TRUE,
+  group_order = FALSE,
+  facet_order = FALSE,
+  style = c("group", "sample")[1],
+  number = FALSE,
   format_params = list(digits = 2),
   text_params = list(position = position_stack())
 )
@@ -67,14 +87,23 @@ stackplot(
 }
 \value{
 a ggplot
+
+a ggplot
 }
 \description{
 Plot a stack plot
+
+Plot a area plot
 }
 \examples{
 data(otutab)
 stackplot(otutab, metadata, group = "Group")
 \donttest{
-stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = TRUE, relative = FALSE)
+stackplot(otutab, metadata, group = "Group", style= "sample", group_order = TRUE, flow = TRUE, relative = FALSE)
+}
+data(otutab)
+areaplot(otutab, metadata, group = "Id")
+\donttest{
+areaplot(otutab, metadata, group = "Group", style= "sample", group_order = TRUE, relative = FALSE)
 }
 }

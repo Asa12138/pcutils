@@ -4,14 +4,10 @@
 \alias{triangp}
 \title{Triangle plot}
 \usage{
-triangp(otutab, group, scale = F, class = NULL)
+triangp(group_df, class = NULL)
 }
 \arguments{
-\item{otutab}{otutab}
-
-\item{group}{group}
-
-\item{scale}{default:F}
+\item{group_df}{group_df}
 
 \item{class}{point color}
 }
@@ -21,6 +17,7 @@ Triangle plot
 \examples{
 \donttest{
 data(otutab)
-triangp(otutab,metadata$Group,class=taxonomy$Phylum,scale=TRUE)
+hebing(otutab,metadata$Group,act = 'mean')->tmp
+triangp(tmp,class=taxonomy$Phylum)
 }
 }

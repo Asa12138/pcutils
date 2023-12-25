@@ -4,10 +4,10 @@
 \alias{tax_radar}
 \title{Radar plot}
 \usage{
-tax_radar(otu_time, ...)
+tax_radar(group_df, ...)
 }
 \arguments{
-\item{otu_time}{otutab}
+\item{group_df}{group_df}
 
 \item{...}{add}
 }
@@ -20,6 +20,6 @@ Radar plot
 \examples{
 \donttest{
 data(otutab)
-tax_radar(otutab[1:20,1:3])
+tax_radar(otutab[1:6,1:4])
 }
 }

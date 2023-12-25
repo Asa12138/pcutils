@@ -4,15 +4,7 @@
 \alias{my_lm}
 \title{Fit a linear model and plot}
 \usage{
-my_lm(
-  tab,
-  var,
-  metadata = NULL,
-  formula = TRUE,
-  r2 = TRUE,
-  p_value = TRUE,
-  ...
-)
+my_lm(tab, var, metadata = NULL, lm_color = "red", ...)
 }
 \arguments{
 \item{tab}{your dataframe}
@@ -21,11 +13,7 @@ my_lm(
 
 \item{metadata}{the dataframe contains the var}
 
-\item{formula}{show formula}
-
-\item{r2}{show r2}
-
-\item{p_value}{show p_value}
+\item{lm_color}{"red"}
 
 \item{...}{parameters parse to \code{\link[ggplot2]{geom_point}}}
 }

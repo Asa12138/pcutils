@@ -8,26 +8,28 @@ print_authors_affiliation=function(authors=c("jc","pc")){
     "2"="State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, National Clinical Research Center for Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
     "3"="Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
     "4"="BGI Research, Wuhan, Hubei 430074, China",
-    "5"="BGI Research, Shenzhen, Guangdong 518083, China")
+    "5"="BGI Research, Shenzhen, Guangdong 518083, China",
+    "6"="Department of Genetics, Stanford University School of Medicine, Stanford, CA, USA")
   author_list=list(
     jc=1:3,
-    pc=c(1,2),
-    lye=1,
-    lz=1,
-    jlyq=1,
-    hzn=1,
-    cq=c(1,2),
-    tsj=4:5
+    pc=1:3,
+    lye=1:3,
+    lz=1:3,
+    jlyq=1:3,
+    hzn=1:3,
+    cq=1:3,
+    tsj=4:5,
+    sxt=6
   )
   pa=affiliations[author_list[authors]%>%Reduce(union,.)]
   for (i in seq_along(pa)) {
-    pa[i]=paste0("$^",i,"$",pa[i])
+    pa[i]=paste0("^",i,"^",pa[i])
   }
   paste0(pa,collapse = "\n\n")%>%clipr::write_clip()
   message(paste0(pa,collapse = "\n\n"))
 }
 
-# =========little tools=========
+# =========Little tools=========
 #' Print some message with =
 #'
 #' @param str output strings
@@ -161,7 +163,8 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
     "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
     "Vennerable" = "js229/Vennerable",
     "linkET"="Hy4m/linkET",
-    "deeplr"="paulcbauer/deeplr"
+    "deeplr"="paulcbauer/deeplr",
+    "ggchicklet"="hrbrmstr/ggchicklet"
   )
 
   p_list <- c(p_list, ...)
@@ -234,6 +237,8 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #' @param ncol show how many columns
 #' @param fig output as a figure
 #' @param ... additional arguments e.g.(rows=NULL)
+#' @param mode 1~2
+#' @param background background color
 #'
 #' @return a ggplot
 #' @export
@@ -243,7 +248,7 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #' data(otutab)
 #' sanxian(otutab)
 #' }
-sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, ...) {
+sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, mode=1,background="#D7261E", ...) {
   if (nrow(df) > nrow) df <- df[1:nrow, , drop = FALSE]
   if (ncol(df) > ncol) df <- df[, 1:ncol, drop = FALSE]
 
@@ -257,286 +262,15 @@ sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, ...) {
     return(p)
   } else {
     lib_ps("kableExtra", library = FALSE)
-    kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")
-  }
-}
-
-#' Transform a rgb vector to a Rcolor code
-#'
-#' @param x vector or three columns data.frame
-#' @param rev reverse,transform a Rcolor code to a rgb vector
-#'
-#' @return Rcolor code like "#69C404"
-#' @export
-#'
-#' @examples
-#' rgb2code(c(12, 23, 34))
-#' rgb2code("#69C404", rev = TRUE)
-rgb2code <- function(x, rev = FALSE) {
-  lib_ps("dplyr", library = FALSE)
-  r=g=b=NULL
-  if (rev) {
-    if (is.vector(x)) {
-      grDevices::col2rgb(x) %>%
-        t() %>%
-        as.vector() -> A
-      names(A) <- c("r", "g", "b")
-      return(A)
+    if(mode==1)p=kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")
+    else if(mode==2){
+      p=kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")%>%
+        kableExtra::row_spec(0, bold = T, color = "white",background = background)%>%
+        kableExtra::row_spec(seq(2,nrow(df),2), background = add_alpha(background))
     }
-    if (is.data.frame(x)) {
-      apply(x, 1, grDevices::col2rgb) %>% t() -> A
-      colnames(A) <- c("r", "g", "b")
-      rownames(A) <- rownames(x)
-      return(A)
-    }
-  } else {
-    if (length(x) != 3) stop("need r,g,b!")
-    names(x) <- c("r", "g", "b")
-    if (is.vector(x)) {
-      return(grDevices::rgb(x[1], x[2], x[3], maxColorValue = 255))
-    }
-    if (is.data.frame(x)) {
-      return(dplyr::transmute(x, code = grDevices::rgb(r, g, b, maxColorValue = 255)))
-    }
+    else p=NULL
+    return(p)
   }
-}
-
-#' Judge if a characteristic is Rcolor
-#' @param color characteristic
-#'
-#' @export
-#' @return TRUE or FALSE
-#' @examples
-#' is.ggplot.color("red")
-#' is.ggplot.color("notcolor")
-#' is.ggplot.color(NA)
-#' is.ggplot.color("#000")
-is.ggplot.color <- function(color) {
-  is.col <- grepl("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$", color)
-  is.name <- color %in% grDevices::colors()
-  (is.col | is.name | is.na(color)) # NA accepted
-}
-
-#' Add alpha for a Rcolor
-#' @param color Rcolor
-#' @param alpha alpha, default 0.3
-#' @return 8 hex color
-#' @export
-#' @examples
-#' add_alpha("red",0.3)
-add_alpha <- function(color, alpha = 0.3) {
-  if((alpha>1)|(alpha<0))stop("alpha should be 0~1")
-  color <- grDevices::col2rgb(color) %>%
-    t() %>%
-    grDevices::rgb(., maxColorValue = 255)
-  fix=as.hexmode(ceiling(255 * alpha))
-  if(nchar(fix)==1)fix=paste0("0",fix)
-  paste0(color, fix)
-}
-
-#' Plot a multi-pages pdf
-#'
-#' @param plist plot list
-#' @param file prefix of your .pdf file
-#' @param width width
-#' @param height height
-#' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
-#' @param ... additional arguments
-#'
-#' @return No return value
-#' @export
-plotpdf <- function(plist, file, width = 8, height = 7, brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
-  if (inherits(plist, "htmlwidget")) {
-    lib_ps("pagedown", "htmlwidgets", library = FALSE)
-    if (!file.exists(brower)) stop(brower, "is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
-    suppressMessages(htmlwidgets::saveWidget(plist, "tmppp.html"))
-    pagedown::chrome_print("tmppp.html", paste0(file, ".pdf"),
-                           wait = 0, browser = brower,
-                           options = list(pageRanges = "1", paperWidth = width, paperHeight = height, ...)
-    )
-    file.remove("tmppp.html")
-    message("pdf saved sucessfully")
-  } else {
-    grDevices::pdf(paste0(file, ".pdf"), width, height, ...)
-    for (i in plist) {
-      print(i)
-    }
-    grDevices::dev.off()
-  }
-}
-
-#' Plot a gif
-#'
-#' @param plist plot list
-#' @param file prefix of your .gif file
-#' @param mode "gif" or "html"
-#' @return No return value
-#' @export
-plotgif <- function(plist, file, mode = "gif") {
-  lib_ps("animation", library = FALSE)
-  if (mode == "gif") {
-    animation::saveGIF(
-      for (i in plist) {
-        print(i)
-      },
-      movie.name = paste0(file, ".gif")
-    )
-  }
-  # transfer pngs to a gif use gifski::gifski()
-  if (mode == "html") {
-    oldwd <- getwd()
-    on.exit(setwd(oldwd))
-
-    dir.create(paste0(file, "_html"))
-    setwd(paste0(file, "_html"))
-    animation::saveHTML(
-      for (i in plist) {
-        print(i)
-      },
-      movie.name = paste0(file, ".html")
-    )
-  }
-}
-
-#' Get n colors
-#'
-#' @param n how many colors you need
-#' @param pal col1~3; or a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
-#' @param picture a picture file, colors will be extracted from the picture
-#'
-#' @return a vector of n colors
-#' @export
-#'
-#' @examples
-#' get_cols(10, "col2") -> my_cols
-#' scales::show_col(my_cols)
-#' \donttest{
-#' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-#' scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
-#' }
-get_cols <- function(n, pal = "col1", picture = NULL) {
-  col1 <- c(
-    "#8dd3c7", "#ffed6f", "#bebada", "#fb8072", "#80b1d3",
-    "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
-    "#ccebc5"
-  )
-  col2 <- c(
-    "#a6cee3", "#78c679", "#c2a5cf", "#ff7f00", "#1f78b4", "#810f7c", "#ffff33",
-    "#006d2c", "#4d4d4d", "#8c510a", "#d73027",
-    "#7f0000", "#41b6c4", "#e7298a", "#54278f"
-  )
-  col3 <- c(
-    "#a6bce3", "#fb9a99", "#fdbf6f", "#1f78b4", "#b2df8a", "#cab2d6", "#33a02c",
-    "#e31a1c", "#ff7f00", "#6a3d9a",
-    "#ffef00", "#b15928"
-  )
-
-  if (length(pal) == 1) pal <- get(pal)
-
-  if (!is.null(picture)) {
-    lib_ps("RImagePalette", "tools", "jpeg", "png", library = FALSE)
-    type <- tools::file_ext(picture)
-    switch(type,
-           "jpg" = {
-             p1 <- jpeg::readJPEG(picture)
-           },
-           "png" = {
-             p1 <- png::readPNG(picture)
-           }
-    )
-    pal <- RImagePalette::image_palette(p1, n = n)
-  }
-
-  if (length(pal) < n) {
-    res <- grDevices::colorRampPalette(pal)(n)
-    return(res)
-  }
-  return(pal[seq_len(n)])
-}
-
-
-#' Add a global gg_theme and colors for plots
-#'
-#' @param set_theme your theme
-#'
-#' @return No return value
-#' @export
-#'
-#' @examples
-#' add_theme()
-add_theme <- function(set_theme = NULL) {
-  if (is.null(set_theme)) {
-    mytheme <- {
-      ggplot2::theme_classic(base_size = 13)+
-        ggplot2::theme(
-          axis.text = element_text(color = "black"),
-          plot.margin = grid::unit(rep(0.5, 4), "lines"),
-          strip.background = ggplot2::element_rect(fill = NA)
-        )
-    }
-    if (requireNamespace("ggpubr")) {
-      mytheme <- {
-        ggpubr::theme_pubr(base_size = 14, legend = "right") +
-          ggplot2::theme(
-            plot.margin = grid::unit(rep(0.5, 4), "lines"),
-            strip.background = ggplot2::element_rect(fill = NA)
-          )
-      }
-    }
-  } else {
-    stopifnot(inherits(set_theme, c("theme", "gg")))
-    mytheme <- set_theme
-  }
-  mytheme <<- mytheme
-}
-
-#' Remove outliers
-#'
-#' @param x a numeric vector
-#' @param factor default 1.5
-#'
-#' @export
-#'
-#' @return a numeric vector
-#' @examples
-#' remove.outliers(c(1, 10:15))
-remove.outliers <- function(x, factor = 1.5) {
-  q25 <- stats::quantile(x, probs = 0.25)
-  q75 <- stats::quantile(x, probs = 0.75)
-  iqr <- unname(q75 - q25)
-  lower.threshold <- q25 - (iqr * factor)
-  upper.threshold <- q75 + (iqr * factor)
-  res <- x[(x >= lower.threshold) & (x <= upper.threshold)]
-  return(res)
-}
-
-
-#' Like uniq -c in shell to count a vector
-#'
-#' @param df two columns: first is type, second is number
-#'
-#' @export
-#'
-#' @return two columns: first is type, second is number
-#' @examples
-#' count2(data.frame(group = c("A", "A", "B", "C", "C", "A"), value = c(2, 2, 2, 1, 3, 1)))
-count2 <- function(df) {
-  res <- data.frame()
-  type_p <- df[1, 1]
-  n <- 0
-  for (i in 1:nrow(df)) {
-    type <- df[i, 1]
-    if (type_p == type) {
-      n <- n + df[i, 2]
-    } else {
-      res <- rbind(res, data.frame(type = type_p, n = n))
-      n <- df[i, 2]
-    }
-    type_p <- type
-  }
-  res <- rbind(res, data.frame(type = type_p, n = n))
-  colnames(res) <- colnames(df)[1:2]
-  res
 }
 
 #' Grepl applied on a data.frame
@@ -587,211 +321,32 @@ gsub.data.frame <- function(pattern,replacement, x, ...) {
   y
 }
 
-#' Group your data
-#'
-#' @param otutab data.frame
-#' @param group group vector
-#' @param margin 1 for row and 2 for column(default: 2)
-#' @param act do (default: mean)
-#' @return data.frame
-#'
-#' @export
-#'
-#' @examples
-#' data(otutab)
-#' hebing(otutab,metadata$Group)
-hebing<-function(otutab,group,margin=2,act='mean'){
-  if (margin==2) {
-    stats::aggregate(t(otutab),FUN=act,by=list(factor(group)))->a
-    a[,-1]->a
-    data.frame(t(a))->a
-    levels(factor(group))->colnames(a)
-  }
-  else{
-    stats::aggregate(otutab,FUN=act,by=list(factor(group)))->a
-    a[,-1]->a
-    levels(factor(group))->rownames(a)
-  }
-  return(a)
-}
-
-#' Filter your data
-#'
-#' @param tab dataframe
-#' @param sum the rowsum should bigger than sum(default:10)
-#' @param exist the exist number bigger than exist(default:1)
-#'
-#' @return input object
-#' @export
-#'
-#' @examples
-#' data(otutab)
-#' guolv(otutab)
-guolv<-function(tab,sum=10,exist=1){
-  tab[rowSums(tab)>sum,]->tab
-  tab[rowSums(tab>0)>exist,]->tab
-  return(tab)
-}
-
-#' Remove the low relative items in each column
-#'
-#' @param otutab otutab
-#' @param relative_threshold threshold, default: 1e-4
-#'
-#' @export
-#'
-#' @examples
-#' data(otutab)
-#' rm_low(otutab)
-rm_low=function(otutab,relative_threshold=1e-4){
-  #colSums(otutab)%>%summary()
-
-  f_mpa=otutab
-  f_mpa_r <- as.data.frame(apply(f_mpa,2, function(x) x/sum(x)))#正确形式
-  #f_mpa_r=f_mpa/colSums(f_mpa),错误,不能这样除
-  f_mpa[f_mpa_r<relative_threshold]=0
-  f_mpa=f_mpa[rowSums(f_mpa)>0,]
-  f_mpa
-}
-
-#' Transfer your data
-#'
-#' @param df dataframe
-#' @param method "cpm","minmax","acpm","total","log", "max", "frequency", "normalize", "range", "rank", "rrank",
-#' "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr"
-#' @param margin 1 for row and 2 for column(default: 2)
-#' @param ... additional
-#'
-#' @export
-#' @examples
-#'
-#' data(otutab)
-#' trans(otutab,method="cpm")
-#'
-#' @seealso \code{\link[vegan]{decostand}}
-trans<-function(df,method = "normalize",margin=2,...){
-  all=c("cpm","minmax","acpm","total", "log1","max", "frequency", "normalize", "range", "rank", "rrank",
-        "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr")
-  if(is.vector(df))df=data.frame(value=df)
-  if (!method%in%all)stop("methods should be one of ",paste0(all,collapse = ", "))
-  if(method=="cpm"){
-    df=apply(df, margin, \(x){x*10**6/sum(x)})
-  }
-  else if(method=="minmax"){
-    df=apply(df,margin,mmscale,...)
-  }
-  else if(method=="acpm"){
-    df=asinh(apply(df, margin, \(x){x*10**6/sum(x)}))
-  }
-  else if(method=="log1"){
-    df=log(df+1,...)
-  }
-  else {
-    lib_ps("vegan",library = F)
-    df=vegan::decostand(df,method = method,margin,...)
-  }
-  return(data.frame(df,check.names = F))
-}
-
-#' Split Composite Names
-#'
-#' @param x character vector
-#' @param split character to split each element of vector on, see \code{\link[base]{strsplit}}
-#' @param colnames colnames for the result
-#' @param ... other arguments are passed to \code{\link[base]{strsplit}}
-#'
-#' @return data.frame
-#' @export
-#'
-#' @examples
-#' strsplit2(c("a;b", "c;d"), ";")
-strsplit2 <- function(x, split, colnames = NULL, ...) {
-  x <- as.character(x)
-  n <- length(x)
-  s <- strsplit(x, split = split, ...)
-  nc <- unlist(lapply(s, length))
-  out <- matrix("", n, max(nc))
-  for (i in 1:n) {
-    if (nc[i]) {
-      out[i, 1:nc[i]] <- s[[i]]
-    }
-  }
-  out <- as.data.frame(out)
-  if (!is.null(colnames)) colnames(out) <- colnames
-  out
-}
-
-#' Transpose data.frame
-#'
-#' @param data data.frame
-#'
-#' @export
-t2=function(data){
-  as.data.frame(t(data),optional = T)
-}
-
-#' Explode a data.frame if there are split charter in one column
-#'
-#' @param df data.frame
-#' @param column column
-#' @param split split string
-#'
-#' @export
-#'
-#' @return data.frame
-#' @examples
-#' \donttest{
-#' df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
-#' explode(df, "b", ",")
-#' }
-explode <- function(df, column, split = ",") {
-  lib_ps("tidyr", "dplyr", library = FALSE)
-  df <- tidyr::as_tibble(df)
-  df[[column]] <- strsplit(df[, column, drop = TRUE], split = split)
-  tidyr::unnest(df, dplyr::all_of(column)) %>% as.data.frame()
-}
-
-#' Squash one column in a data.frame using other columns as id.
-#'
-#' @param df data.frame
-#' @param column column name, not numeric position
-#' @param split split string
-#'
-#' @return data.frame
-#' @export
-#'
-#' @examples
-#' df <- data.frame(a = c(1:2,1:2), b = letters[1:4])
-#' squash(df, "b", ",")
-squash = function(df, column, split = ",") {
-  stats::aggregate(stats::reformulate(".",response = column),df,paste,collapse = split)
-}
+#=======Read file========
 
 #' Read some special format file
 #'
 #' @param file file path
-#' @param format "blast","diamond"
+#' @param format "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf","jpg", "png", "pdf", "svg"...
 #' @param just_print just print the file
 #'
 #' @return data.frame
 #' @export
 #'
 read.file <- function(file, format = NULL, just_print = FALSE) {
-  if (just_print) {
-    if (file.size(file) > 10000) {
-      message(paste0(file, ": this file is a little big, still open?"))
-      flag <- readline("yes/no(y/n)?")
-      if (tolower(flag) %in% c("yes", "y")) {
-        cat(readr::read_file(file))
-      }
-    } else {
-      cat(readr::read_file(file))
+  if (file.size(file) > 10000) {
+    message(paste0(file, ": this file is a little big, still open?"))
+    flag <- readline("yes/no(y/n)?")
+    if (!tolower(flag) %in% c("yes", "y")) {
+      return(NULL)
     }
+  }
+  if (just_print) {
+      cat(readr::read_file(file))
   } else {
     if (is.null(format)) format <- tools::file_ext(file)
     format <- match.arg(format, c(
       "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf",
-      "jpg", "png", "pdf", "svg"
+      "jpg", "png", "pdf", "svg","biom"
     ))
 
     if (format %in% c("gff", "gtf")) {
@@ -815,6 +370,20 @@ read.file <- function(file, format = NULL, just_print = FALSE) {
                                 "Qstart", "Qend", "Sstart", "Send", "E_value", "Bitscore"
                               )
       )
+      return(df)
+    }
+
+    if (format %in% c("biom")) {
+      if (file.size(file) > 10000) {
+        message(paste0(file, ": this biom file is a little big: ",file.size(file)," still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
+        flag <- readline("yes/no(y/n)?")
+        if (tolower(flag) %in% c("yes", "y")) {
+          lib_ps("biomformat",library = FALSE)
+          dat.b<-biomformat::read_biom(file)
+          df<-data.frame(data.matrix(biomformat::biom_data(dat.b)),check.names = F)
+        }
+        else return(NULL)
+      }
       return(df)
     }
 
@@ -1002,6 +571,8 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
   }
 }
 
+#======= Network ========
+
 #' Download supplemental materials according to a doi
 #'
 #' @param doi doi
@@ -1062,25 +633,37 @@ search_browse = function(search_terms, engine = "google", base_url = NULL) {
   # 循环遍历搜索每个元素
   for (term in search_terms) {
     # 构建搜索 URL
-    search_url <- paste0(base_url, URLencode(term))
+    search_url <- paste0(base_url, utils::URLencode(term))
 
     # 在默认浏览器中打开搜索页面
-    browseURL(search_url)
+    utils::browseURL(search_url)
   }
 }
 
 #' translator
 #'
 #' @param words words
+#' @param mode "e2z","z2e"
 #'
 #' @export
 #'
 #' @examples
-#' translator(c("中国","if"))
-translator=function(words){
-  if(!requireNamespace("ecce"))remotes::install_gitlab("chuxinyuan/ecce")
-  lib_ps("ecce")
-  # Example-1
-  sapply(words, \(i)translate(i)%>%.$Explains)
+#' translator(c("love","if"),mode="e2z")
+#' translator(c("中国欢迎你"),mode="z2e")
+translator=function(words,mode="e2z"){
+  lib_ps("fanyi",library = F)
+
+  pcutils_config=show_pcutils_config()
+  if(is.null(pcutils_config$baidu_appid)|is.null(pcutils_config$baidu_key)){
+    message("Please set the baidu_appid and baidu_key using set_pcutils_config:")
+    message("first, get the appid and key from baidu: https://zhuanlan.zhihu.com/p/375789804 ,")
+    message("then, set_pcutils_config('baidu_appid',your_appid),")
+    message("and set_pcutils_config('baidu_key',your_key).")
+  }
+
+  fanyi::set_translate_option(appid = pcutils_config$baidu_appid,key = pcutils_config$baidu_key)
+
+  if(mode=="e2z"|mode==1)lapply(words, \(i)fanyi::translate(i,from = "en",to = "zh"))
+  else lapply(words, \(i)fanyi::translate(i,from = "zh",to = "en"))
 }
 

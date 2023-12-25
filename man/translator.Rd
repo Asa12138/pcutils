@@ -4,14 +4,17 @@
 \alias{translator}
 \title{translator}
 \usage{
-translator(words)
+translator(words, mode = "e2z")
 }
 \arguments{
 \item{words}{words}
+
+\item{mode}{"e2z","z2e"}
 }
 \description{
 translator
 }
 \examples{
-translator(c("中国","if"))
+translator(c("love","if"),mode="e2z")
+translator(c("中国欢迎你"),mode="z2e")
 }

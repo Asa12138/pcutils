@@ -21,7 +21,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Depends: 
-    R (>= 4.0.0)
+    R (>= 4.1.0)
 Imports: 
     dplyr,
     magrittr,
@@ -103,7 +103,12 @@ Suggests:
     d3treeR,
     ggraph,
     ggrepel,
-    treemap
+    treemap,
+    biomformat,
+    devtools,
+    multcompView,
+    plot3D,
+    fanyi
 Remotes:
     github::davidsjoberg/ggsankey,
     github::fbreitwieser/sankeyD3,

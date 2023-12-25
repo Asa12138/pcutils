@@ -4,7 +4,7 @@
 \alias{give_you_a_rose}
 \title{Give you a rose}
 \usage{
-give_you_a_rose(color = "skyblue3")
+give_you_a_rose(color = "red3")
 }
 \arguments{
 \item{color}{"skyblue3"}

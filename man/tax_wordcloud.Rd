@@ -4,10 +4,18 @@
 \alias{tax_wordcloud}
 \title{Word cloud plot}
 \usage{
-tax_wordcloud(str_vector)
+tax_wordcloud(
+  str_vector,
+  ignore_words = "Unclassified|uncultured|Ambiguous|Unknown|unknown|metagenome|Unassig",
+  topN = 50
+)
 }
 \arguments{
 \item{str_vector}{string vector}
+
+\item{ignore_words}{ignore_words}
+
+\item{topN}{topN, 50}
 }
 \value{
 a htmlwidget

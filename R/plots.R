@@ -1,3 +1,248 @@
+pcutils_theme <- {
+  ggplot2::theme_classic(base_size = 13)+
+    ggplot2::theme(
+      axis.text = element_text(color = "black"),
+      plot.margin = grid::unit(rep(0.5, 4), "lines"),
+      strip.background = ggplot2::element_rect(fill = NA)
+    )
+}
+
+#========Utils for ggplot=======
+
+#' Transform a rgb vector to a Rcolor code
+#'
+#' @param x vector or three columns data.frame
+#' @param rev reverse,transform a Rcolor code to a rgb vector
+#'
+#' @return Rcolor code like "#69C404"
+#' @export
+#'
+#' @examples
+#' rgb2code(c(12, 23, 34))
+#' rgb2code("#69C404", rev = TRUE)
+rgb2code <- function(x, rev = FALSE) {
+  lib_ps("dplyr", library = FALSE)
+  r=g=b=NULL
+  if (rev) {
+    if (is.vector(x)) {
+      grDevices::col2rgb(x) %>%
+        t() %>%
+        as.vector() -> A
+      names(A) <- c("r", "g", "b")
+      return(A)
+    }
+    if (is.data.frame(x)) {
+      apply(x, 1, grDevices::col2rgb) %>% t() -> A
+      colnames(A) <- c("r", "g", "b")
+      rownames(A) <- rownames(x)
+      return(A)
+    }
+  } else {
+    if (length(x) != 3) stop("need r,g,b!")
+    names(x) <- c("r", "g", "b")
+    if (is.vector(x)) {
+      return(grDevices::rgb(x[1], x[2], x[3], maxColorValue = 255))
+    }
+    if (is.data.frame(x)) {
+      return(dplyr::transmute(x, code = grDevices::rgb(r, g, b, maxColorValue = 255)))
+    }
+  }
+}
+
+#' Judge if a characteristic is Rcolor
+#' @param color characteristic
+#'
+#' @export
+#' @return TRUE or FALSE
+#' @examples
+#' is.ggplot.color("red")
+#' is.ggplot.color("notcolor")
+#' is.ggplot.color(NA)
+#' is.ggplot.color("#000")
+is.ggplot.color <- function(color) {
+  is.col <- grepl("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$", color)
+  is.name <- color %in% grDevices::colors()
+  (is.col | is.name | is.na(color)) # NA accepted
+}
+
+#' Add alpha for a Rcolor
+#' @param color Rcolor
+#' @param alpha alpha, default 0.3
+#' @return 8 hex color
+#' @export
+#' @examples
+#' add_alpha("red",0.3)
+add_alpha <- function(color, alpha = 0.3) {
+  if((alpha>1)|(alpha<0))stop("alpha should be 0~1")
+  color <- grDevices::col2rgb(color) %>%
+    t() %>%
+    grDevices::rgb(., maxColorValue = 255)
+  fix=as.hexmode(ceiling(255 * alpha))
+  if(nchar(fix)==1)fix=paste0("0",fix)
+  paste0(color, fix)
+}
+
+#' Plot a multi-pages pdf
+#'
+#' @param plist plot list
+#' @param file prefix of your .pdf file
+#' @param width width
+#' @param height height
+#' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
+#' @param ... additional arguments
+#'
+#' @return No return value
+#' @export
+plotpdf <- function(plist, file, width = 8, height = 7, brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
+  if (inherits(plist, "htmlwidget")) {
+    lib_ps("pagedown", "htmlwidgets", library = FALSE)
+    if (!file.exists(brower)) stop(brower, "is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
+    suppressMessages(htmlwidgets::saveWidget(plist, "tmppp.html"))
+    pagedown::chrome_print("tmppp.html", paste0(file, ".pdf"),
+                           wait = 0, browser = brower,
+                           options = list(pageRanges = "1", paperWidth = width, paperHeight = height, ...)
+    )
+    file.remove("tmppp.html")
+    message("pdf saved sucessfully")
+  } else {
+    grDevices::pdf(paste0(file, ".pdf"), width, height, ...)
+    for (i in plist) {
+      print(i)
+    }
+    grDevices::dev.off()
+  }
+}
+
+#' Plot a gif
+#'
+#' @param plist plot list
+#' @param file prefix of your .gif file
+#' @param mode "gif" or "html"
+#' @return No return value
+#' @export
+plotgif <- function(plist, file, mode = "gif") {
+  lib_ps("animation", library = FALSE)
+  if (mode == "gif") {
+    animation::saveGIF(
+      for (i in plist) {
+        print(i)
+      },
+      movie.name = paste0(file, ".gif")
+    )
+  }
+  # transfer pngs to a gif use gifski::gifski()
+  if (mode == "html") {
+    oldwd <- getwd()
+    on.exit(setwd(oldwd))
+
+    dir.create(paste0(file, "_html"))
+    setwd(paste0(file, "_html"))
+    animation::saveHTML(
+      for (i in plist) {
+        print(i)
+      },
+      movie.name = paste0(file, ".html")
+    )
+  }
+}
+
+#' Get n colors
+#'
+#' @param n how many colors you need
+#' @param pal col1~3; or a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
+#' @param picture a picture file, colors will be extracted from the picture
+#'
+#' @return a vector of n colors
+#' @export
+#'
+#' @examples
+#' get_cols(10, "col2") -> my_cols
+#' scales::show_col(my_cols)
+#' \donttest{
+#' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
+#' scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
+#' }
+get_cols <- function(n=11, pal = "col1", picture = NULL) {
+  col1 <- c(
+    "#8dd3c7", "#ffed6f", "#bebada", "#fb8072", "#80b1d3",
+    "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
+    "#ccebc5"
+  )
+  col2 <- c(
+    "#a6cee3", "#78c679", "#c2a5cf", "#ff7f00", "#1f78b4",
+    "#810f7c", "#ffff33", "#006d2c", "#4d4d4d", "#8c510a",
+    "#d73027", "#7f0000", "#41b6c4", "#e7298a", "#54278f"
+  )
+  col3 <- c(
+    "#a6bce3", "#fb9a99", "#fdbf6f", "#1f78b4", "#b2df8a",
+    "#cab2d6", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a",
+    "#ffef00", "#b15928"
+  )
+
+  bluered=c(
+    "#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
+    "#F7F7F7", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B",
+    "#67001F"
+    )
+
+  if (length(pal) == 1) pal <- get(pal)
+
+  if (!is.null(picture)) {
+    lib_ps("RImagePalette", "tools", "jpeg", "png", library = FALSE)
+    type <- tools::file_ext(picture)
+    switch(type,
+           "jpg" = {
+             p1 <- jpeg::readJPEG(picture)
+           },
+           "png" = {
+             p1 <- png::readPNG(picture)
+           }
+    )
+    pal <- RImagePalette::image_palette(p1, n = n)
+  }
+
+  if (length(pal) < n) {
+    res <- grDevices::colorRampPalette(pal)(n)
+    return(res)
+  }
+  return(pal[seq_len(n)])
+}
+
+
+#' Add a global gg_theme and colors for plots
+#'
+#' @param set_theme your theme
+#'
+#' @return No return value
+#' @export
+#'
+#' @examples
+#' add_theme()
+add_theme <- function(set_theme = NULL) {
+  if (is.null(set_theme)) {
+    mytheme <- {
+      ggplot2::theme_classic(base_size = 13)+
+        ggplot2::theme(
+          axis.text = element_text(color = "black"),
+          plot.margin = grid::unit(rep(0.5, 4), "lines"),
+          strip.background = ggplot2::element_rect(fill = NA)
+        )
+    }
+    if (requireNamespace("ggpubr")) {
+      mytheme <- {
+        ggpubr::theme_pubr(base_size = 14, legend = "right") +
+          ggplot2::theme(
+            plot.margin = grid::unit(rep(0.5, 4), "lines"),
+            strip.background = ggplot2::element_rect(fill = NA)
+          )
+      }
+    }
+  } else {
+    stopifnot(inherits(set_theme, c("theme", "gg")))
+    mytheme <- set_theme
+  }
+  mytheme <<- mytheme
+}
 
 #' Scale a legend size
 #'
@@ -29,6 +274,61 @@ ggplot_lim=function(p){
 }
 
 
+#' Generate labels position
+#'
+#' @param labels labels
+#' @param input c(0,0)
+#' @param x_offset 0.3
+#' @param y_offset 0.15
+#' @param just 0~5
+#' @param nrows default: NULL
+#' @param ncols default: NULL
+#'
+#' @return matrix
+#' @export
+#'
+#' @examples
+#' library(ggplot2)
+#' labels=vapply(1:8,\(i)paste0(sample(LETTERS,4),collapse = ""), character(1))
+#' df=data.frame(label=labels,generate_labels(labels))
+#' ggplot(data=df)+geom_label(aes(x=X1,y=X2,label=label))
+generate_labels=function(labels=NULL,input=c(0,0),nrows=NULL,ncols=NULL, x_offset=0.3,y_offset=0.15,just=1) {
+  total_points=length(labels)
+  # Calculate the number of rows and columns
+  if(is.null(nrows))rows <- ceiling(sqrt(total_points))
+  else rows=nrows
+  cols <- ceiling(total_points / rows)
+  if(!is.null(ncols)){
+    cols=ncols
+    rows <- ceiling(total_points / cols)
+  }
+
+  # Generate points around the input point in a rectangular grid
+  points <- matrix(ncol = 2, nrow = total_points)
+  for (i in 1:total_points) {
+    col_idx <- (i - 1) %% cols + 1
+    row_idx <- floor((i - 1) / cols) + 1
+
+    # Distribute points around the input with specified offsets
+    if(col_idx==1)points[i, ] <- input + c(0, (row_idx - 1) * -y_offset)
+    else points[i, ] <- points[i-1, ] + c(x_offset*(0.5+(nchar(labels[i-1])+nchar(labels[i]))/12),0)
+
+  }
+  if(just!=1){
+    center=apply(points, 2, mean)
+    switch (just,
+            "0" = {center=center},
+            "2" = {center[1]=2*center[1];center[2]=0},
+            "3" = {center[1]=0;center[2]=center[2]*2},
+            "4" = {center[1]=2*center[1];center[2]=center[2]*2}
+    )
+    points[,1]=points[,1]-center[1]
+    points[,2]=points[,2]-center[2]
+  }
+  return(points)
+}
+
+
 match_df <- function(otutab, metadata) {
   if (!setequal(rownames(metadata), colnames(otutab))) message("rownames don't match in tab and metadata")
   idx <- rownames(metadata) %in% colnames(otutab)
@@ -36,6 +336,8 @@ match_df <- function(otutab, metadata) {
   otutab <- otutab[, rownames(metadata), drop = FALSE]
   return(list(otutab = otutab, metadata = metadata))
 }
+
+#========Common plots=======
 
 #' Plot a general venn (upset, flower)
 #'
@@ -193,53 +495,14 @@ venn.data.frame <- function(otutab, mode = "venn", ...) {
 }
 
 
-#' Plot a stack plot
-#'
-#'
-#' @param otutab otutab
-#' @param metadata metadata
-#' @param group one group name of columns of metadata
-#' @param get_data just get the formatted data?
-#' @param bar_params parameters parse to \code{\link[ggplot2]{geom_bar}}
-#' @param topN plot how many top species
-#' @param others should plot others?
-#' @param relative transfer to relative or absolute
-#' @param legend_title fill legend_title
-#' @param stack_order the order of stack fill
-#' @param group_order the order of x group
-#' @param facet_order the order of the facet
-#' @param style "group" or "sample"
-#' @param flow should plot a flow plot?
-#' @param flow_params parameters parse to \code{\link[ggalluvial]{geom_flow}}
-#' @param number show the number?
-#' @param format_params parameters parse to \code{\link[base]{format}}
-#' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
-#' @param repel use the ggrepel::geom_text_repel instead of geom_text
-#'
-#' @import ggplot2
-#' @export
-#' @return a ggplot
-#' @examples
-#' data(otutab)
-#' stackplot(otutab, metadata, group = "Group")
-#' \donttest{
-#' stackplot(otutab, metadata, group = "Group", group_order = TRUE, flow = TRUE, relative = FALSE)
-#' }
-stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
-                      bar_params = list(width = 0.7, position = "stack"),
-                      topN = 8, others = TRUE, relative = TRUE, legend_title = "",
-                      stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
-                      style = c("group", "sample")[1],
-                      flow = FALSE, flow_params = list(lode.guidance = "frontback", color = "darkgray"),
-                      number = FALSE, repel=FALSE,format_params = list(digits = 2),
-                      text_params = list(position = position_stack())) {
-  # Used to draw species stacking diagrams, suitable for processing various OTU similar data, input metatab as the basis for grouping.
-  # style can choose "group" or "sample"
-  # others=TRUE is used to choose whether to draw other than TopN
-  # pmode can choose fill/stack/dodge
-  # library(ggplot2)
-  # library(dplyr)
-  lib_ps("reshape2", "scales", "dplyr", library = FALSE)
+
+
+# Preprocess data for stack plot
+pre_stack_data <- function(otutab, metadata = NULL, group = "Group",
+                           topN = 8, others = TRUE, relative = TRUE,
+                           stack_order = TRUE, group_order = FALSE,facet_order=FALSE,
+                           style = c("group", "sample")[1]) {
+  lib_ps("reshape2", "dplyr", library = FALSE)
   variable=Taxonomy=value=NULL
   if(is.numeric(metadata[, group,drop=T]))warning("Recommend categorical variables")
   # prepare otutab and sampFile
@@ -254,11 +517,19 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
 
   mean_sort <- as.data.frame(otutab[(order(-rowSums(otutab))), , drop = FALSE])
 
-  if (nrow(mean_sort) > topN) {
-    other <- colSums(mean_sort[topN:dim(mean_sort)[1], ])
-    mean_sort <- mean_sort[1:(topN - 1), ]
+  if(is.numeric(topN)){
+    if (nrow(mean_sort) > topN) {
+      other <- colSums(mean_sort[topN:dim(mean_sort)[1], ])
+      mean_sort <- mean_sort[1:(topN - 1), ]
+      mean_sort <- rbind(mean_sort, other)
+      rownames(mean_sort)[topN] <- c("Other")
+    }
+  }
+  else {
+    other <- colSums(mean_sort[!rownames(mean_sort)%in%topN, ])
+    mean_sort=mean_sort[rownames(mean_sort)%in%topN,]
     mean_sort <- rbind(mean_sort, other)
-    rownames(mean_sort)[topN] <- c("Other")
+    rownames(mean_sort)[nrow(mean_sort)] <- c("Other")
   }
 
   if (style == "sample") {
@@ -323,9 +594,56 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     data_all$variable=change_fac_lev(data_all$variable,group_order)
   }
 
-  if (get_data) {
-    return(data_all)
-  }
+  return(data_all)
+}
+
+#' Plot a stack plot
+#'
+#'
+#' @param otutab otutab
+#' @param metadata metadata
+#' @param group one group name of columns of metadata
+#' @param get_data just get the formatted data?
+#' @param bar_params parameters parse to \code{\link[ggplot2]{geom_bar}}
+#' @param topN plot how many top species
+#' @param others should plot others?
+#' @param relative transfer to relative or absolute
+#' @param legend_title fill legend_title
+#' @param stack_order the order of stack fill
+#' @param group_order the order of x group
+#' @param facet_order the order of the facet
+#' @param style "group" or "sample"
+#' @param flow should plot a flow plot?
+#' @param flow_params parameters parse to \code{\link[ggalluvial]{geom_flow}}
+#' @param number show the number?
+#' @param format_params parameters parse to \code{\link[base]{format}}
+#' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
+#' @param repel use the ggrepel::geom_text_repel instead of geom_text
+#'
+#' @import ggplot2
+#' @export
+#' @return a ggplot
+#' @examples
+#' data(otutab)
+#' stackplot(otutab, metadata, group = "Group")
+#' \donttest{
+#' stackplot(otutab, metadata, group = "Group", style= "sample", group_order = TRUE, flow = TRUE, relative = FALSE)
+#' }
+stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
+                      bar_params = list(width = 0.7, position = "stack"),
+                      topN = 8, others = TRUE, relative = TRUE, legend_title = "",
+                      stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
+                      style = c("group", "sample")[1],
+                      flow = FALSE, flow_params = list(lode.guidance = "frontback", color = "darkgray"),
+                      number = FALSE, repel=FALSE,format_params = list(digits = 2),
+                      text_params = list(position = position_stack())) {
+  # Used to draw species stacking diagrams, suitable for processing various OTU similar data, input metatab as the basis for grouping.
+  # style can choose "group" or "sample"
+  # others=TRUE is used to choose whether to draw other than TopN
+  # pmode can choose fill/stack/dodge
+
+  data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order,facet_order,style)
+  if(get_data)return(data_all)
 
   # plot
   bar_params <- update_param(list(width = 0.7, position = "stack"), bar_params)
@@ -397,6 +715,76 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
 }
 
 
+#' Plot a area plot
+#' @rdname stackplot
+#' @import ggplot2
+#' @export
+#' @return a ggplot
+#' @examples
+#' data(otutab)
+#' areaplot(otutab, metadata, group = "Id")
+#' \donttest{
+#' areaplot(otutab, metadata, group = "Group", style= "sample", group_order = TRUE, relative = FALSE)
+#' }
+areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
+                     bar_params = list(position = "stack"),
+                     topN = 8, others = TRUE, relative = TRUE, legend_title = "",
+                     stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
+                     style = c("group", "sample")[1],
+                     number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
+  data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order,facet_order,style)
+  if(get_data)return(data_all)
+
+  # plot
+  bar_params <- update_param(NULL, bar_params)
+  format_params <- update_param(list(digits = 2), format_params)
+  text_params <- update_param(list(position = position_stack()), text_params)
+
+  #变为数字向量
+  data_all$variable2=as.numeric(data_all$variable)
+
+  if (style == "sample") {
+    if (T) {
+      p <- ggplot(data_all, aes(
+        x = variable2, y = value, fill = Taxonomy,
+        label = do.call(format, append(list(value), format_params))
+      )) +
+        # geom_bar(stat = "identity",  position = pmode) +
+        do.call(geom_area, bar_params) +
+        facet_grid(~group,
+                   as.table = FALSE,
+                   switch = "both", scales = "free", space = "free"
+        )
+    }
+    p <- p +
+      theme(
+        # strip.background = element_blank(),
+        # axis.ticks.x = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5)
+      ) + xlab(group)
+  } else {
+    if (T) {
+      p <- ggplot(data_all, aes(
+        x = variable2, y = value, fill = Taxonomy,
+        label = do.call(format, append(list(value), format_params))
+      )) +
+        do.call(geom_area, bar_params)
+    }
+  }
+  #强行加上原来的label
+  p=p+scale_x_continuous(breaks = 1:nlevels(data_all$variable),labels = levels(data_all$variable))
+
+  if (relative) {
+    p <- p + scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
+  } else {
+    p <- p + ylab("Number")
+  }
+
+  if (number) p <- p + do.call(geom_text, (text_params))
+
+  p + guides(fill = guide_legend(title = legend_title)) + xlab(group)
+}
+
 #' Plot a boxplot
 #'
 #'
@@ -409,11 +797,13 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
 #' @param alpha whether plot a group alphabeta by test of method
 #' @param method test method:wilcox, tukeyHSD, LSD, (default: wilcox), see \code{\link{multitest}}
 #' @param alpha_param parameters parse to \code{\link[ggplot2]{geom_text}}
+#' @param point_param parameters parse to \code{\link[ggplot2]{geom_jitter}}
 #' @param p_value1 multi-test of all group
 #' @param p_value2 two-test of each pair
 #' @param stat_compare_means_param parameters parse to \code{\link[ggpubr]{stat_compare_means}}
 #' @param trend_line add a trend line
 #' @param trend_line_param parameters parse to \code{\link[ggplot2]{geom_smooth}}
+#' @param only_sig only_sig for p_value2
 #'
 #' @return a ggplot
 #' @export
@@ -426,8 +816,8 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
 #' group_box(a, group = rep(c("a", "b", "c"), each = 6))
 group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                       group_order = NULL, facet_order = NULL,
-                      alpha = FALSE, method = "wilcox", alpha_param = list(color = "red"),
-                      p_value1 = FALSE, p_value2 = FALSE, stat_compare_means_param = NULL,
+                      alpha = FALSE, method = "wilcox", alpha_param = list(color = "red"),point_param=NULL,
+                      p_value1 = FALSE, p_value2 = FALSE, only_sig=TRUE, stat_compare_means_param = NULL,
                       trend_line = FALSE, trend_line_param = list(color = "blue")) {
   lib_ps("ggplot2", "dplyr", "reshape2", library = FALSE)
   # data transform
@@ -466,19 +856,19 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     p <- ggplot(md, aes(x = group, y = value, color = group, group = group)) +
       stat_boxplot(geom = "errorbar", width = 0.15) +
       geom_boxplot(outlier.shape = NA) +
-      geom_jitter(width = 0.15, alpha = 0.8, size = 0.5)
+      do.call(geom_jitter,update_param(list(width = 0.15, alpha = 0.8, size = 0.5),point_param))
   }
   if (mode == 2) {
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
       # stat_boxplot(geom = "errorbar",width=0.15)+
       geom_boxplot(color = "black", outlier.shape = NA) +
-      geom_jitter(color = "black", width = 0.15, alpha = 0.8, size = 0.5)
+      do.call(geom_jitter,update_param(list(color = "black",width = 0.15, alpha = 0.8, size = 0.5),point_param))
   }
   if (mode == 3) {
     lib_ps("gghalves", library = FALSE)
     p <- ggplot(md, aes(x = group, y = value, color = group, group = group)) +
       gghalves::geom_half_violin(aes(fill = group), side = "l", trim = FALSE) +
-      gghalves::geom_half_point(side = "r", size = 0.5, alpha = 0.8) +
+      do.call(gghalves::geom_half_point,update_param(list(side = "r", alpha = 0.8, size = 0.5),point_param))+
       geom_boxplot(
         position = position_nudge(x = .22),
         linewidth = 0.6,
@@ -491,7 +881,8 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     ylab(label = NULL) + xlab(label = NULL)
 
   # trend line
-  if (trend_line) p <- p + do.call(geom_smooth, update_param(list(mapping = aes(group = 1), method = "glm", se = FALSE, alpha = 0.8), trend_line_param))
+  if (trend_line) p <- p + do.call(geom_smooth, update_param(list(mapping = aes(group = 1), method = "glm", se = FALSE, alpha = 0.8),
+                                                             trend_line_param))
 
   # facet?
   flag <- (ncol(tab) == 1)
@@ -506,17 +897,34 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
   if (is.character(p_value1) | p_value1 == TRUE) {
     lib_ps("ggpubr", library = FALSE)
     if (p_value1 == TRUE) p_value1 <- NULL
-    md %>% summarise(low = min(value), high = max(value)) -> aa
+    md %>% summarise(low = min(value,na.rm = T), high = max(value,na.rm = T)) -> aa
     #    p <- p + ggpubr::stat_compare_means(show.legend = FALSE, method = p_value1, label.x = 1, label.y.npc = 1)
     p <- p + do.call(ggpubr::stat_compare_means, update_param(list(
       show.legend = FALSE, method = p_value1, label.x = 1, label.y.npc = 1
     ), stat_compare_means_param))
   }
 
+  #only_sig displays only significant pairwise p-values
   if (is.character(p_value2) | p_value2 == TRUE) {
     lib_ps("ggpubr", library = FALSE)
-    if (p_value2 == TRUE) p_value2 <- NULL
-    comparisons <- utils::combn(levels(md$group), 2) %>% split(col(.))
+    if (p_value2 == TRUE) p_value2 <- "wilcox"
+    if(!only_sig){
+      comparisons <- utils::combn(levels(md$group), 2) %>% split(col(.))
+    }
+    else{
+      if(flag){
+        aa=multitest(md$value, md$group, return = p_value2) %>% cbind(., indexes = colnames(tab))
+        comparisons=list()
+        for (i in 1:nrow(aa)) {
+          for (j in i:nrow(aa)) {
+            if(length(intersect(strsplit(aa[i,"groups"],"")[[1]],strsplit(aa[j,"groups"],"")[[1]]))==0){
+              comparisons=append(comparisons,list(c(i,j)))
+            }
+          }
+        }
+      }
+      else stop("`only_sig` cannot be used when facet, please use `cowplot` for combining each plot.")
+    }
     p <- p + do.call(ggpubr::stat_compare_means, update_param(list(
       show.legend = FALSE, method = p_value2, comparisons = comparisons
     ), stat_compare_means_param))
@@ -727,15 +1135,33 @@ gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
 }
 
 
+#' gg Histogram
+#'
+#' @param x vector
+#' @param ... parameters parse to \code{\link[ggpubr]{gghistogram}}
+#'
+#' @return ggplot
+#' @export
+#'
+#' @examples
+#' gghist(rnorm(100))
+gghist=function(x,...){
+  lib_ps("ggpubr")
+  a=round(summary(x),2)
+  p=do.call(ggpubr::gghistogram,update_param(list(data = x,fill = "skyblue2",add = "median",add_density = T),list(...)))
+  lims=ggplot_lim(p)
+  p+annotate("text",x=0.8*lims$x[2]+0.2*lims$x[1],y=0.8*lims$y[2]+0.2*lims$y[1],
+             label=paste0("Min: ",a[1],"\nMedian: ",a[3],"\nMean: ",a[4],"\nMax: ",a[6]))
+}
+
+
 #' Fit a linear model and plot
 #'
 #' @param tab your dataframe
 #' @param var which colname choose for var or a vector
 #' @param metadata the dataframe contains the var
+#' @param lm_color "red"
 #' @param ... parameters parse to \code{\link[ggplot2]{geom_point}}
-#' @param formula show formula
-#' @param r2 show r2
-#' @param p_value show p_value
 #'
 #' @return a ggplot
 #' @export
@@ -745,7 +1171,7 @@ gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
 #' my_lm(runif(50), var = 1:50)
 #' my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
 #' }
-my_lm <- function(tab, var, metadata = NULL,formula=TRUE,r2=TRUE,p_value=TRUE,...) {
+my_lm <- function(tab, var, metadata = NULL,lm_color="red",...) {
   lib_ps("reshape2", "ggpmisc", library = FALSE)
   # data transform
   g_name <- NULL
@@ -767,29 +1193,17 @@ my_lm <- function(tab, var, metadata = NULL,formula=TRUE,r2=TRUE,p_value=TRUE,..
   md %>% reshape2::melt(., id.vars = "var", variable.name = "indexes") -> md
   md$indexes <- factor(md$indexes, levels = colnames(tab))
 
-  # lab=paste(ifelse(formula,"after_stat(eq.label)",""),
-  #                     ifelse(r2,"after_stat(adj.rr.label)",""),
-  #                     ifelse(p_value,"after_stat(p.value.label)",""),sep = ",")
-  # lab=paste0("paste(",lab,", sep = \"~~~~~\")")
   # main plot
   p <- ggplot(md, aes(var, value)) +
     geom_point(...) +
-    geom_smooth(method = "lm", color = "red", se = FALSE, formula = "y~x") +
+    geom_smooth(method = "lm", color = lm_color, se = FALSE, formula = "y~x") +
     labs(x = NULL, y = NULL)+
-    # ggpmisc::stat_poly_eq(
-    #   aes(label = paste(ifelse(formula,after_stat(eq.label),""),
-    #                     ifelse(r2,after_stat(adj.rr.label),""),
-    #                     ifelse(p_value,after_stat(p.value.label)), sep = "~~~~~")),
-    #   formula = y ~ x, parse = TRUE, color = "red",
-    #   size = 3, # 公式字体大小
-    #   label.x = 0.05, label.y = 1.05
-    # )+
     ggpmisc::stat_poly_eq(
       aes(label = paste(after_stat(eq.label),
                         after_stat(adj.rr.label),
                         after_stat(p.value.label), sep = "~~~~~")),
-      formula = y ~ x, parse = TRUE, color = "red",
-      size = 3, # 公式字体大小
+      formula = y ~ x, parse = TRUE, color = lm_color,
+      size = 3, # Formula font size
       label.x = 0.05, label.y = 1.05
     )
 
@@ -951,70 +1365,6 @@ sample_map=function(metadata,point_params=list(),mode=1,legend_title="Group",shp
   return(p)
 }
 
-#' Show my little cat named Guo Dong which drawn by my girlfriend.
-#' @param mode 1~2
-#' @return a ggplot
-#' @export
-my_cat <- function(mode = 1) {
-  little_guodong=NULL
-  data("little_guodong", package = "pcutils", envir = environment())
-  if (mode == 1) {
-    p <- ggplot() +
-      annotation_custom(little_guodong, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-      theme_void()
-  }
-  if (mode == 2) {
-    x=y=NULL
-    lib_ps("ggimage", library = FALSE)
-    t <- seq(0, 2 * pi, 0.08)
-    d <- data.frame(x = 2 * (sin(t) - 0.5 * sin(2 * t)), y = 2 * (cos(t) - 0.5 * cos(2 * t)))
-
-    temp <- tempdir()
-    ggsave(filename = paste0(temp, "/", "little_guodong.png"), plot = little_guodong, bg = "transparent")
-    p <- ggplot(d, aes(x, y)) +
-      ggimage::geom_image(image = paste0(paste0(temp, "/", "little_guodong.png")), size = .05) +
-      theme_void()
-  }
-  p
-}
-
-#' Give you a rose
-#'
-#' @param color "skyblue3"
-#'
-#' @return NULL
-#' @export
-#' @references https://mp.weixin.qq.com/s/W-BYPR3UXL120XWpTmN3rA
-give_you_a_rose=function(color="skyblue3"){
-  lib_ps("plot3D",library = F)
-  #生成绘图数据
-  x<-seq(0,24)/24
-  t<-seq(0,575,by=0.5)/575*20*pi+4*pi
-  grid<-expand.grid(x=x,t=t)
-  x<-matrix(grid$x,ncol=25,byrow=T)
-  t<-matrix(grid$t,ncol = 25,byrow = T)
-  p<-(pi/2)*exp(-t/(8*pi))
-  change<-sin(15*t)/150
-  u<-1-(1-(3.6*t)%%(2*pi)/pi)^4/2+change
-  y<-2*(x^2-x)^2*sin(p)
-  r<-u*(x*sin(p)+y*cos(p))
-  #绘图
-  plot3D::persp3D(x=r*cos(t),y=r*sin(t),z=u*(x*cos(p)-y*sin(p)),
-          main="To you",
-          #xlim=c(-0.5,0.5),ylim=c(-0.5,0.5),zlim=c(0,1),
-          xlab="Love youself",
-          ylab="Love youself",
-          zlab="Love youself",
-          col = colorRampPalette(c("#e4e9f6",color))(100),
-          border = "grey85",
-          lwd=0.1,
-          facets = T,
-          colkey = F,
-          bty="b2",
-          theta = -60,phi = 45)
-  print("give you a rose 🌹")
-}
-
 #' Pie plot
 #'
 #' @param otutab otutab
@@ -1050,6 +1400,8 @@ tax_pie<-function(otutab,topN=6,...){
 #' Word cloud plot
 #'
 #' @param str_vector string vector
+#' @param ignore_words ignore_words
+#' @param topN topN, 50
 #'
 #' @export
 #' @return a htmlwidget
@@ -1058,73 +1410,130 @@ tax_pie<-function(otutab,topN=6,...){
 #' data(otutab)
 #' tax_wordcloud(taxonomy$Genus)
 #' }
-tax_wordcloud<-function(str_vector){
+tax_wordcloud<-function(str_vector,
+                        ignore_words="Unclassified|uncultured|Ambiguous|Unknown|unknown|metagenome|Unassig",topN=50){
   lib_ps("wordcloud2",library = FALSE)
-  remove_unclassfied<-\ (taxdf) {
-    taxdf[grepl.data.frame("Unclassified|uncultured|Ambiguous|Unknown|unknown|metagenome|Unassig",
-                           taxdf, ignore.case = TRUE)] <- NA
-    return(taxdf)
-  }
-  sort(table(str_vector),decreasing = TRUE)[1:50]%>%as.data.frame()%>%
-    remove_unclassfied()%>%stats::na.omit()%>%wordcloud2::wordcloud2(.,size=.7)
+  str_vector=str_vector[!grepl(ignore_words,str_vector)]
+  sort(table(str_vector),decreasing = TRUE)[1:topN]%>%as.data.frame()%>%
+    stats::na.omit()%>%wordcloud2::wordcloud2(.,size=.7)
 }
 
-#' My circo plot
-#
-#' @param df dataframe with three column
-#' @param reorder reorder by number?
-#' @param pal a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
-#' @param mode "circlize","chorddiag"
-#' @param ... \code{\link[circlize]{chordDiagram}}
-#'
-#' @return chordDiagram
+#========Easter eggs=======
+
+#' Show my little cat named Guo Dong which drawn by my girlfriend.
+#' @param mode 1~2
+#' @return a ggplot
 #' @export
+my_cat <- function(mode = 1) {
+  little_guodong=NULL
+  data("little_guodong", package = "pcutils", envir = environment())
+  if (mode == 1) {
+    p <- ggplot() +
+      annotation_custom(little_guodong, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+      theme_void()
+  }
+  if (mode == 2) {
+    x=y=NULL
+    lib_ps("ggimage", library = FALSE)
+    t <- seq(0, 2 * pi, 0.08)
+    d <- data.frame(x = 2 * (sin(t) - 0.5 * sin(2 * t)), y = 2 * (cos(t) - 0.5 * cos(2 * t)))
+
+    temp <- tempdir()
+    ggsave(filename = paste0(temp, "/", "little_guodong.png"), plot = little_guodong, bg = "transparent")
+    p <- ggplot(d, aes(x, y)) +
+      ggimage::geom_image(image = paste0(paste0(temp, "/", "little_guodong.png")), size = .05) +
+      theme_void()
+  }
+  p
+}
+
+#' Give you a rose
 #'
+#' @param color "skyblue3"
+#'
+#' @return NULL
+#' @export
+#' @references https://mp.weixin.qq.com/s/W-BYPR3UXL120XWpTmN3rA
+give_you_a_rose=function(color="red3"){
+  lib_ps("plot3D",library = F)
+  #生成绘图数据
+  x<-seq(0,24)/24
+  t<-seq(0,575,by=0.5)/575*20*pi+4*pi
+  grid<-expand.grid(x=x,t=t)
+  x<-matrix(grid$x,ncol=25,byrow=T)
+  t<-matrix(grid$t,ncol = 25,byrow = T)
+  p<-(pi/2)*exp(-t/(8*pi))
+  change<-sin(15*t)/150
+  u<-1-(1-(3.6*t)%%(2*pi)/pi)^4/2+change
+  y<-2*(x^2-x)^2*sin(p)
+  r<-u*(x*sin(p)+y*cos(p))
+  #绘图
+  plot3D::persp3D(x=r*cos(t),y=r*sin(t),z=u*(x*cos(p)-y*sin(p)),
+                  main="To you",
+                  #xlim=c(-0.5,0.5),ylim=c(-0.5,0.5),zlim=c(0,1),
+                  xlab="Love youself",
+                  ylab="Love youself",
+                  zlab="Love youself",
+                  col = colorRampPalette(c("#e4e9f6",color))(100),
+                  border = "grey85",
+                  lwd=0.1,
+                  facets = T,
+                  colkey = F,
+                  bty="b2",
+                  theta = -60,phi = 45)
+  print("give you a rose \ud83c\udf39.")
+}
+
+
+#' Plot a DNA double helix
+#'
+#' @param col_DNA col_DNA, "#377EB8"
+#' @param col_ATCG col_ATCG, c("#7FC97F","#FB8072","#FFFFB3","#A6CEE3")
+#' @param DNA_length DNA_length, 2
+#'
+#' @export
+#' @references \code{https://github.com/SherryDong/create_plot_by_R_base}
 #' @examples
-#' \donttest{
-#' data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)%>%my_circo(mode="circlize")
-#' }
-my_circo=function(df,reorder=TRUE,pal=NULL,mode=c("circlize","chorddiag"),...){
-  mode=match.arg(mode,c("circlize","chorddiag"))
-  colnames(df)=c("from","to","count")
-  lib_ps("reshape2","tibble",library = FALSE)
-  if(mode=="chorddiag"){
-    #need a square matrix
-    all_g=unique(df$from,df$to)
-    expand.grid(all_g,all_g)->tab
-    df=left_join(tab,df,by=c("Var1"="from","Var2"="to"))
-    colnames(df)=c("from","to","count")}
+#' DNA_plot()
+DNA_plot <- function(col_DNA="#377EB8",col_ATCG=c("#7FC97F","#FB8072","#FFFFB3","#A6CEE3"),
+                     DNA_length = 2) {
+  oldpar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(oldpar))
 
-  tab=reshape2::dcast(df,from~to,value.var = "count")%>%tibble::column_to_rownames("from")%>%as.matrix()
-  tab[is.na(tab)]=0
+  graphics::par(pin = c(1.5*DNA_length,1.5))
 
-  if(reorder){
-    colSums(tab)%>%sort(decreasing = TRUE)%>%names()->s_name
-    tab=tab[,s_name]
-    rowSums(tab)%>%sort(decreasing = TRUE)%>%names()->s_name
-    tab=tab[s_name,]
-  }
+  DNA_length <- 2*DNA_length ## the code only applies when DNA_length%%2==0, if DNA_length%%2==1, need to modify
 
-  if(is.null(pal))pal=get_cols(length(unique(c(colnames(tab),rownames(tab)))))
-
-  if(mode=="circlize"){
-    lib_ps("circlize",library = FALSE)
-    circlize::chordDiagram(tab,grid.col = pal,...)
-  }
-  if(mode=="chorddiag"){
-    lib_ps("chorddiag",library = FALSE)
-    chorddiag::chorddiag(tab,groupedgeColor= pal,...)
+  x <- seq(-DNA_length * pi / 2, DNA_length * pi / 2, length.out = 1000) ##
+  y1 <- cos(x) ## backbone up
+  y2 <- cos(x + pi) ## backbone down
+  # get the position of nucleotides
+  xx <- seq(DNA_length * pi / 2, -DNA_length * pi / 2, length.out = DNA_length * 5 + 1)
+  xx <- xx + (xx[2] - xx[1]) / 2
+  # remove the first and the lines in the boundary region
+  xx <- setdiff(xx, c(xx[c(1:DNA_length) * 5 - 2], min(xx)))
+  plot(y1 ~ x, pch = 16, type = "l", xlab = "", ylab = "", xaxt = "n", yaxt = "n", main = "", bty = "n", col = "white")
+  for (i in 1:length(xx)) {
+    ybottom <- cos(xx[i]) # ybottom position
+    ytop <- cos(xx[i] + pi) # yup position
+    rr <- sample(1:4, 1) ## ATCG, random select one pair
+    if (rr == 1) {
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4) ## A-T
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
     }
+    if (rr == 2) {
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4) ## T-A
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
+    }
+    if (rr == 3) {
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4) ## C-G
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4)
+    }
+    if (rr == 4) {
+      graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4) ## G-C
+      graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4)
+    }
+  }
+  graphics::lines(y1 ~ x, pch = 16, lwd = 8, col = col_DNA)
+  graphics::lines(y2 ~ x, pch = 16, lwd = 8, col = col_DNA)
 }
-
-pcutils_theme <- {
-  ggplot2::theme_classic(base_size = 13)+
-    ggplot2::theme(
-      axis.text = element_text(color = "black"),
-      plot.margin = grid::unit(rep(0.5, 4), "lines"),
-      strip.background = ggplot2::element_rect(fill = NA)
-    )
-}
-
-bluered=c("#053061","#2166AC","#4393C3","#92C5DE","#D1E5F0","#F7F7F7","#FDDBC7","#F4A582","#D6604D","#B2182B","#67001F")
-phylo_le=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")

@@ -1,3 +1,160 @@
+#=====Data processing=====
+
+#' Remove outliers
+#'
+#' @param x a numeric vector
+#' @param factor default 1.5
+#'
+#' @export
+#'
+#' @return a numeric vector
+#' @examples
+#' remove.outliers(c(1, 10:15))
+remove.outliers <- function(x, factor = 1.5) {
+  q25 <- stats::quantile(x, probs = 0.25)
+  q75 <- stats::quantile(x, probs = 0.75)
+  iqr <- unname(q75 - q25)
+  lower.threshold <- q25 - (iqr * factor)
+  upper.threshold <- q75 + (iqr * factor)
+  res <- x[(x >= lower.threshold) & (x <= upper.threshold)]
+  return(res)
+}
+
+
+#' Like uniq -c in shell to count a vector
+#'
+#' @param df two columns: first is type, second is number
+#'
+#' @export
+#'
+#' @return two columns: first is type, second is number
+#' @examples
+#' count2(data.frame(group = c("A", "A", "B", "C", "C", "A"), value = c(2, 2, 2, 1, 3, 1)))
+count2 <- function(df) {
+  res <- data.frame()
+  type_p <- df[1, 1]
+  n <- 0
+  for (i in 1:nrow(df)) {
+    type <- df[i, 1]
+    if (type_p == type) {
+      n <- n + df[i, 2]
+    } else {
+      res <- rbind(res, data.frame(type = type_p, n = n))
+      n <- df[i, 2]
+    }
+    type_p <- type
+  }
+  res <- rbind(res, data.frame(type = type_p, n = n))
+  colnames(res) <- colnames(df)[1:2]
+  res
+}
+
+#' Group your data
+#'
+#' @param otutab data.frame
+#' @param group group vector
+#' @param margin 1 for row and 2 for column(default: 2)
+#' @param act do (default: mean)
+#' @return data.frame
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' hebing(otutab,metadata$Group)
+hebing<-function(otutab,group,margin=2,act='mean'){
+  if (margin==2) {
+    stats::aggregate(t(otutab),FUN=act,by=list(factor(group)))->a
+    a[,-1]->a
+    data.frame(t(a))->a
+    levels(factor(group))->colnames(a)
+  }
+  else{
+    stats::aggregate(otutab,FUN=act,by=list(factor(group)))->a
+    a[,-1]->a
+    levels(factor(group))->rownames(a)
+  }
+  return(a)
+}
+
+#' Filter your data
+#'
+#' @param tab dataframe
+#' @param sum the rowsum should bigger than sum(default:10)
+#' @param exist the exist number bigger than exist(default:1)
+#'
+#' @return input object
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' guolv(otutab)
+guolv<-function(tab,sum=10,exist=1){
+  tab[rowSums(tab)>sum,]->tab
+  tab[rowSums(tab>0)>exist,]->tab
+  return(tab)
+}
+
+#' Remove the low relative items in each column
+#'
+#' @param otutab otutab
+#' @param relative_threshold threshold, default: 1e-4
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' rm_low(otutab)
+rm_low=function(otutab,relative_threshold=1e-4){
+  #colSums(otutab)%>%summary()
+
+  f_mpa=otutab
+  f_mpa_r <- as.data.frame(apply(f_mpa,2, function(x) x/sum(x)))#正确形式
+  #f_mpa_r=f_mpa/colSums(f_mpa),错误,不能这样除
+  f_mpa[f_mpa_r<relative_threshold]=0
+  f_mpa=f_mpa[rowSums(f_mpa)>0,]
+  f_mpa
+}
+
+#' Transfer your data
+#'
+#' @param df dataframe
+#' @param method "cpm","minmax","acpm","total","log", "max", "frequency", "normalize", "range", "rank", "rrank",
+#' "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr"
+#' @param margin 1 for row and 2 for column(default: 2)
+#' @param ... additional
+#'
+#' @export
+#' @examples
+#'
+#' data(otutab)
+#' trans(otutab,method="cpm")
+#'
+#' @seealso \code{\link[vegan]{decostand}}
+trans<-function(df,method = "normalize",margin=2,...){
+  all=c("cpm","minmax","acpm","total", "log1","max", "frequency", "normalize", "range", "rank", "rrank",
+        "standardize", "pa", "chi.square", "hellinger", "log", "clr", "rclr", "alr")
+  if(is.vector(df))df=data.frame(value=df)
+  if (!method%in%all)stop("methods should be one of ",paste0(all,collapse = ", "))
+  if(method=="cpm"){
+    df=apply(df, margin, \(x){x*10**6/sum(x)})
+  }
+  else if(method=="minmax"){
+    df=apply(df,margin,mmscale,...)
+  }
+  else if(method=="acpm"){
+    df=asinh(apply(df, margin, \(x){x*10**6/sum(x)}))
+  }
+  else if(method=="log1"){
+    df=log(df+1,...)
+  }
+  else {
+    lib_ps("vegan",library = F)
+    df=vegan::decostand(df,method = method,margin,...)
+  }
+  return(data.frame(df,check.names = F))
+}
+
 #' Min_Max scale
 #'
 #' @param x a numeric vector
@@ -23,6 +180,160 @@ mmscale <- function(x, min_s = 0, max_s = 1, n = 1, plot = FALSE) {
   y
 }
 
+
+#' Split Composite Names
+#'
+#' @param x character vector
+#' @param split character to split each element of vector on, see \code{\link[base]{strsplit}}
+#' @param colnames colnames for the result
+#' @param ... other arguments are passed to \code{\link[base]{strsplit}}
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' strsplit2(c("a;b", "c;d"), ";")
+strsplit2 <- function(x, split, colnames = NULL, ...) {
+  x <- as.character(x)
+  n <- length(x)
+  s <- strsplit(x, split = split, ...)
+  nc <- unlist(lapply(s, length))
+  out <- matrix("", n, max(nc))
+  for (i in 1:n) {
+    if (nc[i]) {
+      out[i, 1:nc[i]] <- s[[i]]
+    }
+  }
+  out <- as.data.frame(out)
+  if (!is.null(colnames)) colnames(out) <- colnames
+  out
+}
+
+#' Transpose data.frame
+#'
+#' @param data data.frame
+#'
+#' @export
+t2=function(data){
+  as.data.frame(t(data),optional = T)
+}
+
+#' Explode a data.frame if there are split charter in one column
+#'
+#' @param df data.frame
+#' @param column column
+#' @param split split string
+#'
+#' @export
+#'
+#' @return data.frame
+#' @examples
+#' \donttest{
+#' df <- data.frame(a = 1:2, b = c("a,b", "c"), c = 3:4)
+#' explode(df, "b", ",")
+#' }
+explode <- function(df, column, split = ",") {
+  lib_ps("tidyr", "dplyr", library = FALSE)
+  df <- tidyr::as_tibble(df)
+  df[[column]] <- strsplit(df[, column, drop = TRUE], split = split)
+  tidyr::unnest(df, dplyr::all_of(column)) %>% as.data.frame()
+}
+
+#' Squash one column in a data.frame using other columns as id.
+#'
+#' @param df data.frame
+#' @param column column name, not numeric position
+#' @param split split string
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' df <- data.frame(a = c(1:2,1:2), b = letters[1:4])
+#' squash(df, "b", ",")
+squash = function(df, column, split = ",") {
+  stats::aggregate(stats::reformulate(".",response = column),df,paste,collapse = split)
+}
+
+#' Prepare a numeric string
+#'
+#' @param str  a string contain ',' and '-'
+#' @param split_str split_str ","
+#' @param continuous_str continuous_str "-"
+#'
+#' @return vector
+#' @export
+#'
+#' @examples
+#' pre_number_str("a1,a3,a5,a6-a10")
+pre_number_str=function(str,split_str=",",continuous_str="-"){
+
+  # 将字符串拆分为单词
+  words <- strsplit(str, split_str)[[1]]
+
+  # 提取非数字前缀
+  non_numeric_prefix <- sub("\\d+", "", strsplit(str, paste0(split_str,"|",continuous_str))[[1]])
+
+  if(!all(non_numeric_prefix==non_numeric_prefix[1]))stop("Prefix is not consistent.")
+
+  # 提取数字部分
+  numeric_parts <- gsub(non_numeric_prefix[1], "", words)
+
+  # 将连续范围展开成完整的向量
+  expanded_numbers <- unlist(lapply(strsplit(numeric_parts, continuous_str), function(x) {
+    if (length(x) == 2) {
+      seq(as.numeric(x[1]), as.numeric(x[2]))
+    } else {
+      as.numeric(x)
+    }
+  }))
+
+  # 将数字转换回字符串，并加上前缀
+  result <- paste0(non_numeric_prefix[1], expanded_numbers)
+  result
+}
+
+
+#' df 2 link
+#'
+#' @param test df
+#' @param fun function to summary the elements number, defalut: `sum`, you can choose `mean`.
+#'
+#' @export
+#' @examples
+#' data(otutab)
+#' cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+#' df2link(test)
+#'
+df2link=function(test,fun=sum){
+  if(!is.numeric(test[,ncol(test)]))test$weight=1
+  nc=ncol(test)
+  colnames(test)[nc]="weight"
+  if(nc<3)stop("as least 3-columns dataframe")
+  #change duplicated data
+  #if need tree, use `before_tree()`
+
+  #merge to two columns
+  links=data.frame()
+  tmp_fun_df=stats::aggregate(test$weight,by=list(test[,1,drop=T]),fun)
+  nodes=data.frame(name=tmp_fun_df[["Group.1"]],level=colnames(test)[1],
+                   weight=tmp_fun_df[["x"]])
+
+  for (i in 1:(nc-2)){
+    test[,c(i,i+1,nc)]->tmp
+    colnames(tmp)=c("from","to","weight")
+    tmp=dplyr::group_by(tmp,from,to)%>%dplyr::summarise(weight=fun(weight),.groups="keep")
+    tmp=na.omit(tmp)
+    links=rbind(links,tmp)
+
+    tmp_fun_df=stats::aggregate(tmp$weight,by=list(tmp$to),fun)
+    nodes=rbind(nodes,data.frame(name=tmp_fun_df[["Group.1"]],level=colnames(test)[i+1],
+                                 weight=tmp_fun_df[["x"]]))
+  }
+  return(list(links=links,nodes=nodes))
+}
+
+#======= Statistical test======
 
 #' Two-group test
 #'
@@ -55,14 +366,14 @@ twotest <- function(var, group) {
 #' anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
 #' LSD and TukeyHSD are post hoc test of anova.
 #' dunn and nemenyi are post hoc test of kruskal.test.
-#' ttest or wilcox is just perform wilcox-test in each two group (no p.adjust).
+#' t.test or wilcox is just perform t.test or wilcox.test in each two group (no p.adjust).
 #'
 #' @export
 #'
 #' @examples
-#' multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = FALSE, return = "wilcox") -> aa
+#' multitest(runif(30), rep(c("A", "B", "C"), each = 10), print = FALSE, return = "wilcox") -> aa
 multitest <- function(var, group, print = TRUE, return = FALSE) {
-  methods <- c("LSD", "TukeyHSD", "dunn", "nemenyi", "wilcox", "ttest")
+  methods <- c("LSD", "TukeyHSD", "dunn", "nemenyi", "wilcox.test", "t.test")
   if (is.character(return)) {
     return <- match.arg(return, methods)
     print <- FALSE
@@ -71,13 +382,16 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
     return <- methods
   }
 
-  lib_ps("agricolae", library = FALSE)
+  lib_ps("agricolae","multcompView", library = FALSE)
   group <- factor(group)
   means <- stats::aggregate(var, by = list(group), mean)$x
-
+  names(means)=levels(group)
   ano <- stats::aov(var ~ group)
   kw <- stats::kruskal.test(var ~ group)
   ntr <- nlevels(group)
+
+  p_res=rep(1,choose(ntr,2))
+  names(p_res)=combn(levels(group), 2)%>% split(col(.))%>%sapply(paste,collapse="-")
 
   # LSD
   if ("LSD" %in% return) lsdres <- agricolae::LSD.test(ano, "group", p.adj = "bonferroni")
@@ -88,11 +402,12 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
   # TukeyHSD
   if ("TukeyHSD" %in% return) tukeyres <- stats::TukeyHSD(ano)
 
+  #2023.11.23发现orderPvalue有问题，它默认评估均值最大组和其他组的差异，认为没差异的都是相同字母，但实际上可能最大组和最小组没差异，另外两组有差异。
+  #换成multcompView::multcompLetters
   if (identical(return, "tukeyHSD")) {
-    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
-    p_mat[lower.tri(p_mat)] <- p_mat[upper.tri(p_mat)] <- tukeyres$group[, 4]
-    tukeyHSD_out <- agricolae::orderPvalue(levels(group), means, 0.05, p_mat)
-    return(data.frame(tukeyHSD_out, variable = rownames(tukeyHSD_out)))
+
+    p_ord_res=multcompView::multcompLetters(tukeyres$group[,4])$Letters
+    return(data.frame(means=means,groups=p_ord_res[names(means)],variable=names(means),row.names = names(means)))
   }
 
   # dunn
@@ -101,18 +416,16 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
     dunnres <- PMCMRplus::kwAllPairsDunnTest(var ~ group)
   }
   if (identical(return, "dunn")) {
-    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+
     for (i in 1:(ntr - 1)) {
       for (j in (i + 1):ntr) {
         gi <- levels(group)[i]
         gj <- levels(group)[j]
-        p_mat[j, i] <- p_mat[i, j] <- dunnres$p.value[gj, gi]
+        p_res[paste(gi,gj,sep = "-")]<- dunnres$p.value[gj, gi]
       }
     }
-    rownames(p_mat) <- colnames(p_mat) <- levels(group)
-    p_mat[is.nan(p_mat)] <- 1
-    dunn_out <- agricolae::orderPvalue(levels(group), means, 0.05, p_mat)
-    return(data.frame(dunn_out, variable = rownames(dunn_out)))
+    p_ord_res=multcompView::multcompLetters(p_res)$Letters
+    return(data.frame(means=means,groups=p_ord_res[names(means)],variable=names(means),row.names = names(means)))
   }
 
   # nemenyi
@@ -121,56 +434,49 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
     nemenyires <- PMCMRplus::kwAllPairsNemenyiTest(var ~ group)
   }
   if (identical(return, "nemenyi")) {
-    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+
     for (i in 1:(ntr - 1)) {
       for (j in (i + 1):ntr) {
         gi <- levels(group)[i]
         gj <- levels(group)[j]
-        p_mat[j, i] <- p_mat[i, j] <- nemenyires$p.value[gj, gi]
+        p_res[paste(gi,gj,sep = "-")]<- nemenyires$p.value[gj, gi]
       }
     }
-    rownames(p_mat) <- colnames(p_mat) <- levels(group)
-    p_mat[is.nan(p_mat)] <- 1
-    nemenyi_out <- agricolae::orderPvalue(levels(group), means, 0.05, p_mat)
-    return(data.frame(nemenyi_out, variable = rownames(nemenyi_out)))
+    p_ord_res=multcompView::multcompLetters(p_res)$Letters
+    return(data.frame(means=means,groups=p_ord_res[names(means)],variable=names(means),row.names = names(means)))
   }
 
   # each t-test
-  if ("ttest" %in% return) {
-    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+  if ("t.test" %in% return) {
+
     for (i in 1:(ntr - 1)) {
       for (j in (i + 1):ntr) {
         gi <- levels(group)[i]
         gj <- levels(group)[j]
-        w <- stats::t.test(var[which(group %in% c(gi, gj))] ~ group[which(group %in% c(gi, gj))])
-        p_mat[j, i] <- p_mat[i, j] <- w$p.value
+        p_res[paste(gi,gj,sep = "-")] <- stats::t.test(var[which(group %in% c(gi, gj))] ~ group[which(group %in% c(gi, gj))])$p.value
       }
     }
-    rownames(p_mat) <- colnames(p_mat) <- levels(group)
-    p_mat[is.nan(p_mat)] <- 1
-    ttest_p <- p_mat
-    ttest_out <- agricolae::orderPvalue(levels(group), means, 0.05, p_mat)
-    if (identical(return, "ttest")) {
-      return(data.frame(ttest_out, variable = rownames(ttest_out)))
+    p_res[is.nan(p_res)] <- 1
+    ttest_p=p_res
+    if (identical(return, "t.test")) {
+      p_ord_res=multcompView::multcompLetters(p_res)$Letters
+      return(data.frame(means=means,groups=p_ord_res[names(means)],variable=names(means),row.names = names(means)))
     }
   }
   # each wilcox.test
-  if ("wilcox" %in% return) {
-    p_mat <- matrix(1, ncol = ntr, nrow = ntr)
+  if ("wilcox.test" %in% return) {
     for (i in 1:(ntr - 1)) {
       for (j in (i + 1):ntr) {
         gi <- levels(group)[i]
         gj <- levels(group)[j]
-        w <- stats::wilcox.test(var[which(group %in% c(gi, gj))] ~ group[which(group %in% c(gi, gj))])
-        p_mat[j, i] <- p_mat[i, j] <- w$p.value
+        p_res[paste(gi,gj,sep = "-")] <- stats::wilcox.test(var[which(group %in% c(gi, gj))] ~ group[which(group %in% c(gi, gj))])$p.value
       }
     }
-    rownames(p_mat) <- colnames(p_mat) <- levels(group)
-    p_mat[is.nan(p_mat)] <- 1
-    wilcox_p <- p_mat
-    wilcox_out <- agricolae::orderPvalue(levels(group), means, 0.05, p_mat)
-    if (identical(return, "wilcox")) {
-      return(data.frame(wilcox_out, variable = rownames(wilcox_out)))
+    p_res[is.nan(p_res)] <- 1
+    wilcox_p=p_res
+    if (identical(return, "wilcox.test")) {
+      p_ord_res=multcompView::multcompLetters(p_res)$Letters
+      return(data.frame(means=means,groups=p_ord_res[names(means)],variable=names(means),row.names = names(means)))
     }
   }
 
@@ -343,16 +649,6 @@ fittest <- function(a) {
   }
 }
 
-#=====GAM=====
-if(F){
-  #使用 mgcv 包拟合广义加性模型
-  library(mgcv)
-  dat <- gamSim(1,n=400,dist="normal",scale=2)
-  b <- gam(y~s(x0)+s(x1)+s(x2)+s(x3),data=dat)
-  summary(b)
-
-}
-
 
 #' Get coefficients of linear regression model
 #'
@@ -506,7 +802,7 @@ multireg<-function(formula,data,TopN=3){
 
   p1=ggplot(data =n_env_cor,aes(y=variable,x=xGroup))+
     geom_tile(aes(fill=value))+
-    scale_fill_gradientn(name="Correlation",colours = bluered)+
+    scale_fill_gradientn(name="Correlation",colours = get_cols(pal = "bluered"))+
     geom_point(data = n_env_lm1,aes(size=value),shape=21,fill=NA)+
     guides(size=guide_legend("Importance"))+labs(x=NULL,y=NULL)+pcutils_theme+
     theme(panel.background = element_rect(fill = "transparent", colour = NA),
