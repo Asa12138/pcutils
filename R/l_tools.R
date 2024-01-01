@@ -1,32 +1,33 @@
-common_list=list(
-  taxaclass=c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
+common_list <- list(
+    taxaclass = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 )
 
-print_authors_affiliation=function(authors=c("jc","pc")){
-  affiliations=c(
-    "1"="Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310058, China",
-    "2"="State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, National Clinical Research Center for Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
-    "3"="Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
-    "4"="BGI Research, Wuhan, Hubei 430074, China",
-    "5"="BGI Research, Shenzhen, Guangdong 518083, China",
-    "6"="Department of Genetics, Stanford University School of Medicine, Stanford, CA, USA")
-  author_list=list(
-    jc=1:3,
-    pc=1:3,
-    lye=1:3,
-    lz=1:3,
-    jlyq=1:3,
-    hzn=1:3,
-    cq=1:3,
-    tsj=4:5,
-    sxt=6
-  )
-  pa=affiliations[author_list[authors]%>%Reduce(union,.)]
-  for (i in seq_along(pa)) {
-    pa[i]=paste0("^",i,"^",pa[i])
-  }
-  paste0(pa,collapse = "\n\n")%>%clipr::write_clip()
-  message(paste0(pa,collapse = "\n\n"))
+print_authors_affiliation <- function(authors = c("jc", "pc")) {
+    affiliations <- c(
+        "1" = "Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310058, China",
+        "2" = "State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, National Clinical Research Center for Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
+        "3" = "Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
+        "4" = "BGI Research, Wuhan, Hubei 430074, China",
+        "5" = "BGI Research, Shenzhen, Guangdong 518083, China",
+        "6" = "Department of Genetics, Stanford University School of Medicine, Stanford, CA, USA"
+    )
+    author_list <- list(
+        jc = 1:3,
+        pc = 1:3,
+        lye = 1:3,
+        lz = 1:3,
+        jlyq = 1:3,
+        hzn = 1:3,
+        cq = 1:3,
+        tsj = 4:5,
+        sxt = 6
+    )
+    pa <- affiliations[author_list[authors] %>% Reduce(union, .)]
+    for (i in seq_along(pa)) {
+        pa[i] <- paste0("^", i, "^", pa[i])
+    }
+    paste0(pa, collapse = "\n\n") %>% clipr::write_clip()
+    message(paste0(pa, collapse = "\n\n"))
 }
 
 # =========Little tools=========
@@ -44,25 +45,28 @@ print_authors_affiliation=function(authors=c("jc","pc")){
 #'
 #' @export
 #' @return No return value
-dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"),print=FALSE) {
-  str <- paste0(c(str, ...), collapse = "")
-  mode <- match.arg(mode, c("middle", "left", "right"))
-  if (n < nchar(str)) n <- nchar(str) + 2
-  x <- (n - nchar(str)) %/% 2
-  x2 <- n - nchar(str) - x
-  switch(mode,
-         "left" = {
-           xx <- paste0(str, strrep(char, x + x2))
-         },
-         "middle" = {
-           xx <- paste0(strrep(char, x), str, strrep(char, x2))
-         },
-         "right" = {
-           xx <- paste0(strrep(char, x + x2), str)
-         }
-  )
-  if(print)cat(xx, "\n")
-  else message(xx, "\n")
+dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"), print = FALSE) {
+    str <- paste0(c(str, ...), collapse = "")
+    mode <- match.arg(mode, c("middle", "left", "right"))
+    if (n < nchar(str)) n <- nchar(str) + 2
+    x <- (n - nchar(str)) %/% 2
+    x2 <- n - nchar(str) - x
+    switch(mode,
+        "left" = {
+            xx <- paste0(str, strrep(char, x + x2))
+        },
+        "middle" = {
+            xx <- paste0(strrep(char, x), str, strrep(char, x2))
+        },
+        "right" = {
+            xx <- paste0(strrep(char, x + x2), str)
+        }
+    )
+    if (print) {
+        cat(xx, "\n")
+    } else {
+        message(xx, "\n")
+    }
 }
 
 #' Copy a vector
@@ -72,10 +76,13 @@ dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left",
 #' @export
 #' @return No return value
 copy_vector <- function(vec) {
-  lib_ps("clipr", library = FALSE)
-  if(is.numeric(vec))clipr::write_clip(paste0('c(', paste0(vec, collapse = ','), ')'))
-  else clipr::write_clip(paste0('c("', paste0(vec, collapse = '","'), '")'))
-  message("copy done, just Ctrl+V")
+    lib_ps("clipr", library = FALSE)
+    if (is.numeric(vec)) {
+        clipr::write_clip(paste0("c(", paste0(vec, collapse = ","), ")"))
+    } else {
+        clipr::write_clip(paste0('c("', paste0(vec, collapse = '","'), '")'))
+    }
+    message("copy done, just Ctrl+V")
 }
 
 #' Change factor levels
@@ -88,16 +95,19 @@ copy_vector <- function(vec) {
 #' @export
 #'
 #' @examples
-#' change_fac_lev(letters[1:5],levels = c("c","a"))
-change_fac_lev=function (x, levels = NULL,last=FALSE){
-  ordervec = factor(x)
-  if (!is.null(levels)) {
-    levels = intersect(levels, levels(ordervec))
-    if(last) shunxu = c(setdiff(levels(ordervec), levels),levels)
-    else shunxu = c(levels, setdiff(levels(ordervec), levels))
-    ordervec = factor(ordervec, levels = shunxu)
-  }
-  ordervec
+#' change_fac_lev(letters[1:5], levels = c("c", "a"))
+change_fac_lev <- function(x, levels = NULL, last = FALSE) {
+    ordervec <- factor(x)
+    if (!is.null(levels)) {
+        levels <- intersect(levels, levels(ordervec))
+        if (last) {
+            shunxu <- c(setdiff(levels(ordervec), levels), levels)
+        } else {
+            shunxu <- c(levels, setdiff(levels(ordervec), levels))
+        }
+        ordervec <- factor(ordervec, levels = shunxu)
+    }
+    ordervec
 }
 
 #' Update the parameters
@@ -111,32 +121,36 @@ change_fac_lev=function (x, levels = NULL,last=FALSE){
 #' @export
 #' @return same class of your input (data.frame, list or vector)
 #' @examples
-#' update_param(list(a=1,b=2),list(b=5,c=5))
+#' update_param(list(a = 1, b = 2), list(b = 5, c = 5))
 #'
-update_param=function(default,update){
-  if(length(default)==0)default=NULL
-  if(length(update)==0)update=NULL
-  if(is.null(default))return(update)
-  if(is.null(update))return(default)
+update_param <- function(default, update) {
+    if (length(default) == 0) default <- NULL
+    if (length(update) == 0) update <- NULL
+    if (is.null(default)) {
+        return(update)
+    }
+    if (is.null(update)) {
+        return(default)
+    }
 
-  if(!identical(class(default),class(update)))stop("Two different class object is not allowed to update")
-  if(is.data.frame(default)){
-    inter = intersect(colnames(update), colnames(default))
-    la = setdiff(colnames(default), inter)
-    return(cbind(default[, la, drop = FALSE], update))
-  }
-  if(is.list(default)){
-    if(is.null(names(update))|is.null(names(default)))stop("No name")
-    inter = intersect(names(update), names(default))
-    la = setdiff(names(default), inter)
-    return(append(default[la, drop = FALSE], update))
-  }
-  if(is.vector(default)){
-    if(is.null(names(update))|is.null(names(default)))stop("No name")
-    inter = intersect(names(update), names(default))
-    la = setdiff(names(default), inter)
-    return(c(default[la, drop = FALSE], update))
-  }
+    if (!identical(class(default), class(update))) stop("Two different class object is not allowed to update")
+    if (is.data.frame(default)) {
+        inter <- intersect(colnames(update), colnames(default))
+        la <- setdiff(colnames(default), inter)
+        return(cbind(default[, la, drop = FALSE], update))
+    }
+    if (is.list(default)) {
+        if (is.null(names(update)) | is.null(names(default))) stop("No name")
+        inter <- intersect(names(update), names(default))
+        la <- setdiff(names(default), inter)
+        return(append(default[la, drop = FALSE], update))
+    }
+    if (is.vector(default)) {
+        if (is.null(names(update)) | is.null(names(default))) stop("No name")
+        inter <- intersect(names(update), names(default))
+        la <- setdiff(names(default), inter)
+        return(c(default[la, drop = FALSE], update))
+    }
 }
 
 #' Attach packages or install packages have not benn installed
@@ -150,64 +164,65 @@ update_param=function(default,update){
 #' @export
 #'
 lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
-  some_packages <- c(
-    "ggsankey" = "davidsjoberg/ggsankey",
-    "sankeyD3" = "fbreitwieser/sankeyD3",
-    "pctax" = "Asa12138/pctax",
-    "MetaNet" = "Asa12138/MetaNet",
-    "ReporterScore" = "Asa12138/ReporterScore",
-    "ggcor" = "Github-Yilei/ggcor",
-    "chorddiag" = "mattflor/chorddiag",
-    "inborutils" = "inbo/inborutils",
-    "ggradar" = "ricardo-bion/ggradar",
-    "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
-    "Vennerable" = "js229/Vennerable",
-    "linkET"="Hy4m/linkET",
-    "deeplr"="paulcbauer/deeplr",
-    "ggchicklet"="hrbrmstr/ggchicklet"
-  )
+    some_packages <- c(
+        "ggsankey" = "davidsjoberg/ggsankey",
+        "sankeyD3" = "fbreitwieser/sankeyD3",
+        "pctax" = "Asa12138/pctax",
+        "MetaNet" = "Asa12138/MetaNet",
+        "ReporterScore" = "Asa12138/ReporterScore",
+        "ggcor" = "Github-Yilei/ggcor",
+        "chorddiag" = "mattflor/chorddiag",
+        "inborutils" = "inbo/inborutils",
+        "ggradar" = "ricardo-bion/ggradar",
+        "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
+        "Vennerable" = "js229/Vennerable",
+        "linkET" = "Hy4m/linkET",
+        "deeplr" = "paulcbauer/deeplr",
+        "ggchicklet" = "hrbrmstr/ggchicklet",
+        "ggkegg" = "noriakis/ggkegg"
+    )
 
-  p_list <- c(p_list, ...)
-  for (p in p_list) {
-    if (!requireNamespace(p)) {
-      if (!all_yes) {
-        message(paste0(p, ": this package haven't install, should install?"))
-        flag <- readline("yes/no(y/n)?")
-      } else {
-        flag <- "y"
-      }
+    p_list <- c(p_list, ...)
+    for (p in p_list) {
+        if (!requireNamespace(p)) {
+            if (!all_yes) {
+                message(paste0(p, ": this package haven't install, should install?"))
+                flag <- readline("yes/no(y/n)?")
+            } else {
+                flag <- "y"
+            }
 
-      if (tolower(flag) %in% c("yes", "y")) {
-        if (p %in% names(some_packages)) {
-          remotes::install_github(some_packages[p])
-        } else {
-          utils::install.packages(p)
+            if (tolower(flag) %in% c("yes", "y")) {
+                if (p %in% names(some_packages)) {
+                    remotes::install_github(some_packages[p])
+                } else {
+                    utils::install.packages(p)
+                }
+            } else {
+                stop(paste0("exit, because '", p, "' need to install"))
+            }
+
+            if (!requireNamespace(p)) {
+                if (!all_yes) {
+                    message(paste0(p, " is not available in CRAN, try Bioconductor?"))
+                    flag <- readline("yes/no(y/n)?")
+                }
+
+                if (tolower(flag) %in% c("yes", "y")) {
+                    if (!requireNamespace("BiocManager")) utils::install.packages("BiocManager")
+                    BiocManager::install(p)
+                } else {
+                    stop(paste0("exit, because '", p, "' need to install"))
+                }
+            }
+
+            if (!requireNamespace(p)) {
+                stop("\nplease try other way (github...) to install ", p)
+            }
         }
-      } else {
-        stop(paste0("exit, because '", p, "' need to install"))
-      }
 
-      if (!requireNamespace(p)) {
-        if (!all_yes) {
-          message(paste0(p, " is not available in CRAN, try Bioconductor?"))
-          flag <- readline("yes/no(y/n)?")
-        }
-
-        if (tolower(flag) %in% c("yes", "y")) {
-          if (!requireNamespace("BiocManager")) utils::install.packages("BiocManager")
-          BiocManager::install(p)
-        } else {
-          stop(paste0("exit, because '", p, "' need to install"))
-        }
-      }
-
-      if (!requireNamespace(p)) {
-        stop("\nplease try other way (github...) to install ", p)
-      }
+        if (library) suppressPackageStartupMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE))
     }
-
-    if (library) suppressPackageStartupMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE))
-  }
 }
 
 
@@ -219,14 +234,14 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
 #' @return No return value
 #' @export
 del_ps <- function(p_list, ..., origin = NULL) {
-  p_list <- c(p_list, ...)
-  p_list <- paste0("package:", p_list)
-  all <- search()
-  p_list <- p_list[p_list %in% all]
-  if (!is.null(origin)) p_list <- setdiff(p_list, origin)
-  for (p in p_list) {
-    detach(p, character.only = TRUE)
-  }
+    p_list <- c(p_list, ...)
+    p_list <- paste0("package:", p_list)
+    all <- search()
+    p_list <- p_list[p_list %in% all]
+    if (!is.null(origin)) p_list <- setdiff(p_list, origin)
+    for (p in p_list) {
+        detach(p, character.only = TRUE)
+    }
 }
 
 #' Three-line table
@@ -248,29 +263,32 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #' data(otutab)
 #' sanxian(otutab)
 #' }
-sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, mode=1,background="#D7261E", ...) {
-  if (nrow(df) > nrow) df <- df[1:nrow, , drop = FALSE]
-  if (ncol(df) > ncol) df <- df[, 1:ncol, drop = FALSE]
+sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, mode = 1, background = "#D7261E", ...) {
+    if (nrow(df) > nrow) df <- df[1:nrow, , drop = FALSE]
+    if (ncol(df) > ncol) df <- df[, 1:ncol, drop = FALSE]
 
-  if (fig) {
-    lib_ps("ggpubr", "dplyr", library = FALSE)
-    df %>%
-      dplyr::mutate_if(is.numeric, \(x)round(x, digits = digits)) %>%
-      ggpubr::ggtexttable(..., theme = ggpubr::ttheme("blank")) %>%
-      ggpubr::tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 3) %>%
-      ggpubr::tab_add_hline(at.row = nrow(df) + 1, row.side = "bottom", linewidth = 3) -> p
-    return(p)
-  } else {
-    lib_ps("kableExtra", library = FALSE)
-    if(mode==1)p=kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")
-    else if(mode==2){
-      p=kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")%>%
-        kableExtra::row_spec(0, bold = T, color = "white",background = background)%>%
-        kableExtra::row_spec(seq(2,nrow(df),2), background = add_alpha(background))
+    if (fig) {
+        lib_ps("ggpubr", "dplyr", library = FALSE)
+        df %>%
+            dplyr::mutate_if(is.numeric, \(x)round(x, digits = digits)) %>%
+            ggpubr::ggtexttable(..., theme = ggpubr::ttheme("blank")) %>%
+            ggpubr::tab_add_hline(at.row = 1:2, row.side = "top", linewidth = 3) %>%
+            ggpubr::tab_add_hline(at.row = nrow(df) + 1, row.side = "bottom", linewidth = 3) -> p
+        return(p)
+    } else {
+        lib_ps("kableExtra", library = FALSE)
+        if (mode == 1) {
+            p <- kableExtra::kbl(df, digits = digits, ...) %>% kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria")
+        } else if (mode == 2) {
+            p <- kableExtra::kbl(df, digits = digits, ...) %>%
+                kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria") %>%
+                kableExtra::row_spec(0, bold = TRUE, color = "white", background = background) %>%
+                kableExtra::row_spec(seq(2, nrow(df), 2), background = add_alpha(background))
+        } else {
+            p <- NULL
+        }
+        return(p)
     }
-    else p=NULL
-    return(p)
-  }
 }
 
 #' Grepl applied on a data.frame
@@ -286,15 +304,15 @@ sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, mode=1,ba
 #' grepl.data.frame("c", a)
 #' grepl.data.frame("\\w", a)
 grepl.data.frame <- function(pattern, x, ...) {
-  y <- if (length(x)) {
-    do.call("cbind", lapply(x, "grepl", pattern = pattern, ...))
-  } else {
-    matrix(FALSE, length(row.names(x)), 0)
-  }
-  if (.row_names_info(x) > 0L) {
-    rownames(y) <- row.names(x)
-  }
-  y
+    y <- if (length(x)) {
+        do.call("cbind", lapply(x, "grepl", pattern = pattern, ...))
+    } else {
+        matrix(FALSE, length(row.names(x)), 0)
+    }
+    if (.row_names_info(x) > 0L) {
+        rownames(y) <- row.names(x)
+    }
+    y
 }
 
 #' Gsub applied on a data.frame
@@ -308,20 +326,20 @@ grepl.data.frame <- function(pattern, x, ...) {
 #' @export
 #' @examples
 #' matrix(letters[1:6], 2, 3) |> as.data.frame() -> a
-#' gsub.data.frame("c","a", a)
-gsub.data.frame <- function(pattern,replacement, x, ...) {
-  y <- if (length(x)) {
-    do.call("cbind", lapply(x, "gsub", pattern = pattern,replacement=replacement, ...))
-  } else {
-    matrix(FALSE, length(row.names(x)), 0)
-  }
-  if (.row_names_info(x) > 0L) {
-    rownames(y) <- row.names(x)
-  }
-  y
+#' gsub.data.frame("c", "a", a)
+gsub.data.frame <- function(pattern, replacement, x, ...) {
+    y <- if (length(x)) {
+        do.call("cbind", lapply(x, "gsub", pattern = pattern, replacement = replacement, ...))
+    } else {
+        matrix(FALSE, length(row.names(x)), 0)
+    }
+    if (.row_names_info(x) > 0L) {
+        rownames(y) <- row.names(x)
+    }
+    y
 }
 
-#=======Read file========
+# =======Read file========
 
 #' Read some special format file
 #'
@@ -333,122 +351,125 @@ gsub.data.frame <- function(pattern,replacement, x, ...) {
 #' @export
 #'
 read.file <- function(file, format = NULL, just_print = FALSE) {
-  if (file.size(file) > 10000) {
-    message(paste0(file, ": this file is a little big, still open?"))
-    flag <- readline("yes/no(y/n)?")
-    if (!tolower(flag) %in% c("yes", "y")) {
-      return(NULL)
-    }
-  }
-  if (just_print) {
-      cat(readr::read_file(file))
-  } else {
-    if (is.null(format)) format <- tools::file_ext(file)
-    format <- match.arg(format, c(
-      "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf",
-      "jpg", "png", "pdf", "svg","biom"
-    ))
-
-    if (format %in% c("gff", "gtf")) {
-      df <- utils::read.delim(file,
-                              header = FALSE, stringsAsFactors = FALSE, comment.char = "#",
-                              col.names = c("seqid", "source", "feature", "start", "end", "score", "strand", "phase", "attributes")
-      )
-      return(df)
-    }
-
-    if (format %in% c("fa", "fasta", "fna")) {
-      df <- read_fasta(file)
-      return(df)
-    }
-
-    if (format %in% c("blast", "diamond")) {
-      df <- utils::read.table(file,
-                              sep = "\t",
-                              col.names = c(
-                                "Qseqid", "Sseqid", "Pident", "Length", "Mismatch", "Gapopen",
-                                "Qstart", "Qend", "Sstart", "Send", "E_value", "Bitscore"
-                              )
-      )
-      return(df)
-    }
-
-    if (format %in% c("biom")) {
-      if (file.size(file) > 10000) {
-        message(paste0(file, ": this biom file is a little big: ",file.size(file)," still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
+    if (file.size(file) > 10000) {
+        message(paste0(file, ": this file is a little big, still open?"))
         flag <- readline("yes/no(y/n)?")
-        if (tolower(flag) %in% c("yes", "y")) {
-          lib_ps("biomformat",library = FALSE)
-          dat.b<-biomformat::read_biom(file)
-          df<-data.frame(data.matrix(biomformat::biom_data(dat.b)),check.names = F)
+        if (!tolower(flag) %in% c("yes", "y")) {
+            return(NULL)
         }
-        else return(NULL)
-      }
-      return(df)
     }
+    if (just_print) {
+        cat(readr::read_file(file))
+    } else {
+        if (is.null(format)) format <- tools::file_ext(file)
+        format <- match.arg(format, c(
+            "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf",
+            "jpg", "png", "pdf", "svg", "biom"
+        ))
 
-    if (format %in% c("jpg", "png")) {
-      lib_ps("jpeg", "png", "grid", library = FALSE)
-      switch(format,
-             "jpg" = {
-               p1 <- jpeg::readJPEG(file)
-             },
-             "png" = {
-               p1 <- png::readPNG(file)
-             }
-      )
-      g <- grid::rasterGrob(p1, interpolate=TRUE)
-      p=ggplot2::ggplot() +ggplot2::annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +ggplot2::theme_void()
-      return(p)
-      # graphics::plot(1:2, type = "n", axes = FALSE, ylab = "n", xlab = "n", ann = FALSE)
-      # graphics::rasterImage(p1, 1, 1, 2, 2)
+        if (format %in% c("gff", "gtf")) {
+            df <- utils::read.delim(file,
+                header = FALSE, stringsAsFactors = FALSE, comment.char = "#",
+                col.names = c("seqid", "source", "feature", "start", "end", "score", "strand", "phase", "attributes")
+            )
+            return(df)
+        }
+
+        if (format %in% c("fa", "fasta", "fna")) {
+            df <- read_fasta(file)
+            return(df)
+        }
+
+        if (format %in% c("blast", "diamond")) {
+            df <- utils::read.table(file,
+                sep = "\t",
+                col.names = c(
+                    "Qseqid", "Sseqid", "Pident", "Length", "Mismatch", "Gapopen",
+                    "Qstart", "Qend", "Sstart", "Send", "E_value", "Bitscore"
+                )
+            )
+            return(df)
+        }
+
+        if (format %in% c("biom")) {
+            if (file.size(file) > 10000) {
+                message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
+                flag <- readline("yes/no(y/n)?")
+                if (tolower(flag) %in% c("yes", "y")) {
+                    lib_ps("biomformat", library = FALSE)
+                    dat.b <- biomformat::read_biom(file)
+                    df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
+                } else {
+                    return(NULL)
+                }
+            }
+            return(df)
+        }
+
+        if (format %in% c("jpg", "png")) {
+            lib_ps("jpeg", "png", "grid", library = FALSE)
+            switch(format,
+                "jpg" = {
+                    p1 <- jpeg::readJPEG(file)
+                },
+                "png" = {
+                    p1 <- png::readPNG(file)
+                }
+            )
+            g <- grid::rasterGrob(p1, interpolate = TRUE)
+            p <- ggplot2::ggplot() +
+                ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+                ggplot2::theme_void()
+            return(p)
+            # graphics::plot(1:2, type = "n", axes = FALSE, ylab = "n", xlab = "n", ann = FALSE)
+            # graphics::rasterImage(p1, 1, 1, 2, 2)
+        }
+        if (format == "svg") {
+            lib_ps("grImport2", "ggpubr", library = FALSE)
+            x <- grImport2::readPicture(file)
+            g <- grImport2::pictureGrob(x)
+            p <- ggpubr::as_ggplot(g)
+            p
+            return(p)
+        }
     }
-    if (format == "svg") {
-      lib_ps("grImport2", "ggpubr", library = FALSE)
-      x <- grImport2::readPicture(file)
-      g <- grImport2::pictureGrob(x)
-      p <- ggpubr::as_ggplot(g)
-      p
-      return(p)
-    }
-  }
 }
 
 #' Read fasta file
 #' @param fasta_file file path
-#'
+#' @return data.frame
 #' @export
 read_fasta <- function(fasta_file) {
-  fasta_data <- readLines(fasta_file)
-  # create a null data.frame
-  df <- data.frame(stringsAsFactors = FALSE)
+    fasta_data <- readLines(fasta_file)
+    # create a null data.frame
+    df <- data.frame(stringsAsFactors = FALSE)
 
-  # initialize
-  current_id <- ""
-  current_seq <- ""
+    # initialize
+    current_id <- ""
+    current_seq <- ""
 
-  # read fasta row by row
-  for (line in fasta_data) {
-    if (startsWith(line, ">")) {
-      # start with > indicate name
-      # add name and sequence of last one
-      if (current_id != "") {
-        df <- rbind(df, c(current_id, current_seq))
-      }
-      # update the new sequence
-      current_id <- gsub(">", "", line)
-      current_seq <- ""
-    } else {
-      # add sequence
-      current_seq <- paste(current_seq, line, sep = "")
+    # read fasta row by row
+    for (line in fasta_data) {
+        if (startsWith(line, ">")) {
+            # start with > indicate name
+            # add name and sequence of last one
+            if (current_id != "") {
+                df <- rbind(df, c(current_id, current_seq))
+            }
+            # update the new sequence
+            current_id <- gsub(">", "", line)
+            current_seq <- ""
+        } else {
+            # add sequence
+            current_seq <- paste(current_seq, line, sep = "")
+        }
     }
-  }
 
-  # add the last sequence
-  df <- rbind(df, c(current_id, current_seq))
+    # add the last sequence
+    df <- rbind(df, c(current_id, current_seq))
 
-  colnames(df) <- c("Sequence_ID", "Sequence")
-  df
+    colnames(df) <- c("Sequence_ID", "Sequence")
+    df
 }
 
 #' Write a data.frame to fasta
@@ -456,33 +477,34 @@ read_fasta <- function(fasta_file) {
 #' @param df data.frame
 #' @param file_path output file path
 #' @param str_per_line how many base or animo acid in one line, if NULL, one sequence in one line.
-#' @return file
+#' @return No return value
 #' @export
-write_fasta <- function(df, file_path, str_per_line=70) {
-  file_conn <- file(file_path, "w")
-  df=as.data.frame(df)
-  for (i in 1:nrow(df)) {
-    sequence_id <- df[i, 1]
-    sequence <- df[i, 2]
+write_fasta <- function(df, file_path, str_per_line = 70) {
+    file_conn <- file(file_path, "w")
+    df <- as.data.frame(df)
+    for (i in 1:nrow(df)) {
+        sequence_id <- df[i, 1]
+        sequence <- df[i, 2]
 
-    writeLines(paste0(">", sequence_id), file_conn)
-    if(is.null(str_per_line)){
-      writeLines(sequence, file_conn)
-    } else if(str_per_line>0){
-      split_sequence <- strsplit(sequence, split = "")
-      split_sequence <- unlist(split_sequence)
-      num_chunks <- ceiling(length(split_sequence) / str_per_line)
-      for (j in 1:num_chunks) {
-        start_index <- (j - 1) * str_per_line + 1
-        end_index <- min(j * str_per_line, length(split_sequence))
-        chunk <- paste(split_sequence[start_index:end_index], collapse = "")
-        writeLines(chunk, file_conn)
-      }} else{
-        close(file_conn)
-        stop("str_per_line should be NULL or number bigger than 1.")
-      }
-  }
-  close(file_conn)
+        writeLines(paste0(">", sequence_id), file_conn)
+        if (is.null(str_per_line)) {
+            writeLines(sequence, file_conn)
+        } else if (str_per_line > 0) {
+            split_sequence <- strsplit(sequence, split = "")
+            split_sequence <- unlist(split_sequence)
+            num_chunks <- ceiling(length(split_sequence) / str_per_line)
+            for (j in 1:num_chunks) {
+                start_index <- (j - 1) * str_per_line + 1
+                end_index <- min(j * str_per_line, length(split_sequence))
+                chunk <- paste(split_sequence[start_index:end_index], collapse = "")
+                writeLines(chunk, file_conn)
+            }
+        } else {
+            close(file_conn)
+            stop("str_per_line should be NULL or number bigger than 1.")
+        }
+    }
+    close(file_conn)
 }
 
 #' Transfer the format of file
@@ -497,81 +519,81 @@ write_fasta <- function(df, file_path, str_per_line=70) {
 #' @export
 #'
 trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge") {
-  if (is.null(format)) format <- tools::file_ext(file)
-  name <- tools::file_path_sans_ext(basename(file))
-  out <- paste0(name, ".", to_format)
+    if (is.null(format)) format <- tools::file_ext(file)
+    name <- tools::file_path_sans_ext(basename(file))
+    out <- paste0(name, ".", to_format)
 
-  if (to_format == "jpeg") to_format <- "jpg"
-  if (format == to_format) stop("don not need transfer")
+    if (to_format == "jpeg") to_format <- "jpg"
+    if (format == to_format) stop("don not need transfer")
 
-  lib_ps("ggplot2", library = FALSE)
-  if (format == "svg") {
-    if (to_format == "html") {
-      file.copy(file, out)
-    } else {
-      lib_ps("rsvg", "grImport2", library = FALSE)
-      rsvg::rsvg_svg(file, file)
-      x <- grImport2::readPicture(file)
-      g <- grImport2::pictureGrob(x)
-      ggplot2::ggsave(g, filename = out, device = to_format, ...)
-      invisible(g)
+    lib_ps("ggplot2", library = FALSE)
+    if (format == "svg") {
+        if (to_format == "html") {
+            file.copy(file, out)
+        } else {
+            lib_ps("rsvg", "grImport2", library = FALSE)
+            rsvg::rsvg_svg(file, file)
+            x <- grImport2::readPicture(file)
+            g <- grImport2::pictureGrob(x)
+            ggplot2::ggsave(g, filename = out, device = to_format, ...)
+            invisible(g)
+        }
     }
-  }
-  if (format == "pdf") {
-    lib_ps("pdftools", library = FALSE)
-    switch(to_format,
-           "png" = {
-             pdftools::pdf_convert(file, "png", filenames = out)
-           },
-           "jpg" = {
-             pdftools::pdf_convert(file, "jpeg", filenames = out)
-           },
-           "jpeg" = {
-             pdftools::pdf_convert(file, "jpeg", filenames = out)
-           }
-    )
-  }
-  # https://phantomjs.org/download.html
-  # PhantomJS
-  if (format == "png") {
-    lib_ps("png", "grid", library = FALSE)
-    img <- png::readPNG(file)
-    g <- grid::rasterGrob(img, interpolate = TRUE)
-    p <- ggplot2::ggplot() +
-      ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-      ggplot2::theme_void()
-    ggplot2::ggsave(p, filename = out, device = to_format, ...)
-    invisible(g)
-  }
-  if (format == "jpg") {
-    lib_ps("jpg", "grid", library = FALSE)
-    img <- jpeg::readJPEG(file)
-    g <- grid::rasterGrob(img, interpolate = TRUE)
-    p <- ggplot2::ggplot() +
-      ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-      ggplot2::theme_void()
-    ggplot2::ggsave(p, filename = out, device = to_format, ...)
-    invisible(g)
-  }
-  if (format == "html") {
-    if (to_format %in% c("pdf", "png", "jpeg")) {
-      pagedown::chrome_print(file, out,
-                             wait = 0, browser = brower, format = to_format,
-                             options = list(
-                               # paperWidth=width,
-                               # pageRanges="1",
-                               # paperHeight=height,
-                               ...
-                             )
-      )
+    if (format == "pdf") {
+        lib_ps("pdftools", library = FALSE)
+        switch(to_format,
+            "png" = {
+                pdftools::pdf_convert(file, "png", filenames = out)
+            },
+            "jpg" = {
+                pdftools::pdf_convert(file, "jpeg", filenames = out)
+            },
+            "jpeg" = {
+                pdftools::pdf_convert(file, "jpeg", filenames = out)
+            }
+        )
     }
-    if (to_format == "svg") {
-      file.copy(file, out)
+    # https://phantomjs.org/download.html
+    # PhantomJS
+    if (format == "png") {
+        lib_ps("png", "grid", library = FALSE)
+        img <- png::readPNG(file)
+        g <- grid::rasterGrob(img, interpolate = TRUE)
+        p <- ggplot2::ggplot() +
+            ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+            ggplot2::theme_void()
+        ggplot2::ggsave(p, filename = out, device = to_format, ...)
+        invisible(g)
     }
-  }
+    if (format == "jpg") {
+        lib_ps("jpg", "grid", library = FALSE)
+        img <- jpeg::readJPEG(file)
+        g <- grid::rasterGrob(img, interpolate = TRUE)
+        p <- ggplot2::ggplot() +
+            ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+            ggplot2::theme_void()
+        ggplot2::ggsave(p, filename = out, device = to_format, ...)
+        invisible(g)
+    }
+    if (format == "html") {
+        if (to_format %in% c("pdf", "png", "jpeg")) {
+            pagedown::chrome_print(file, out,
+                wait = 0, browser = brower, format = to_format,
+                options = list(
+                    # paperWidth=width,
+                    # pageRanges="1",
+                    # paperHeight=height,
+                    ...
+                )
+            )
+        }
+        if (to_format == "svg") {
+            file.copy(file, out)
+        }
+    }
 }
 
-#======= Network ========
+# ======= Network ========
 
 #' Download supplemental materials according to a doi
 #'
@@ -583,10 +605,10 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
 #' @export
 #'
 get_doi <- function(doi, dir = "~/Downloads/", bget_path = "~/software/bget_0.3.2_Darwin_64-bit/bget") {
-  if (!file.exists(bget_path)) stop("Cann't find bget! check `bget_path`")
-  doi <- sub("https://doi.org/", "", doi)
-  command <- paste0(bget_path, " doi ", doi, " -t2 --suppl --full-text -o ", dir)
-  system(command)
+    if (!file.exists(bget_path)) stop("Cann't find bget! check `bget_path`")
+    doi <- sub("https://doi.org/", "", doi)
+    command <- paste0(bget_path, " doi ", doi, " -t2 --suppl --full-text -o ", dir)
+    system(command)
 }
 
 #' Search and browse the web for specified terms
@@ -600,12 +622,12 @@ get_doi <- function(doi, dir = "~/Downloads/", bget_path = "~/software/bget_0.3.
 #'               Supported engines: "google", "bing".
 #' @param base_url A character string specifying the base URL for web searches. If not provided,
 #'                the function will use a default URL based on the chosen search engine.
-#'
+#' @return No return value
 #' @examples
 #' \dontrun{
 #' search_terms <- c(
-#'   "s__Pandoraea_pnomenusa",
-#'   "s__Alicycliphilus_sp._B1"
+#'     "s__Pandoraea_pnomenusa",
+#'     "s__Alicycliphilus_sp._B1"
 #' )
 #'
 #' # Using Google search engine
@@ -616,28 +638,28 @@ get_doi <- function(doi, dir = "~/Downloads/", bget_path = "~/software/bget_0.3.
 #' }
 #'
 #' @export
-search_browse = function(search_terms, engine = "google", base_url = NULL) {
-  if(length(search_terms)>30)stop("too many search_terms, please cut down to 30.")
-  # 如果未提供基础URL，则根据搜索引擎设置默认URL
-  if (is.null(base_url)) {
-    if (engine == "google") {
-      base_url <- "https://www.google.com/search?q="
-    } else if (engine == "bing") {
-      base_url <- "https://www.bing.com/search?q="
-    } else {
-      stop("Unsupported search engine. Supported engines: 'google', 'bing'")
+search_browse <- function(search_terms, engine = "google", base_url = NULL) {
+    if (length(search_terms) > 30) stop("too many search_terms, please cut down to 30.")
+    # 如果未提供基础URL，则根据搜索引擎设置默认URL
+    if (is.null(base_url)) {
+        if (engine == "google") {
+            base_url <- "https://www.google.com/search?q="
+        } else if (engine == "bing") {
+            base_url <- "https://www.bing.com/search?q="
+        } else {
+            stop("Unsupported search engine. Supported engines: 'google', 'bing'")
+        }
     }
-  }
 
-  search_terms=gsub("_"," ",search_terms)
-  # 循环遍历搜索每个元素
-  for (term in search_terms) {
-    # 构建搜索 URL
-    search_url <- paste0(base_url, utils::URLencode(term))
+    search_terms <- gsub("_", " ", search_terms)
+    # 循环遍历搜索每个元素
+    for (term in search_terms) {
+        # 构建搜索 URL
+        search_url <- paste0(base_url, utils::URLencode(term))
 
-    # 在默认浏览器中打开搜索页面
-    utils::browseURL(search_url)
-  }
+        # 在默认浏览器中打开搜索页面
+        utils::browseURL(search_url)
+    }
 }
 
 #' translator
@@ -646,24 +668,25 @@ search_browse = function(search_terms, engine = "google", base_url = NULL) {
 #' @param mode "e2z","z2e"
 #'
 #' @export
-#'
+#' @return vector
 #' @examples
-#' translator(c("love","if"),mode="e2z")
-#' translator(c("中国欢迎你"),mode="z2e")
-translator=function(words,mode="e2z"){
-  lib_ps("fanyi",library = F)
+#' translator(c("love", "if"), mode = "e2z")
+translator <- function(words, mode = "e2z") {
+    lib_ps("fanyi", library = FALSE)
 
-  pcutils_config=show_pcutils_config()
-  if(is.null(pcutils_config$baidu_appid)|is.null(pcutils_config$baidu_key)){
-    message("Please set the baidu_appid and baidu_key using set_pcutils_config:")
-    message("first, get the appid and key from baidu: https://zhuanlan.zhihu.com/p/375789804 ,")
-    message("then, set_pcutils_config('baidu_appid',your_appid),")
-    message("and set_pcutils_config('baidu_key',your_key).")
-  }
+    pcutils_config <- show_pcutils_config()
+    if (is.null(pcutils_config$baidu_appid) | is.null(pcutils_config$baidu_key)) {
+        message("Please set the baidu_appid and baidu_key using set_pcutils_config:")
+        message("first, get the appid and key from baidu: https://zhuanlan.zhihu.com/p/375789804 ,")
+        message("then, set_pcutils_config('baidu_appid',your_appid),")
+        message("and set_pcutils_config('baidu_key',your_key).")
+    }
 
-  fanyi::set_translate_option(appid = pcutils_config$baidu_appid,key = pcutils_config$baidu_key)
+    fanyi::set_translate_option(appid = pcutils_config$baidu_appid, key = pcutils_config$baidu_key)
 
-  if(mode=="e2z"|mode==1)lapply(words, \(i)fanyi::translate(i,from = "en",to = "zh"))
-  else lapply(words, \(i)fanyi::translate(i,from = "zh",to = "en"))
+    if (mode == "e2z" | mode == 1) {
+        lapply(words, \(i)fanyi::translate(i, from = "en", to = "zh"))
+    } else {
+        lapply(words, \(i)fanyi::translate(i, from = "zh", to = "en"))
+    }
 }
-

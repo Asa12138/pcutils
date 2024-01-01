@@ -9,7 +9,7 @@ cor_plot(
   env2 = NULL,
   mode = 1,
   method = "pearson",
-  heat = T,
+  heat = TRUE,
   mode3_param = NULL,
   ...
 )
@@ -40,6 +40,6 @@ Plot correlation
 data(otutab)
 cor_plot(metadata[, 3:10])
 cor_plot(metadata[, 3:10], mode = 2)
-cor_plot(t(otutab)[,1:50],mode=3,heat=FALSE)
+cor_plot(t(otutab)[, 1:50], mode = 3, heat = FALSE)
 }
 }

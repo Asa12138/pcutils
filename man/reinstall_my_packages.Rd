@@ -9,6 +9,9 @@ reinstall_my_packages(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore"))
 \arguments{
 \item{pkgs}{pkgs}
 }
+\value{
+No return value
+}
 \description{
 Re-install my packages
 }

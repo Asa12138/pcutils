@@ -11,12 +11,15 @@ df2link(test, fun = sum)
 
 \item{fun}{function to summary the elements number, defalut: \code{sum}, you can choose \code{mean}.}
 }
+\value{
+data.frame
+}
 \description{
 df 2 link
 }
 \examples{
 data(otutab)
-cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
 df2link(test)
 
 }

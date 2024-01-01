@@ -6,31 +6,52 @@
 \usage{
 sample_map(
   metadata,
-  point_params = list(),
   mode = 1,
-  legend_title = "Group",
+  map_params = list(),
+  group = NULL,
+  point_params = list(),
+  label = NULL,
+  label_params = list(),
   shp_file = NULL,
   crs = NULL,
   xlim = NULL,
-  ylim = NULL
+  ylim = NULL,
+  add_scale = TRUE,
+  scale_params = list(),
+  add_north_arrow = TRUE,
+  north_arrow_params = list()
 )
 }
 \arguments{
-\item{metadata}{metadata must contains "long", "lat", "Group"}
+\item{metadata}{metadata must contains  "Longitude","Latitude"}
+
+\item{mode}{1~3. 1 use basic data from ggplot2. 2 use a shp_file. 3 use the leaflet.}
+
+\item{map_params}{parameters parse to geom_polygon (mode=1) or geom_sf (mode=2)}
+
+\item{group}{one column name of metadata which mapping to point color}
 
 \item{point_params}{parameters parse to geom_point}
 
-\item{mode}{1~3}
+\item{label}{one column name of metadata which mapping to point label}
 
-\item{legend_title}{legend title}
+\item{label_params}{parameters parse to geom_sf_text}
 
 \item{shp_file}{a geojson file parse to \code{sf::read_sf}}
 
-\item{crs}{crs coordinate}
+\item{crs}{crs coordinate: \code{https://asa-blog.netlify.app/p/r-map/#crs}}
 
 \item{xlim}{xlim}
 
 \item{ylim}{ylim}
+
+\item{add_scale}{add annotation_scale}
+
+\item{scale_params}{parameters parse to \code{ggspatial::annotation_scale}}
+
+\item{add_north_arrow}{add annotation_north_arrow}
+
+\item{north_arrow_params}{parameters parse to \code{ggspatial::annotation_north_arrow}}
 }
 \value{
 map
@@ -41,6 +62,8 @@ Plot the sampling map
 \examples{
 \donttest{
 data(otutab)
-sample_map(metadata,mode = 3,xlim = c(100,150),ylim = c(25,50))
+anno_df <- metadata[, c("Id", "long", "lat", "Group")]
+colnames(anno_df) <- c("Id", "Longitude", "Latitude", "Group")
+sample_map(anno_df, mode = 1, group = "Group", xlim = c(90, 135), ylim = c(20, 50))
 }
 }

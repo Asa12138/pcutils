@@ -9,6 +9,9 @@ give_you_a_rose(color = "red3")
 \arguments{
 \item{color}{"skyblue3"}
 }
+\value{
+plot
+}
 \description{
 Give you a rose
 }

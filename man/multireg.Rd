@@ -13,10 +13,13 @@ multireg(formula, data, TopN = 3)
 
 \item{TopN}{give top variable importance}
 }
+\value{
+ggplot
+}
 \description{
 Multiple regression/ variance decomposition analysis
 }
 \examples{
 data(otutab)
-multireg(env1~Group*.,data = metadata[,2:7])
+multireg(env1 ~ Group * ., data = metadata[, 2:7])
 }

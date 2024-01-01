@@ -39,6 +39,6 @@ Performs multiple mean comparisons for a data.frame
 }
 \examples{
 data(otutab)
-group_test(otutab,metadata$Group,method="kruskal.test")
-group_test(otutab[,1:12],metadata$Group[1:12],method="wilcox.test")
+group_test(otutab, metadata$Group, method = "kruskal.test")
+group_test(otutab[, 1:12], metadata$Group[1:12], method = "wilcox.test")
 }

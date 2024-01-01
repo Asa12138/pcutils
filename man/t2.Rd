@@ -9,6 +9,9 @@ t2(data)
 \arguments{
 \item{data}{data.frame}
 }
+\value{
+data.frame
+}
 \description{
 Transpose data.frame
 }

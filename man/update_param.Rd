@@ -18,6 +18,6 @@ same class of your input (data.frame, list or vector)
 Keep the different parameters while use the same name in update first.
 }
 \examples{
-update_param(list(a=1,b=2),list(b=5,c=5))
+update_param(list(a = 1, b = 2), list(b = 5, c = 5))
 
 }

@@ -35,7 +35,7 @@ My Network plot
 \examples{
 \donttest{
 data(otutab)
-cbind(taxonomy,num=rowSums(otutab))[1:10,]->test
+cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
 my_network(test)
 }
 }

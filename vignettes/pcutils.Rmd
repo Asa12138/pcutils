@@ -13,8 +13,8 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+    collapse = TRUE,
+    comment = "#>"
 )
 ```
 
@@ -37,7 +37,7 @@ install.packages("pcutils")
 Or try the development version, which contains more functions:
 ```{r eval=FALSE}
 install.packages("devtools")
-devtools::install_github('Asa12138/pcutils',dependencies=T)
+devtools::install_github("Asa12138/pcutils", dependencies = T)
 library(pcutils)
 ```
 

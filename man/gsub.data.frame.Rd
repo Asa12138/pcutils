@@ -23,5 +23,5 @@ Gsub applied on a data.frame
 }
 \examples{
 matrix(letters[1:6], 2, 3) |> as.data.frame() -> a
-gsub.data.frame("c","a", a)
+gsub.data.frame("c", "a", a)
 }

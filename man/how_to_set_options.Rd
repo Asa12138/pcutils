@@ -10,7 +10,7 @@ how_to_set_options(package = "My_package")
 \item{package}{package name}
 }
 \value{
-No value
+No return value
 }
 \description{
 How to set options in a package

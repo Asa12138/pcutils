@@ -23,5 +23,5 @@ Group your data
 }
 \examples{
 data(otutab)
-hebing(otutab,metadata$Group)
+hebing(otutab, metadata$Group)
 }

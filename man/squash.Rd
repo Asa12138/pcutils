@@ -20,6 +20,6 @@ data.frame
 Squash one column in a data.frame using other columns as id.
 }
 \examples{
-df <- data.frame(a = c(1:2,1:2), b = letters[1:4])
+df <- data.frame(a = c(1:2, 1:2), b = letters[1:4])
 squash(df, "b", ",")
 }

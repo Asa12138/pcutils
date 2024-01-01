@@ -18,5 +18,5 @@ add_alpha(color, alpha = 0.3)
 Add alpha for a Rcolor
 }
 \examples{
-add_alpha("red",0.3)
+add_alpha("red", 0.3)
 }

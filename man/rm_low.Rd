@@ -11,6 +11,9 @@ rm_low(otutab, relative_threshold = 0.0001)
 
 \item{relative_threshold}{threshold, default: 1e-4}
 }
+\value{
+data.frame
+}
 \description{
 Remove the low relative items in each column
 }

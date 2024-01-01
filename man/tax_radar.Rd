@@ -20,6 +20,6 @@ Radar plot
 \examples{
 \donttest{
 data(otutab)
-tax_radar(otutab[1:6,1:4])
+tax_radar(otutab[1:6, 1:4])
 }
 }

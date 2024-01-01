@@ -4,7 +4,7 @@
 \alias{add_analysis}
 \title{Add an analysis for a project}
 \usage{
-add_analysis(analysis_n, title = analysis_n, author = "Peng Chen", theme = 1)
+add_analysis(analysis_n, title = analysis_n, author = "Asa12138", theme = 1)
 }
 \arguments{
 \item{analysis_n}{analysis name}

@@ -17,6 +17,9 @@ DNA_plot(
 
 \item{DNA_length}{DNA_length, 2}
 }
+\value{
+ggplot
+}
 \description{
 Plot a DNA double helix
 }

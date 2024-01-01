@@ -4,6 +4,8 @@
 .Ruserdata
 pcutils.Rproj
 .DS_Store
+*/.DS_Store
 inst/doc
 images/pcutils.pptx
 images/utils.R
+*.svg

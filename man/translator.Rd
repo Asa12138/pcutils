@@ -11,10 +11,12 @@ translator(words, mode = "e2z")
 
 \item{mode}{"e2z","z2e"}
 }
+\value{
+vector
+}
 \description{
 translator
 }
 \examples{
-translator(c("love","if"),mode="e2z")
-translator(c("中国欢迎你"),mode="z2e")
+translator(c("love", "if"), mode = "e2z")
 }

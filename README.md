@@ -99,3 +99,4 @@ library(pcutils)
 -   `triangp` plot a triangle plot
 
 **Easter Egg**： `my_cat` will show my little cat named GuoDong.
+

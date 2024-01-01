@@ -16,13 +16,16 @@ trans(df, method = "normalize", margin = 2, ...)
 
 \item{...}{additional}
 }
+\value{
+data.frame
+}
 \description{
 Transfer your data
 }
 \examples{
 
 data(otutab)
-trans(otutab,method="cpm")
+trans(otutab, method = "cpm")
 
 }
 \seealso{

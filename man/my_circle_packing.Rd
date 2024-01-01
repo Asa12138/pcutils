@@ -44,7 +44,7 @@ My Circle packing plot
 \examples{
 \donttest{
 data(otutab)
-cbind(taxonomy,weight=rowSums(otutab))[1:10,]->test
+cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
 my_circle_packing(test)
 }
 

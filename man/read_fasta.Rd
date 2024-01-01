@@ -9,6 +9,9 @@ read_fasta(fasta_file)
 \arguments{
 \item{fasta_file}{file path}
 }
+\value{
+data.frame
+}
 \description{
 Read fasta file
 }

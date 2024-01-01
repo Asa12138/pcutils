@@ -33,7 +33,7 @@ gghuan(
 
 \item{text_params}{parameters parse to \code{\link[ggplot2]{geom_text}}}
 
-\item{text_params2}{parameters parse to \code{\link[ggplot2]{geom_text}}, for name=T & mode=1,3}
+\item{text_params2}{parameters parse to \code{\link[ggplot2]{geom_text}}, for name=TRUE & mode=1,3}
 }
 \value{
 a ggplot
@@ -44,10 +44,12 @@ Plot a doughnut chart
 \examples{
 a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
 gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-gghuan(a,bar_params=list(col="black"),
-    text_params=list(col="#b15928",size=3),
-    text_params2=list(col="#006d2c",size=5))+
-  ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-gghuan(a,mode=2) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-gghuan(a,mode=3) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+gghuan(a,
+    bar_params = list(col = "black"),
+    text_params = list(col = "#b15928", size = 3),
+    text_params2 = list(col = "#006d2c", size = 5)
+) +
+    ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+gghuan(a, mode = 2) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+gghuan(a, mode = 3) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
 }
