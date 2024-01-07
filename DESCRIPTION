@@ -97,14 +97,7 @@ Suggests:
     biomformat,
     ggtree,
     aplot,
-    ape,
-    ggcor,
-    pheatmap,
-    corrplot,
-    ggradar,
-    ggsankey,
-    sankeyD3,
-    SoDA
+    ape
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
