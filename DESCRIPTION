@@ -95,16 +95,7 @@ Suggests:
     rio,
     bookdown,
     sysfonts,
-    showtext,
-    ggcor,
-    ggradar,
-    ggsankey,
-    sankeyD3,
-    biomformat,
-    ggtree,
-    aplot,
-    ape,
-    SoDA
+    showtext
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

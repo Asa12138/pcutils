@@ -16,9 +16,6 @@ how_to_use_parallel(
 \value{
 No return value
 }
-\value{
-No return value
-}
 \description{
 How to use parallel
 }

@@ -20,9 +20,6 @@ tax_wordcloud(
 \value{
 a htmlwidget
 }
-\value{
-a htmlwidget
-}
 \description{
 Word cloud plot
 }

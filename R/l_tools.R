@@ -434,20 +434,20 @@ read.file <- function(file, format = NULL, just_print = FALSE) {
             return(df)
         }
 
-        if (format %in% c("biom")) {
-            if (file.size(file) > 10000) {
-                message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
-                flag <- readline("yes/no(y/n)?")
-                if (tolower(flag) %in% c("yes", "y")) {
-                    lib_ps("biomformat", library = FALSE)
-                    dat.b <- biomformat::read_biom(file)
-                    df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
-                } else {
-                    return(NULL)
-                }
-            }
-            return(df)
-        }
+        # if (format %in% c("biom")) {
+        #     if (file.size(file) > 10000) {
+        #         message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
+        #         flag <- readline("yes/no(y/n)?")
+        #         if (tolower(flag) %in% c("yes", "y")) {
+        #             lib_ps("biomformat", library = FALSE)
+        #             dat.b <- biomformat::read_biom(file)
+        #             df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
+        #         } else {
+        #             return(NULL)
+        #         }
+        #     }
+        #     return(df)
+        # }
 
         if (format %in% c("jpg", "png")) {
             lib_ps("jpeg", "png", "grid", library = FALSE)
