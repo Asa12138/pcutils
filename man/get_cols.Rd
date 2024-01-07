@@ -9,7 +9,7 @@ get_cols(n = 11, pal = "col1")
 \arguments{
 \item{n}{how many colors you need}
 
-\item{pal}{col1~3; or a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}}
+\item{pal}{col1~3; or a vector of colors, you can get from: \code{RColorBrewer::brewer.pal(5,"Set2")} or \code{ggsci::pal_aaas()(5)}}
 }
 \value{
 a vector of n colors

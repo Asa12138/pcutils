@@ -55,8 +55,6 @@ Suggests:
     fitdistrplus,
     ggalluvial,
     gghalves,
-    pheatmap,
-    corrplot,
     ggspatial,
     sf,
     ggimage,
@@ -96,17 +94,17 @@ Suggests:
     bookdown,
     sysfonts,
     showtext,
-    ggcor,
-    ggradar,
-    ggsankey,
-    sankeyD3,
     biomformat,
     ggtree,
     aplot,
     ape,
+    ggcor,
+    pheatmap,
+    corrplot,
+    ggradar,
+    ggsankey,
+    sankeyD3,
     SoDA
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
-ByteCompile: true
-biocViews: DataImport, Software, Visualization
