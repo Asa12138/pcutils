@@ -150,7 +150,6 @@ plotgif <- function(plist, file, mode = "gif") {
 #'
 #' @param n how many colors you need
 #' @param pal col1~3; or a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
-#' @param picture a picture file, colors will be extracted from the picture
 #'
 #' @return a vector of n colors
 #' @export
@@ -162,21 +161,21 @@ plotgif <- function(plist, file, mode = "gif") {
 #' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
 #' scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
 #' }
-get_cols <- function(n = 11, pal = "col1", picture = NULL) {
+get_cols <- function(n = 11, pal = "col1") {
     col1 <- c(
-        "#8dd3c7", "#ffed6f", "#bebada", "#fb8072", "#80b1d3",
+        "#8dd3c7", "#F8CC00", "#bebada", "#fb8072", "#80b1d3",
         "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
         "#ccebc5"
     )
     col2 <- c(
         "#a6cee3", "#78c679", "#c2a5cf", "#ff7f00", "#1f78b4",
-        "#810f7c", "#ffff33", "#006d2c", "#4d4d4d", "#8c510a",
+        "#810f7c", "#F8CC00", "#006d2c", "#4d4d4d", "#8c510a",
         "#d73027", "#7f0000", "#41b6c4", "#e7298a", "#54278f"
     )
     col3 <- c(
         "#a6bce3", "#fb9a99", "#fdbf6f", "#1f78b4", "#b2df8a",
         "#cab2d6", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a",
-        "#ffef00", "#b15928"
+        "#F8CC00", "#b15928"
     )
 
     bluered <- c(
@@ -187,19 +186,19 @@ get_cols <- function(n = 11, pal = "col1", picture = NULL) {
 
     if (length(pal) == 1) pal <- get(pal)
 
-    if (!is.null(picture)) {
-        lib_ps("RImagePalette", "tools", "jpeg", "png", library = FALSE)
-        type <- tools::file_ext(picture)
-        switch(type,
-            "jpg" = {
-                p1 <- jpeg::readJPEG(picture)
-            },
-            "png" = {
-                p1 <- png::readPNG(picture)
-            }
-        )
-        pal <- RImagePalette::image_palette(p1, n = n)
-    }
+    # if (!is.null(picture)) {
+    #     lib_ps("RImagePalette", "tools", "jpeg", "png", library = FALSE)
+    #     type <- tools::file_ext(picture)
+    #     switch(type,
+    #         "jpg" = {
+    #             p1 <- jpeg::readJPEG(picture)
+    #         },
+    #         "png" = {
+    #             p1 <- png::readPNG(picture)
+    #         }
+    #     )
+    #     pal <- RImagePalette::image_palette(p1, n = n)
+    # }
 
     if (length(pal) < n) {
         res <- grDevices::colorRampPalette(pal)(n)
@@ -422,94 +421,126 @@ venn.list <- function(aa, mode = "venn", elements_label = TRUE, ...) {
         return(p)
     }
     if (mode == "flower") {
-        lib_ps("RColorBrewer", "plotrix", library = FALSE)
-        oldpar <- graphics::par(no.readonly = TRUE)
-        on.exit(graphics::par(oldpar))
-
-        otu_num <- length(aa[[1]])
-        core_otu_id <- aa[[1]]
-        for (i in 2:length(aa)) {
-            core_otu_id <- intersect(core_otu_id, aa[[i]])
-            otu_num <- c(otu_num, length(aa[[i]]))
-        }
-        core_num <- length(core_otu_id)
-        otu_num <- otu_num - core_num
-        sample_id <- names(aa)
-        n <- length(sample_id)
-
-        ellipse_col <- grDevices::colorRampPalette(get_cols(10))(n)
-        start <- 90
-        a <- 0.5
-        b <- 2.2
-        r <- 0.5
-        ellipse_col <- ellipse_col
-        circle_col <- "white"
-
-        graphics::par(bty = "n", ann = FALSE, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
-
-        plot(c(0, 10), c(0, 10), type = "n")
-        deg <- 360 / n
-        res <- lapply(1:n, function(t) {
-            plotrix::draw.ellipse(
-                x = 5 + cos((start + deg * (t - 1)) * pi / 180),
-                y = 5 + sin((start + deg * (t - 1)) * pi / 180),
-                col = ellipse_col[t],
-                border = ellipse_col[t],
-                a = 0.6, b = 2.2, angle = deg * (t - 1)
-            )
-
-            graphics::text(
-                x = 5 + 2.5 * cos((start + deg * (t - 1)) * pi / 180),
-                y = 5 + 2.5 * sin((start + deg * (t - 1)) * pi / 180),
-                otu_num[t]
-            )
-
-            if (deg * (t - 1) < 180 && deg * (t - 1) > 0) {
-                graphics::text(
-                    x = 5 + 3.3 * cos((start + deg * (t - 1)) * pi / 180),
-                    y = 5 + 3.3 * sin((start + deg * (t - 1)) * pi / 180),
-                    sample_id[t],
-                    srt = deg * (t - 1) - start,
-                    adj = 1,
-                    cex = 1
-                )
-            } else {
-                graphics::text(
-                    x = 5 + 3.3 * cos((start + deg * (t - 1)) * pi / 180),
-                    y = 5 + 3.3 * sin((start + deg * (t - 1)) * pi / 180),
-                    sample_id[t],
-                    srt = deg * (t - 1) + start,
-                    adj = 0,
-                    cex = 1
-                )
-            }
-        })
-        plotrix::draw.circle(x = 5, y = 5, r = 1.3, col = circle_col, border = NA)
-        graphics::text(x = 5, y = 5, paste("Core:", core_num))
+        venn_flower(aa, ...)
     }
     if (mode == "network") {
-        lib_ps("MetaNet", library = FALSE)
-        MetaNet::venn_net(aa) -> v_net
-        MetaNet::get_v(v_net) -> tmp_v
-        if (!elements_label) {
-            tmp_v$label <- ifelse(tmp_v$v_group == "Group", tmp_v$label, NA)
-            igraph::vertex.attributes(v_net) <- as.list(tmp_v)
-        }
-        plot(v_net, ...)
+        venn_net_internal(aa, elements_label = elements_label, ...)
     }
 }
 
+venn_net_internal <- function(vennlist, elements_label = TRUE, ...) {
+    lib_ps("igraph", library = FALSE)
+    edgelist <- data.frame()
+    groupss <- names(vennlist)
+    for (i in groupss) {
+        if (length(vennlist[[i]] > 0)) edgelist <- rbind(edgelist, data.frame(Group = i, elements = vennlist[[i]]))
+    }
+
+    nodelist1 <- data.frame(name = groupss, v_group = "Group", label = groupss, all_group = groupss)
+    nodelist2 <- data.frame(name = unique(edgelist$elements), v_group = "elements", label = NA)
+    if (elements_label) nodelist2$label <- nodelist2$name
+
+    all_group <- edgelist %>%
+        pcutils::squash("Group") %>%
+        dplyr::rename(name = "elements", all_group = "Group")
+    nodelist2 <- dplyr::left_join(nodelist2, all_group, by = "name")
+
+    nice_size <- ceiling(60 / sqrt(nrow(nodelist1) + nrow(nodelist2))) + 1
+    nodelist1$size <- 1.5 * nice_size
+    nodelist2$size <- 0.5 * nice_size
+
+    nodelist <- rbind(nodelist1, nodelist2)
+
+    tmp_col <- paste0(nodelist$v_group, "-", nodelist$all_group)
+    nodelist$color <- tidai(tmp_col, pcutils::get_cols(nlevels(factor(tmp_col)), "col3"), fac = TRUE)
+    nodelist$label.cex <- 0.08 * nodelist$size
+    nodelist$label.color <- "black"
+
+    edgelist$color <- tidai(edgelist$Group, unique(nodelist$color), fac = TRUE)
+    edgelist$curved <- 0.3
+    go <- igraph::graph_from_data_frame(edgelist, directed = FALSE, vertices = nodelist)
+
+    igraph::plot.igraph(x = go, ...)
+}
+
+venn_flower <- function(aa) {
+    lib_ps("RColorBrewer", "plotrix", library = FALSE)
+    oldpar <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(oldpar))
+
+    otu_num <- length(aa[[1]])
+    core_otu_id <- aa[[1]]
+    for (i in 2:length(aa)) {
+        core_otu_id <- intersect(core_otu_id, aa[[i]])
+        otu_num <- c(otu_num, length(aa[[i]]))
+    }
+    core_num <- length(core_otu_id)
+    otu_num <- otu_num - core_num
+    sample_id <- names(aa)
+    n <- length(sample_id)
+
+    ellipse_col <- grDevices::colorRampPalette(get_cols(10))(n)
+    start <- 90
+    a <- 0.5
+    b <- 2.2
+    r <- 0.5
+    ellipse_col <- ellipse_col
+    circle_col <- "white"
+
+    graphics::par(bty = "n", ann = FALSE, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
+
+    plot(c(0, 10), c(0, 10), type = "n")
+    deg <- 360 / n
+    res <- lapply(1:n, function(t) {
+        plotrix::draw.ellipse(
+            x = 5 + cos((start + deg * (t - 1)) * pi / 180),
+            y = 5 + sin((start + deg * (t - 1)) * pi / 180),
+            col = ellipse_col[t],
+            border = ellipse_col[t],
+            a = 0.6, b = 2.2, angle = deg * (t - 1)
+        )
+
+        graphics::text(
+            x = 5 + 2.5 * cos((start + deg * (t - 1)) * pi / 180),
+            y = 5 + 2.5 * sin((start + deg * (t - 1)) * pi / 180),
+            otu_num[t]
+        )
+
+        if (deg * (t - 1) < 180 && deg * (t - 1) > 0) {
+            graphics::text(
+                x = 5 + 3.3 * cos((start + deg * (t - 1)) * pi / 180),
+                y = 5 + 3.3 * sin((start + deg * (t - 1)) * pi / 180),
+                sample_id[t],
+                srt = deg * (t - 1) - start,
+                adj = 1,
+                cex = 1
+            )
+        } else {
+            graphics::text(
+                x = 5 + 3.3 * cos((start + deg * (t - 1)) * pi / 180),
+                y = 5 + 3.3 * sin((start + deg * (t - 1)) * pi / 180),
+                sample_id[t],
+                srt = deg * (t - 1) + start,
+                adj = 0,
+                cex = 1
+            )
+        }
+    })
+    plotrix::draw.circle(x = 5, y = 5, r = 1.3, col = circle_col, border = NA)
+    graphics::text(x = 5, y = 5, paste("Core:", core_num))
+}
 
 #' @param otutab table
 #' @param mode "venn","venn2","upset","flower"
+#' @param elements_label logical, show elements label in network?
 #' @param ... add
 #' @return a plot
 #' @method venn data.frame
 #' @rdname venn
 #' @exportS3Method
-venn.data.frame <- function(otutab, mode = "venn", ...) {
+venn.data.frame <- function(otutab, mode = "venn", elements_label = TRUE, ...) {
     venn_cal(otutab) -> aa
-    venn.list(aa, mode = mode)
+    venn.list(aa, mode = mode, elements_label = elements_label)
 }
 
 
@@ -521,7 +552,7 @@ pre_stack_data <- function(otutab, metadata = NULL, group = "Group",
                            stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
                            style = c("group", "sample")[1]) {
     lib_ps("reshape2", "dplyr", library = FALSE)
-    variable <- Taxonomy <- value <- NULL
+    variable <- Taxonomy <- value <- n <- NULL
     if (is.numeric(metadata[, group, drop = TRUE])) warning("Recommend categorical variables")
     # prepare otutab and sampFile
     if (!is.null(metadata)) {
@@ -666,7 +697,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     if (get_data) {
         return(data_all)
     }
-
+    variable <- value <- Taxonomy <- Taxonomy <- NULL
     # plot
     bar_params <- update_param(list(width = 0.7, position = "stack"), bar_params)
     flow_params <- update_param(list(lode.guidance = "frontback", color = "darkgray"), flow_params)
@@ -764,7 +795,7 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
     if (get_data) {
         return(data_all)
     }
-
+    variable <- value <- Taxonomy <- Taxonomy <- NULL
     # plot
     bar_params <- update_param(NULL, bar_params)
     format_params <- update_param(list(digits = 2), format_params)
@@ -1272,16 +1303,24 @@ my_lm <- function(tab, var, metadata = NULL, lm_color = "red", ...) {
 
 #' Plot china map
 #'
-#' @param dir where to put the china.json file
+#' @param china_shp china.json file
+#' @param download_dir download_dir, "pcutils_temp"
 #'
 #' @return a ggplot
 #' @export
 #' @import ggplot2
-china_map <- function(dir = "~/database/") {
+china_map <- function(china_shp = NULL, download_dir = "pcutils_temp") {
     name <- NULL
     lib_ps("ggspatial", "sf", library = FALSE)
-    china_shp <- paste0(dir, "china.json")
-    if (!file.exists(china_shp)) utils::download.file("https://gitcode.net/mirrors/lyhmyd1211/geomapdata_cn/-/raw/master/china.json?inline=false", china_shp)
+
+    if (is.null(china_shp)) {
+        china_shp <- file.path(download_dir, "china.json")
+        china_shp_url <- "https://asa12138.github.io/FileList/china.json"
+        download2(china_shp_url, china_shp)
+    }
+
+    if (!file.exists(china_shp)) stop("china_shp don't exsit.")
+
     china <- sf::read_sf(china_shp)
 
     ggplot() +
@@ -1342,6 +1381,8 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
                        shp_file = NULL, crs = NULL, xlim = NULL, ylim = NULL,
                        add_scale = TRUE, scale_params = list(),
                        add_north_arrow = TRUE, north_arrow_params = list()) {
+    long <- lat <- group <- Longitude <- Latitude <- Group <- label <- NULL
+
     metadata <- data.frame(metadata, check.names = FALSE)
     if (is.null(group)) {
         metadata$Group <- "Sample"
@@ -1644,7 +1685,6 @@ my_sunburst <- function(test, ...) {
 #' My Treemap plot
 #'
 #' @param test a three-columns dataframe with hierarchical structure
-#' @param d3 choose 3D
 #' @param ... look for parameters in \code{\link[plotly]{plot_ly}}
 #'
 #' @return htmlwidget
@@ -1656,7 +1696,7 @@ my_sunburst <- function(test, ...) {
 #' cbind(taxonomy, num = rowSums(otutab))[1:10, c(4, 7, 8)] -> test
 #' my_treemap(test)
 #' }
-my_treemap <- function(test, d3 = TRUE, ...) {
+my_treemap <- function(test, ...) {
     test <- as.data.frame(test)
     # if(length(unique(test[,1]))>1){
     #   test=cbind("Root"=" ",test)
@@ -1688,11 +1728,11 @@ my_treemap <- function(test, d3 = TRUE, ...) {
         # 定义各分类的值（一一对应）
         vSize = "weight", type = "index"
     )
-    if (d3) {
-        lib_ps("d3treeR", library = FALSE)
-        fig <- d3treeR::d3tree2(fig, rootname = colnames(test)[1])
-        fig
-    }
+    # if (d3) {
+    #     lib_ps("d3treeR", library = FALSE)
+    #     fig <- d3treeR::d3tree2(fig, rootname = colnames(test)[1])
+    #     fig
+    # }
 }
 
 #' My Voronoi treemap plot
@@ -1761,142 +1801,154 @@ my_synteny <- function() {
     read.file("chromosome.svg")
 }
 
-#' Heatmap by ggplot
+
+#' My circo plot
+#
+#' @param df dataframe with three column
+#' @param reorder reorder by number?
+#' @param pal a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
+#' @param mode "circlize","chorddiag"
+#' @param ... \code{\link[circlize]{chordDiagram}}
 #'
-#' @param otutab otutab
-#' @param pal the main color pal, a vector of colors
-#' @param scale "none", "row", "column"
-#' @param row_annotation row annotation
-#' @param col_annotation column annotation
-#' @param rowname show row names?
-#' @param colname show column names?
-#' @param row_cluster cluster the row?
-#' @param col_cluster cluster the column?
-#' @param annotation_pal the annotation color pal, a list. e.g. list(Group=c("red","blue"))
-#'
-#' @return a ggplot
+#' @return chordDiagram
 #' @export
 #'
 #' @examples
+#' \donttest{
+#' data.frame(
+#'     a = c("a", "a", "b", "b", "c"),
+#'     b = c("a", LETTERS[2:5]), c = 1:5
+#' ) %>% my_circo(mode = "circlize")
 #' data(otutab)
-#' ggheatmap(otutab[1:30, ],
-#'     scale = "row", row_annotation = otutab[1:30, 1:2],
-#'     col_annotation = metadata[, c(2, 4)]
-#' )
-ggheatmap <- function(otutab, pal = NULL, scale = "none",
-                      rowname = TRUE, colname = TRUE,
-                      row_cluster = TRUE, col_cluster = TRUE,
-                      row_annotation = NULL, col_annotation = NULL, annotation_pal = NULL) {
-    lib_ps("ggnewscale", "aplot", "reshape2", "ggtree", "ape", library = FALSE)
-
-    if (is.null(pal)) {
-        pal <- get_cols(pal = "bluered")
-    } else if (length(is.ggplot.color(pal)) < 2) stop("pal is wrong!")
-
-    otutab -> d
-    if (scale == "row") {
-        d <- trans(d, method = "standardize", margin = 1)
-    } else if (scale == "column") d <- trans(d, method = "standardize", margin = 2)
-
-    rownames(d) -> d$otu
-
-    dd <- reshape2::melt(d, id.vars = "otu", variable.name = "sample")
-
-    p <- ggplot(dd, aes(sample, otu, fill = value)) +
-        geom_tile() +
-        scale_fill_gradientn(colours = pal) +
-        scale_y_discrete(position = "right") +
-        theme_minimal() +
-        xlab(NULL) +
-        ylab(NULL)
-
-    if (!rowname) {
-        p <- p + theme(
-            axis.text.y = element_blank(),
-            axis.ticks.y = element_blank()
-        )
-    }
-    if (!colname) {
-        p <- p + theme(
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank()
-        )
+#' cbind(taxonomy, num = rowSums(otutab))[1:10, c(3, 7, 8)] -> test
+#' my_circo(test)
+#' }
+#'
+my_circo <- function(df, reorder = TRUE, pal = NULL, mode = c("circlize", "chorddiag")[1], ...) {
+    mode <- match.arg(mode, c("circlize", "chorddiag"))
+    colnames(df) <- c("from", "to", "count")
+    lib_ps("reshape2", "tibble", library = FALSE)
+    if (mode == "chorddiag") {
+        # need a square matrix
+        all_g <- unique(df$from, df$to)
+        expand.grid(all_g, all_g) -> tab
+        df <- left_join(tab, df, by = c("Var1" = "from", "Var2" = "to"))
+        colnames(df) <- c("from", "to", "count")
     }
 
-    if (!is.null(row_annotation)) {
-        ca1 <- row_annotation
-        rownames(ca1) -> ca1$Id
-        pc1 <- ggplot()
-        for (i in 1:(ncol(ca1) - 1)) {
-            tmp <- ca1[, c(i, ncol(ca1))]
-            pd1 <- reshape2::melt(tmp, id.vars = "Id", variable.name = "sample")
-            if (i > 1) pc1 <- pc1 + ggnewscale::new_scale_fill()
-            pc1 <- pc1 +
-                geom_tile(data = pd1, aes(y = Id, x = sample, fill = value)) +
-                labs(fill = colnames(ca1)[i])
-            if (!is.null(annotation_pal[[colnames(ca1)[i]]])) {
-                if (is.numeric(pd1$value)) {
-                    pc1 <- pc1 + scale_fill_gradientn(colours = annotation_pal[[colnames(ca1)[i]]])
-                } else {
-                    pc1 <- pc1 + scale_fill_manual(values = annotation_pal[[colnames(ca1)[i]]])
-                }
-            }
-        }
-        pc1 <- pc1 +
-            theme_minimal() +
-            theme(
-                axis.text.y = element_blank(),
-                axis.ticks.y = element_blank()
-            ) +
-            xlab(NULL) + ylab(NULL)
-        p <- p %>% aplot::insert_left(pc1, width = 0.05 * (ncol(ca1) - 1))
+    tab <- reshape2::dcast(df, from ~ to, value.var = "count") %>%
+        tibble::column_to_rownames("from") %>%
+        as.matrix()
+    tab[is.na(tab)] <- 0
+
+    if (reorder) {
+        colSums(tab) %>%
+            sort(decreasing = TRUE) %>%
+            names() -> s_name
+        tab <- tab[, s_name]
+        rowSums(tab) %>%
+            sort(decreasing = TRUE) %>%
+            names() -> s_name
+        tab <- tab[s_name, ]
     }
 
-    if (row_cluster) {
-        hclust(dist(otutab)) %>% ape::as.phylo() -> a
-        p <- p %>% aplot::insert_left(ggtree::ggtree(a, branch.length = "none"), width = .1)
+    if (is.null(pal)) pal <- get_cols(length(unique(c(colnames(tab), rownames(tab)))))
+
+    if (mode == "circlize") {
+        lib_ps("circlize", library = FALSE)
+        circlize::chordDiagram(tab, grid.col = pal, ...)
     }
-
-    if (!is.null(col_annotation)) {
-        ca <- col_annotation
-        rownames(ca) -> ca$Id
-
-        pc <- ggplot()
-        for (i in 1:(ncol(ca) - 1)) {
-            tmp <- ca[, c(i, ncol(ca))]
-            pd <- reshape2::melt(tmp, id.vars = "Id", variable.name = "sample")
-
-            if (i > 1) pc <- pc + ggnewscale::new_scale_fill()
-            pc <- pc +
-                geom_tile(data = pd, aes(x = Id, y = sample, fill = value)) +
-                labs(fill = colnames(ca)[i]) +
-                scale_y_discrete(position = "right")
-            if (!is.null(annotation_pal[[colnames(ca)[i]]])) {
-                if (is.numeric(pd$value)) {
-                    pc <- pc + scale_fill_gradientn(colours = annotation_pal[[colnames(ca)[i]]])
-                } else {
-                    pc <- pc + scale_fill_manual(values = annotation_pal[[colnames(ca)[i]]])
-                }
-            }
-        }
-        pc <- pc +
-            theme_minimal() +
-            theme(
-                axis.text.x = element_blank(),
-                axis.ticks.x = element_blank()
-            ) +
-            xlab(NULL) + ylab(NULL)
-
-        p <- p %>% aplot::insert_top(pc, height = 0.05 * (ncol(ca) - 1))
-    }
-    if (col_cluster) {
-        hclust(dist(t(otutab))) %>% ape::as.phylo() -> b
-        p <- p %>% aplot::insert_top(ggtree::ggtree(b, branch.length = "none") +
-            ggtree::layout_dendrogram(), height = .1)
-    }
-    return(p)
+    # if (mode == "chorddiag") {
+    #     lib_ps("chorddiag", library = FALSE)
+    #     chorddiag::chorddiag(tab, groupedgeColor = pal, ...)
+    # }
 }
 
+
+#' My Circle packing plot
+#'
+#' @param test a dataframe with hierarchical structure
+#' @param anno annotation tablewith rowname for color or fill.
+#' @param mode 1~2
+#' @param Group fill for mode2
+#' @param Score color for mode1
+#' @param label the labels column
+#' @param show_level_name show which level name? a vector contains some column names.
+#' @param show_tip_label show_tip_label, logical
+#' @param str_width str_width
+#'
+#' @return ggplot
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data(otutab)
+#' cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
+#' my_circle_packing(test)
+#' }
+#'
+my_circle_packing <- function(test, anno = NULL, mode = 1,
+                              Group = "level", Score = "weight", label = "label",
+                              show_level_name = "all", show_tip_label = TRUE, str_width = 10) {
+    weight <- level <- Level <- NULL
+    lib_ps("MetaNet", "ggraph", library = FALSE)
+    test <- as.data.frame(test)
+    if (length(unique(test[, 1])) > 1) {
+        test <- cbind("Root" = " ", test)
+    }
+    nc <- ncol(test)
+    if (nc < 3) stop("as least 3-columns dataframe")
+    if (!is.numeric(test[, nc])) stop("the last column must be numeric")
+    if (any(test[, nc] < 0)) stop("the weight must be bigger than 0.")
+
+    link <- df2link(test, fun = sum)
+    nodes <- link$nodes
+    links <- link$links
+    ttt <- igraph::graph_from_data_frame(d = as.data.frame(links), vertices = nodes)
+
+    tmp_v <- as.data.frame(igraph::vertex.attributes(ttt))
+    if (!is.null(anno)) {
+        if (!"name" %in% colnames(anno)) {
+            anno$name <- rownames(anno)
+        }
+        tmp_v <- dplyr::left_join(tmp_v, anno, by = "name", suffix = c(".x", ""))
+    }
+
+    tmp_v$Level <- factor(tmp_v$level, levels = colnames(test)[-ncol(test)])
+    tmp_v$label <- tmp_v$name
+    tmp_v$label <- ifelse(is.na(tmp_v[, label]), tmp_v$label, tmp_v[, label])
+
+    if (identical(show_level_name, "all")) show_level_name <- colnames(test)[seq_len(ncol(test) - 2)]
+    if (show_tip_label) show_level_name <- c(show_level_name, colnames(test)[ncol(test) - 1])
+    tmp_v$label <- ifelse(tmp_v$level %in% show_level_name, tmp_v$label, NA)
+
+    tmp_v$Group <- ifelse(tmp_v$level == colnames(test)[ncol(test) - 1], tmp_v[, Group], NA)
+    tmp_v$Score <- ifelse(tmp_v$level == colnames(test)[ncol(test) - 1], tmp_v[, Score], NA)
+
+    as.list(tmp_v) -> igraph::vertex.attributes(ttt)
+
+    if (mode == 1) {
+        p <- ggraph::ggraph(ttt, layout = "circlepack", weight = weight) +
+            ggraph::geom_node_circle(aes(fill = Score)) +
+            scale_fill_continuous(na.value = NA)
+    }
+    if (mode == 2) {
+        p <- ggraph::ggraph(ttt, layout = "circlepack", weight = weight) +
+            ggraph::geom_node_circle(aes(fill = Group)) +
+            scale_fill_discrete(na.translate = FALSE)
+    }
+    p <- p + ggraph::geom_node_circle(aes(color = Level)) +
+        ggraph::geom_node_text(aes(
+            label = stringr::str_wrap(label, width = str_width), color = Level,
+            size = weight
+        ), show.legend = FALSE) +
+        # ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=level,
+        #                            filter=leaf,size = weight),show.legend = FALSE)+
+        # ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=level,
+        #                            filter=!leaf,size = weight),show.legend = FALSE,nudge_y = 0.5)+
+        theme_void()
+    p
+}
 
 # ========Easter eggs=======
 
@@ -2033,52 +2085,49 @@ DNA_plot <- function(col_DNA = "#377EB8", col_ATCG = c("#7FC97F", "#FB8072", "#F
 #'
 #' @return A ggplot object representing the Chunlian
 #' @export
-chunlian <- function(words, bg_size = 20, bg_shape = 22, bg_fill = "red2", text_size = 10, text_params= list(), font_file= NULL, download_dir= "pcutils_temp") {
-    lib_ps("sysfonts","showtext",library = FALSE)
-    if(is.null(font_file)){
-        font_file=file.path(download_dir,"SanJiChunLianZiTiJian.ttf")
-        if(!file.exists(font_file)){
-            chunlian_font_url <- "https://asa12138.github.io/FileList/SanJiChunLianZiTiJian.ttf"
-            # Download and unzip the font file
-            ori_time <- getOption("timeout")
-            on.exit(options(timeout = ori_time))
+chunlian <- function(words = NULL, bg_size = 20, bg_shape = 22, bg_fill = "red2", text_size = 10, text_params = list(), font_file = NULL, download_dir = "pcutils_temp") {
+    if (identical(words, 1)) {
+        words <- c("\u6295\u5565\u4e2d\u5565", "SCI\u5929\u5929\u6709\u4e00\u533a", "CNS\u6708\u6708\u6709\u5c01\u9762")
+    } else if (identical(words, 2)) words <- c("\u79d1\u7814\u987a\u5229", "\u6570\u636e\u5206\u6790\u597d\u5230\u7206", "\u6587\u7ae0\u6295\u54ea\u54ea\u90fd\u8981")
 
-            dir.create(download_dir, recursive = TRUE)
-            options(timeout = 300)
-            tryCatch(expr = {
-                download.file(chunlian_font_url, destfile = font_file)
-            }, error = function(e) {
-                stop("Try download yourself from ", chunlian_font_url)
-            })
-        }
+    lib_ps("sysfonts", "showtext", library = FALSE)
+
+    if (is.null(font_file)) {
+        font_file <- file.path(download_dir, "SanJiChunLianZiTiJian.ttf")
+        chunlian_font_url <- "https://asa12138.github.io/FileList/SanJiChunLianZiTiJian.ttf"
+
+        download2(chunlian_font_url, font_file)
     }
 
-    if(!file.exists(font_file))stop("font_file don't exsit.")
+    if (!file.exists(font_file)) stop("font_file don't exsit.")
 
     showtext::showtext_auto()
     # Add the font to showtext
     sysfonts::font_add("chunlian", font_file)
 
-    hengpi <- strsplit(words[1], "")[[1]]
-    hengpi_df <- data.frame(y = 1, x = seq_along(hengpi), label = hengpi)
+    words <- words[1:3]
+    words[is.na(words)] <- ""
 
-    if(length(words)>1){
-        shanglian <- strsplit(words[2], "")[[1]]
-        xialian <- strsplit(words[3], "")[[1]]
-        shanglian_df <- data.frame(x = 0, y = -seq_along(shanglian) + 0.5, label = shanglian)
-        xialian_df <- data.frame(x = nrow(hengpi_df) + 1, y = -seq_along(xialian) + 0.5, label = xialian)
-    }
-    else shanglian_df=xialian_df=NULL
+    hengpi_df <- shanglian_df <- xialian_df <- data.frame()
+    hengpi <- strsplit(words[1], "")[[1]]
+    if (length(hengpi) > 0) hengpi_df <- data.frame(y = 1, x = seq_along(hengpi), label = hengpi)
+
+    shanglian <- strsplit(words[2], "")[[1]]
+    xialian <- strsplit(words[3], "")[[1]]
+    if (length(shanglian) > 0) shanglian_df <- data.frame(x = 0, y = -seq_along(shanglian) + 0.5, label = shanglian)
+    if (length(xialian) > 0) xialian_df <- data.frame(x = nrow(hengpi_df) + 1, y = -seq_along(xialian) + 0.5, label = xialian)
 
     dat <- rbind(hengpi_df, shanglian_df, xialian_df)
 
-    p=ggplot(dat, aes(x = x, y = y)) +
-        geom_point(size = bg_size, shape = bg_shape, fill = bg_fill,color="NA") +
-        do.call(geom_text,update_param(list(mapping=aes(label = label),
-                                            size = text_size, family = "chunlian"),text_params))+
+    p <- ggplot(dat, aes(x = x, y = y)) +
+        geom_point(size = bg_size, shape = bg_shape, fill = bg_fill, color = "NA") +
+        do.call(geom_text, update_param(list(
+            mapping = aes(label = label),
+            size = text_size, family = "chunlian"
+        ), text_params)) +
         xlim(range(c(dat$x - 1, dat$x + 1))) +
         ylim(range(c(dat$y - 1, dat$y + 1))) +
-        theme_void() + coord_fixed()
+        theme_void() +
+        coord_fixed()
     p
 }
-

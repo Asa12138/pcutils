@@ -85,6 +85,19 @@ copy_vector <- function(vec) {
     message("copy done, just Ctrl+V")
 }
 
+#' Copy a data.frame
+#'
+#' @param df a R data.frame object
+#'
+#' @export
+#' @return No return value
+copy_df <- function(df) {
+    lib_ps("rio", library = FALSE)
+    rio::export(df, file = "clipboard")
+    message("copy done, just Ctrl+V")
+}
+
+
 #' Change factor levels
 #'
 #' @param x vector
@@ -108,6 +121,36 @@ change_fac_lev <- function(x, levels = NULL, last = FALSE) {
         ordervec <- factor(ordervec, levels = shunxu)
     }
     ordervec
+}
+
+#' Replace a vector by named vector
+#' @param x a vector need to be replaced
+#' @param y named vector
+#' @param fac consider the factor?
+#'
+#' @return vector
+#' @export
+#' @examples
+#' tidai(c("a", "a", "b"), c("a" = "red", b = "blue"))
+#' tidai(c("a", "a", "b", "c"), c("red", "blue"))
+tidai <- function(x, y, fac = FALSE) {
+    if (is.null(y)) {
+        return(x)
+    }
+    x <- as.character(x)
+    tmp <- y
+    if (is.null(names(tmp))) {
+        tmp <- rep(unique(tmp), len = length(unique(x)))
+        if (fac) {
+            names(tmp) <- levels(factor(x))
+        } else {
+            names(tmp) <- unique(x)
+        }
+    }
+    if (is.null(names(x))) {
+        return(unname(tmp[x]))
+    }
+    return(setNames(unname(tmp[x]), names(x)))
 }
 
 #' Update the parameters
@@ -184,7 +227,7 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
 
     p_list <- c(p_list, ...)
     for (p in p_list) {
-        if (!requireNamespace(p)) {
+        if (!requireNamespace(p, quietly = TRUE)) {
             if (!all_yes) {
                 message(paste0(p, ": this package haven't install, should install?"))
                 flag <- readline("yes/no(y/n)?")
@@ -202,21 +245,21 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
                 stop(paste0("exit, because '", p, "' need to install"))
             }
 
-            if (!requireNamespace(p)) {
+            if (!requireNamespace(p, quietly = TRUE)) {
                 if (!all_yes) {
                     message(paste0(p, " is not available in CRAN, try Bioconductor?"))
                     flag <- readline("yes/no(y/n)?")
                 }
 
                 if (tolower(flag) %in% c("yes", "y")) {
-                    if (!requireNamespace("BiocManager")) utils::install.packages("BiocManager")
+                    if (!requireNamespace("BiocManager", quietly = TRUE)) utils::install.packages("BiocManager")
                     BiocManager::install(p)
                 } else {
                     stop(paste0("exit, because '", p, "' need to install"))
                 }
             }
 
-            if (!requireNamespace(p)) {
+            if (!requireNamespace(p, quietly = TRUE)) {
                 stop("\nplease try other way (github...) to install ", p)
             }
         }
@@ -593,7 +636,41 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
     }
 }
 
-# ======= Network ========
+# ======= Web ========
+
+#' Download File
+#'
+#' This function downloads a file from the provided URL and saves it to the specified location.
+#'
+#' @param file_path The full path to the file.
+#' @param url The URL from which to download the file.
+#' @param timeout timeout, 300s
+#' @param force FALSE, if TRUE, overwrite existed file
+#'
+#' @return NULL
+#' @export
+#'
+download2 <- function(url, file_path, timeout = 300, force = FALSE) {
+    if (file.exists(file_path) & !force) {
+        return(invisible())
+    } else {
+        ori_time <- getOption("timeout")
+        on.exit(options(timeout = ori_time))
+
+        dir.create(dirname(file_path), recursive = TRUE)
+        options(timeout = timeout)
+        # Download the file
+        tryCatch(
+            expr = {
+                download.file(url, destfile = file_path)
+            },
+            error = function(e) {
+                stop("Try downloading yourself from ", url)
+            }
+        )
+    }
+}
+
 
 #' Download supplemental materials according to a doi
 #'

@@ -292,172 +292,138 @@ my_sankey <- function(test, mode = c("sankeyD3", "ggsankey"), topN = "all", spac
     }
 }
 
-#' My Network plot
+#' Heatmap by ggplot
 #'
-#' @param test a dataframe with hierarchical structure
-#' @param vertex_anno vertex annotation table
-#' @param vertex_group vertex_group
-#' @param vertex_class vertex_class
-#' @param vertex_size vertex_size
-#' @param ... look for parameters in \code{\link[MetaNet]{c_net_plot}}
+#' @param otutab otutab
+#' @param pal the main color pal, a vector of colors
+#' @param scale "none", "row", "column"
+#' @param row_annotation row annotation
+#' @param col_annotation column annotation
+#' @param rowname show row names?
+#' @param colname show column names?
+#' @param row_cluster cluster the row?
+#' @param col_cluster cluster the column?
+#' @param annotation_pal the annotation color pal, a list. e.g. list(Group=c("red","blue"))
 #'
-#' @return metanet
+#' @return a ggplot
 #' @export
 #'
 #' @examples
-#' \donttest{
 #' data(otutab)
-#' cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
-#' my_network(test)
-#' }
-my_network <- function(test, vertex_anno = NULL,
-                       vertex_group = "v_group", vertex_class = "v_class",
-                       vertex_size = "size", ...) {
-    lib_ps("MetaNet", library = FALSE)
-    test <- as.data.frame(test)
-    nc <- ncol(test)
-    if (nc < 3) stop("as least 3-columns dataframe")
-    if (!is.numeric(test[, nc])) stop("the last column must be numeric")
-    ttt <- MetaNet::df2net(test)
-    ttt <- MetaNet::c_net_set(ttt, vertex_anno,
-        vertex_group = vertex_group,
-        vertex_class = vertex_class, vertex_size = vertex_size
-    )
-    message("For more details for network visualization, please refer to MetaNet ('https://github.com/Asa12138/MetaNet').")
-    plot(ttt, ...)
-}
+#' ggheatmap(otutab[1:30, ],
+#'     scale = "row", row_annotation = otutab[1:30, 1:2],
+#'     col_annotation = metadata[, c(2, 4)]
+#' )
+ggheatmap <- function(otutab, pal = NULL, scale = "none",
+                      rowname = TRUE, colname = TRUE,
+                      row_cluster = TRUE, col_cluster = TRUE,
+                      row_annotation = NULL, col_annotation = NULL, annotation_pal = NULL) {
+    lib_ps("ggnewscale", "aplot", "reshape2", "ggtree", "ape", library = FALSE)
+    sample <- otu <- value <- Id <- NULL
+    if (is.null(pal)) {
+        pal <- get_cols(pal = "bluered")
+    } else if (length(is.ggplot.color(pal)) < 2) stop("pal is wrong!")
 
-#' My Circle packing plot
-#'
-#' @param test a dataframe with hierarchical structure
-#' @param anno annotation table for color or fill.
-#' @param mode 1~2
-#' @param Group fill for mode2
-#' @param Score color for mode1
-#' @param label the labels column
-#' @param show_level_name show which level name? a vector contains some column names.
-#' @param show_tip_label show_tip_label, logical
-#' @param str_width str_width
-#'
-#' @return ggplot
-#' @export
-#'
-#' @examples
-#' \donttest{
-#' data(otutab)
-#' cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
-#' my_circle_packing(test)
-#' }
-#'
-my_circle_packing <- function(test, anno = NULL, mode = 1,
-                              Group = "v_group", Score = "weight", label = "label",
-                              show_level_name = "all", show_tip_label = TRUE, str_width = 10) {
-    lib_ps("MetaNet", "ggraph", library = FALSE)
-    test <- as.data.frame(test)
-    if (length(unique(test[, 1])) > 1) {
-        test <- cbind("Root" = " ", test)
+    otutab -> d
+    if (scale == "row") {
+        d <- trans(d, method = "standardize", margin = 1)
+    } else if (scale == "column") d <- trans(d, method = "standardize", margin = 2)
+
+    rownames(d) -> d$otu
+
+    dd <- reshape2::melt(d, id.vars = "otu", variable.name = "sample")
+
+    p <- ggplot(dd, aes(x = sample, y = otu, fill = value)) +
+        geom_tile() +
+        scale_fill_gradientn(colours = pal) +
+        scale_y_discrete(position = "right") +
+        theme_minimal() +
+        xlab(NULL) +
+        ylab(NULL)
+
+    if (!rowname) {
+        p <- p + theme(
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank()
+        )
     }
-    nc <- ncol(test)
-    if (nc < 3) stop("as least 3-columns dataframe")
-    if (!is.numeric(test[, nc])) stop("the last column must be numeric")
-    if (any(test[, nc] < 0)) stop("the weight must be bigger than 0.")
-    ttt <- MetaNet::df2net(test)
-
-    ttt <- MetaNet::c_net_set(ttt, anno)
-
-    tmp_v <- MetaNet::get_v(ttt)
-    tmp_v$Level <- factor(tmp_v$v_class, levels = colnames(test)[-ncol(test)])
-    tmp_v$label <- ifelse(is.na(tmp_v[, label]), tmp_v$label, tmp_v[, label])
-
-    if (identical(show_level_name, "all")) show_level_name <- colnames(test)[seq_len(ncol(test) - 2)]
-    if (show_tip_label) show_level_name <- c(show_level_name, colnames(test)[ncol(test) - 1])
-    tmp_v$label <- ifelse(tmp_v$level %in% show_level_name, tmp_v$label, NA)
-
-    tmp_v$Group <- ifelse(tmp_v$Level == colnames(test)[ncol(test) - 1], tmp_v[, Group], NA)
-    tmp_v$Score <- ifelse(tmp_v$Level == colnames(test)[ncol(test) - 1], tmp_v[, Score], NA)
-
-    as.list(tmp_v) -> igraph::vertex.attributes(ttt)
-
-    if (mode == 1) {
-        p <- ggraph::ggraph(ttt, layout = "circlepack", weight = weight) +
-            ggraph::geom_node_circle(aes(fill = Score)) +
-            scale_fill_continuous(na.value = NA)
-    }
-    if (mode == 2) {
-        p <- ggraph::ggraph(ttt, layout = "circlepack", weight = weight) +
-            ggraph::geom_node_circle(aes(fill = Group)) +
-            scale_fill_discrete(na.translate = FALSE)
-    }
-    p <- p + ggraph::geom_node_circle(aes(color = Level)) +
-        ggraph::geom_node_text(aes(
-            label = stringr::str_wrap(label, width = str_width), color = Level,
-            size = weight
-        ), show.legend = FALSE) +
-        # ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=Level,
-        #                            filter=leaf,size = weight),show.legend = FALSE)+
-        # ggraph::geom_node_text(aes(label=stringr::str_wrap(label,width = str_width),color=Level,
-        #                            filter=!leaf,size = weight),show.legend = FALSE,nudge_y = 0.5)+
-        theme_void()
-    p
-}
-
-
-#' My circo plot
-#
-#' @param df dataframe with three column
-#' @param reorder reorder by number?
-#' @param pal a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
-#' @param mode "circlize","chorddiag"
-#' @param ... \code{\link[circlize]{chordDiagram}}
-#'
-#' @return chordDiagram
-#' @export
-#'
-#' @examples
-#' \donttest{
-#' data.frame(a = c("a", "a", "b", "b", "c"),
-#'            b = c("a", LETTERS[2:5]), c = 1:5) %>% my_circo(mode = "circlize")
-#' data(otutab)
-#' cbind(taxonomy, num = rowSums(otutab))[1:10, c(3, 7, 8)] -> test
-#' my_circo(test)
-#' }
-#'
-my_circo <- function(df, reorder = TRUE, pal = NULL, mode = c("circlize", "chorddiag")[1], ...) {
-    mode <- match.arg(mode, c("circlize", "chorddiag"))
-    colnames(df) <- c("from", "to", "count")
-    lib_ps("reshape2", "tibble", library = FALSE)
-    if (mode == "chorddiag") {
-        # need a square matrix
-        all_g <- unique(df$from, df$to)
-        expand.grid(all_g, all_g) -> tab
-        df <- left_join(tab, df, by = c("Var1" = "from", "Var2" = "to"))
-        colnames(df) <- c("from", "to", "count")
+    if (!colname) {
+        p <- p + theme(
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank()
+        )
     }
 
-    tab <- reshape2::dcast(df, from ~ to, value.var = "count") %>%
-        tibble::column_to_rownames("from") %>%
-        as.matrix()
-    tab[is.na(tab)] <- 0
-
-    if (reorder) {
-        colSums(tab) %>%
-            sort(decreasing = TRUE) %>%
-            names() -> s_name
-        tab <- tab[, s_name]
-        rowSums(tab) %>%
-            sort(decreasing = TRUE) %>%
-            names() -> s_name
-        tab <- tab[s_name, ]
+    if (!is.null(row_annotation)) {
+        ca1 <- row_annotation
+        rownames(ca1) -> ca1$Id
+        pc1 <- ggplot()
+        for (i in 1:(ncol(ca1) - 1)) {
+            tmp <- ca1[, c(i, ncol(ca1))]
+            pd1 <- reshape2::melt(tmp, id.vars = "Id", variable.name = "sample")
+            if (i > 1) pc1 <- pc1 + ggnewscale::new_scale_fill()
+            pc1 <- pc1 +
+                geom_tile(data = pd1, aes(y = Id, x = sample, fill = value)) +
+                labs(fill = colnames(ca1)[i])
+            if (!is.null(annotation_pal[[colnames(ca1)[i]]])) {
+                if (is.numeric(pd1$value)) {
+                    pc1 <- pc1 + scale_fill_gradientn(colours = annotation_pal[[colnames(ca1)[i]]])
+                } else {
+                    pc1 <- pc1 + scale_fill_manual(values = annotation_pal[[colnames(ca1)[i]]])
+                }
+            }
+        }
+        pc1 <- pc1 +
+            theme_minimal() +
+            theme(
+                axis.text.y = element_blank(),
+                axis.ticks.y = element_blank()
+            ) +
+            xlab(NULL) + ylab(NULL)
+        p <- p %>% aplot::insert_left(pc1, width = 0.05 * (ncol(ca1) - 1))
     }
 
-    if (is.null(pal)) pal <- get_cols(length(unique(c(colnames(tab), rownames(tab)))))
+    if (row_cluster) {
+        hclust(dist(otutab)) %>% ape::as.phylo() -> a
+        p <- p %>% aplot::insert_left(ggtree::ggtree(a, branch.length = "none"), width = .1)
+    }
 
-    if (mode == "circlize") {
-        lib_ps("circlize", library = FALSE)
-        circlize::chordDiagram(tab, grid.col = pal, ...)
+    if (!is.null(col_annotation)) {
+        ca <- col_annotation
+        rownames(ca) -> ca$Id
+
+        pc <- ggplot()
+        for (i in 1:(ncol(ca) - 1)) {
+            tmp <- ca[, c(i, ncol(ca))]
+            pd <- reshape2::melt(tmp, id.vars = "Id", variable.name = "sample")
+
+            if (i > 1) pc <- pc + ggnewscale::new_scale_fill()
+            pc <- pc +
+                geom_tile(data = pd, aes(x = Id, y = sample, fill = value)) +
+                labs(fill = colnames(ca)[i]) +
+                scale_y_discrete(position = "right")
+            if (!is.null(annotation_pal[[colnames(ca)[i]]])) {
+                if (is.numeric(pd$value)) {
+                    pc <- pc + scale_fill_gradientn(colours = annotation_pal[[colnames(ca)[i]]])
+                } else {
+                    pc <- pc + scale_fill_manual(values = annotation_pal[[colnames(ca)[i]]])
+                }
+            }
+        }
+        pc <- pc +
+            theme_minimal() +
+            theme(
+                axis.text.x = element_blank(),
+                axis.ticks.x = element_blank()
+            ) +
+            xlab(NULL) + ylab(NULL)
+
+        p <- p %>% aplot::insert_top(pc, height = 0.05 * (ncol(ca) - 1))
     }
-    if (mode == "chorddiag") {
-        lib_ps("chorddiag", library = FALSE)
-        chorddiag::chorddiag(tab, groupedgeColor = pal, ...)
+    if (col_cluster) {
+        hclust(dist(t(otutab))) %>% ape::as.phylo() -> b
+        p <- p %>% aplot::insert_top(ggtree::ggtree(b, branch.length = "none") +
+            ggtree::layout_dendrogram(), height = .1)
     }
+    return(p)
 }

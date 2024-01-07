@@ -10,7 +10,7 @@ venn(...)
 
 \method{venn}{list}(aa, mode = "venn", elements_label = TRUE, ...)
 
-\method{venn}{data.frame}(otutab, mode = "venn", ...)
+\method{venn}{data.frame}(otutab, mode = "venn", elements_label = TRUE, ...)
 }
 \arguments{
 \item{...}{add}

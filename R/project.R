@@ -1,7 +1,6 @@
 #' Re-install my packages
 #' @param pkgs pkgs
 #' @return No return value
-#' @export
 reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore")) {
     for (i in pkgs) {
         if (i == "pctax") i <- "pctax/pctax"
@@ -268,6 +267,11 @@ make_gitbook <- function(book_n, root_dir = "~/Documents/R/", mode = c("gitbook"
         "Creat the book `", book_n, "` sucessfully! Open project at directory: `",
         book_dir, "`"
     ))
+}
+
+make_asa_web <- function() {
+    rmarkdown::render_site(encoding = "UTF-8", input = "~/Documents/GitHub/Asa_web/", quiet = TRUE)
+    system("rsync -a ~/Documents/GitHub/Asa_web/_site/* ~/Documents/GitHub/Asa12138.github.io/")
 }
 
 # =======Some tips========

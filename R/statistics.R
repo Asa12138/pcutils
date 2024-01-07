@@ -306,6 +306,8 @@ pre_number_str <- function(str, split_str = ",", continuous_str = "-") {
 #' df2link(test)
 #'
 df2link <- function(test, fun = sum) {
+    from <- to <- weight <- NULL
+
     if (!is.numeric(test[, ncol(test)])) test$weight <- 1
     nc <- ncol(test)
     colnames(test)[nc] <- "weight"
@@ -735,6 +737,8 @@ lm_coefficients <- function(data, formula, each = TRUE) {
 #' @exportS3Method
 #' @method plot coefficients
 plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) {
+    variable <- coefficient <- type <- NULL
+
     coefficients_df <- x
     coefficients_df$variable <- change_fac_lev(coefficients_df$variable, x_order)
     if (mode == 1) {
@@ -793,6 +797,7 @@ plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) 
 #' data(otutab)
 #' multireg(env1 ~ Group * ., data = metadata[, 2:7])
 multireg <- function(formula, data, TopN = 3) {
+    xGroup <- value <- variable <- NULL
     model.frame(formula, data = data) -> metatbl
     colnames(metatbl)[1:2] <- c("test_v", "xGroup")
     metatbl$xGroup <- factor(metatbl$xGroup)

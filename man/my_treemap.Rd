@@ -4,12 +4,10 @@
 \alias{my_treemap}
 \title{My Treemap plot}
 \usage{
-my_treemap(test, d3 = TRUE, ...)
+my_treemap(test, ...)
 }
 \arguments{
 \item{test}{a three-columns dataframe with hierarchical structure}
-
-\item{d3}{choose 3D}
 
 \item{...}{look for parameters in \code{\link[plotly]{plot_ly}}}
 }

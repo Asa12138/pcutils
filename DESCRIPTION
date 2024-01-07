@@ -1,11 +1,9 @@
 Package: pcutils
 Type: Package
 Title: Some Useful Functions for Statistics and Visualization
-Version: 0.1.1
-Author: Peng Chen [aut, cre]
-Maintainer: Peng Chen <pengchen2001@zju.edu.cn>
+Version: 0.2.0
 Authors@R:
-    person("Peng", "Chen",email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"))
+    person("Peng", "Chen",email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9449-7606"))
 Description: 
     Offers a range of utilities and functions for everyday programming tasks. 
     1.Data Manipulation. Such as grouping and merging, column splitting, and character expansion.
@@ -32,14 +30,14 @@ Imports:
     reshape2,
     scales,
     agricolae,
+    tools,
+    graphics
 Suggests:
-    testthat,
     clipr,
     remotes,
     BiocManager,
     ggpubr,
     kableExtra,
-    RImagePalette,
     animation,
     htmlwidgets,
     jpeg,
@@ -49,8 +47,6 @@ Suggests:
     RColorBrewer,
     ggsci,
     readr,
-    tools,
-    graphics,
     grImport2,
     pdftools,
     rsvg,
@@ -70,7 +66,6 @@ Suggests:
     plotrix,
     RBGL,
     vegan,
-    graph,
     ggtern,
     wordcloud2,
     circlize,
@@ -80,12 +75,8 @@ Suggests:
     knitr,
     rmarkdown,
     prettydoc,
-    ape,
-    aplot,
     ggnewscale,
-    ggtree,
     plotly,
-    SoDA,
     htmltools,
     leaflet,
     relaimpo,
@@ -93,26 +84,27 @@ Suggests:
     doSNOW,
     foreach,
     stringr,
-    d3treeR,
     ggraph,
     ggrepel,
     treemap,
     voronoiTreemap,
-    biomformat,
     devtools,
     multcompView,
     plot3D,
     fanyi,
+    rio,
     bookdown,
     sysfonts,
     showtext,
-    MetaNet,
     ggcor,
-    Vennerable,
     ggradar,
     ggsankey,
     sankeyD3,
-    chorddiag
+    biomformat,
+    ggtree,
+    aplot,
+    ape,
+    SoDA
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

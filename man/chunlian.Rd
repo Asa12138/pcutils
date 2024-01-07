@@ -5,7 +5,7 @@
 \title{Draw a Chunlian (Spring Festival couplet) using ggplot2}
 \usage{
 chunlian(
-  words,
+  words = NULL,
   bg_size = 20,
   bg_shape = 22,
   bg_fill = "red2",
