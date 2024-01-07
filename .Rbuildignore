@@ -5,6 +5,6 @@
 .Rhistory
 README.md
 images
-images/
+images/.*
 ^data-raw$
-.DS_Store
+\.DS_Store

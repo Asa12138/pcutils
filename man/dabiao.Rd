@@ -4,7 +4,14 @@
 \alias{dabiao}
 \title{Print some message with =}
 \usage{
-dabiao(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"))
+dabiao(
+  str = "",
+  ...,
+  n = 80,
+  char = "=",
+  mode = c("middle", "left", "right"),
+  print = FALSE
+)
 }
 \arguments{
 \item{str}{output strings}
@@ -16,6 +23,8 @@ dabiao(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"))
 \item{char}{side chars default:=}
 
 \item{mode}{"middle", "left" or "right"}
+
+\item{print}{print or message?}
 }
 \value{
 No return value

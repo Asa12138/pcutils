@@ -4,10 +4,12 @@
 \alias{china_map}
 \title{Plot china map}
 \usage{
-china_map(dir = "~/database/")
+china_map(china_shp = NULL, download_dir = "pcutils_temp")
 }
 \arguments{
-\item{dir}{where to put the china.json file}
+\item{china_shp}{china.json file}
+
+\item{download_dir}{download_dir, "pcutils_temp"}
 }
 \value{
 a ggplot

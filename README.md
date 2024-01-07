@@ -4,6 +4,14 @@
 
 ## install
 
+The stable version is available on CRAN:
+
+```
+install.packages("pcutils")
+```
+
+Or try the development version, which contains more functions:
+
 ```         
 install.packages("devtools")
 devtools::install_github('Asa12138/pcutils',dependencies=TRUE)
@@ -91,3 +99,4 @@ library(pcutils)
 -   `triangp` plot a triangle plot
 
 **Easter Egg**： `my_cat` will show my little cat named GuoDong.
+

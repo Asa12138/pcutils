@@ -1,11 +1,9 @@
 Package: pcutils
 Type: Package
 Title: Some Useful Functions for Statistics and Visualization
-Version: 0.1.0
-Author: Peng Chen [aut, cre]
-Maintainer: Peng Chen <pengchen2001@zju.edu.cn>
+Version: 0.2.0
 Authors@R:
-    person("Peng", "Chen",email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"))
+    person("Peng", "Chen",email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9449-7606"))
 Description: 
     Offers a range of utilities and functions for everyday programming tasks. 
     1.Data Manipulation. Such as grouping and merging, column splitting, and character expansion.
@@ -21,7 +19,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Depends: 
-    R (>= 4.0.0)
+    R (>= 4.1.0)
 Imports: 
     dplyr,
     magrittr,
@@ -32,14 +30,14 @@ Imports:
     reshape2,
     scales,
     agricolae,
+    tools,
+    graphics
 Suggests:
-    testthat,
     clipr,
     remotes,
     BiocManager,
     ggpubr,
     kableExtra,
-    RImagePalette,
     animation,
     htmlwidgets,
     jpeg,
@@ -49,8 +47,6 @@ Suggests:
     RColorBrewer,
     ggsci,
     readr,
-    tools,
-    graphics,
     grImport2,
     pdftools,
     rsvg,
@@ -69,7 +65,7 @@ Suggests:
     UpSetR,
     plotrix,
     RBGL,
-    graph,
+    vegan,
     ggtern,
     wordcloud2,
     circlize,
@@ -78,4 +74,39 @@ Suggests:
     tibble,
     knitr,
     rmarkdown,
-    prettydoc
+    prettydoc,
+    ggnewscale,
+    plotly,
+    htmltools,
+    leaflet,
+    relaimpo,
+    snow,
+    doSNOW,
+    foreach,
+    stringr,
+    ggraph,
+    ggrepel,
+    treemap,
+    voronoiTreemap,
+    devtools,
+    multcompView,
+    plot3D,
+    fanyi,
+    rio,
+    bookdown,
+    sysfonts,
+    showtext,
+    ggcor,
+    ggradar,
+    ggsankey,
+    sankeyD3,
+    biomformat,
+    ggtree,
+    aplot,
+    ape,
+    SoDA
+VignetteBuilder: knitr
+BugReports: https://github.com/Asa12138/pcutils/issues
+URL: https://github.com/Asa12138/pcutils
+ByteCompile: true
+biocViews: DataImport, Software, Visualization

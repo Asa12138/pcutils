@@ -8,7 +8,7 @@ my_circo(
   df,
   reorder = TRUE,
   pal = NULL,
-  mode = c("circlize", "chorddiag"),
+  mode = c("circlize", "chorddiag")[1],
   ...
 )
 }
@@ -31,6 +31,13 @@ My circo plot
 }
 \examples{
 \donttest{
-data.frame(a=c("a","a","b","b","c"),b=c("a",LETTERS[2:5]),c=1:5)\%>\%my_circo(mode="circlize")
+data.frame(
+    a = c("a", "a", "b", "b", "c"),
+    b = c("a", LETTERS[2:5]), c = 1:5
+) \%>\% my_circo(mode = "circlize")
+data(otutab)
+cbind(taxonomy, num = rowSums(otutab))[1:10, c(3, 7, 8)] -> test
+my_circo(test)
 }
+
 }

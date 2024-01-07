@@ -4,12 +4,14 @@
 \alias{change_fac_lev}
 \title{Change factor levels}
 \usage{
-change_fac_lev(x, levels = NULL)
+change_fac_lev(x, levels = NULL, last = FALSE)
 }
 \arguments{
 \item{x}{vector}
 
 \item{levels}{custom levels}
+
+\item{last}{put the custom levels to the last}
 }
 \value{
 factor
@@ -18,5 +20,5 @@ factor
 Change factor levels
 }
 \examples{
-change_fac_lev(letters[1:5],levels = c("c","a"))
+change_fac_lev(letters[1:5], levels = c("c", "a"))
 }

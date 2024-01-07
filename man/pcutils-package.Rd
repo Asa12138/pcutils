@@ -8,8 +8,16 @@
 \description{
 Offers a range of utilities and functions for everyday programming tasks. 1.Data Manipulation. Such as grouping and merging, column splitting, and character expansion. 2.File Handling. Read and convert files in popular formats, including "blast", "diamond", "fasta", "gff", "gtf", and various image formats like "jpg", "png", "pdf", and "svg". 3.Plotting Assistance. Helpful utilities for generating color palettes, validating color formats, and adding transparency. 4.Statistical Analysis. Includes functions for pairwise comparisons and multiple testing corrections, enabling perform statistical analyses with ease. 5.Graph Plotting, Provides efficient tools for creating doughnut plot and multi-layered doughnut plot; Venn diagrams, including traditional Venn diagrams, upset plots, and flower plots; Simplified functions for creating stacked bar plots, or a box plot with alphabets group for multiple comparison group.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/Asa12138/pcutils}
+  \item Report bugs at \url{https://github.com/Asa12138/pcutils/issues}
+}
+
+}
 \author{
-\strong{Maintainer}: Peng Chen \email{pengchen2001@zju.edu.cn}
+\strong{Maintainer}: Peng Chen \email{pengchen2001@zju.edu.cn} (\href{https://orcid.org/0000-0002-9449-7606}{ORCID})
 
 }
 \keyword{internal}

@@ -9,7 +9,7 @@ read.file(file, format = NULL, just_print = FALSE)
 \arguments{
 \item{file}{file path}
 
-\item{format}{"blast","diamond"}
+\item{format}{"blast", "diamond", "fa", "fasta", "fna", "gff", "gtf","jpg", "png", "pdf", "svg"...}
 
 \item{just_print}{just print the file}
 }

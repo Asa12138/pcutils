@@ -14,8 +14,10 @@ group_box(
   alpha = FALSE,
   method = "wilcox",
   alpha_param = list(color = "red"),
+  point_param = NULL,
   p_value1 = FALSE,
   p_value2 = FALSE,
+  only_sig = TRUE,
   stat_compare_means_param = NULL,
   trend_line = FALSE,
   trend_line_param = list(color = "blue")
@@ -40,9 +42,13 @@ group_box(
 
 \item{alpha_param}{parameters parse to \code{\link[ggplot2]{geom_text}}}
 
+\item{point_param}{parameters parse to \code{\link[ggplot2]{geom_jitter}}}
+
 \item{p_value1}{multi-test of all group}
 
 \item{p_value2}{two-test of each pair}
+
+\item{only_sig}{only_sig for p_value2}
 
 \item{stat_compare_means_param}{parameters parse to \code{\link[ggpubr]{stat_compare_means}}}
 

@@ -4,7 +4,16 @@
 \alias{sanxian}
 \title{Three-line table}
 \usage{
-sanxian(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, ...)
+sanxian(
+  df,
+  digits = 3,
+  nrow = 10,
+  ncol = 10,
+  fig = FALSE,
+  mode = 1,
+  background = "#D7261E",
+  ...
+)
 }
 \arguments{
 \item{df}{a data.frame}
@@ -16,6 +25,10 @@ sanxian(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, ...)
 \item{ncol}{show how many columns}
 
 \item{fig}{output as a figure}
+
+\item{mode}{1~2}
+
+\item{background}{background color}
 
 \item{...}{additional arguments e.g.(rows=NULL)}
 }

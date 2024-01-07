@@ -10,7 +10,10 @@ gghuan(
   mode = "1",
   topN = 5,
   name = TRUE,
-  percentage = TRUE
+  percentage = TRUE,
+  bar_params = NULL,
+  text_params = NULL,
+  text_params2 = NULL
 )
 }
 \arguments{
@@ -25,6 +28,12 @@ gghuan(
 \item{name}{label the name}
 
 \item{percentage}{label the percentage}
+
+\item{bar_params}{parameters parse to \code{\link[ggplot2]{geom_rect}}, for mode=1,3 or \code{\link[ggplot2]{geom_col}} for mode=2.}
+
+\item{text_params}{parameters parse to \code{\link[ggplot2]{geom_text}}}
+
+\item{text_params2}{parameters parse to \code{\link[ggplot2]{geom_text}}, for name=TRUE & mode=1,3}
 }
 \value{
 a ggplot
@@ -35,6 +44,12 @@ Plot a doughnut chart
 \examples{
 a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
 gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-b <- data.frame(type = letters[1:12], num = c(1, 3, 3, 4, 15, 10, 35, 2:6))
-gghuan(b) + ggplot2::theme(legend.position = "right")
+gghuan(a,
+    bar_params = list(col = "black"),
+    text_params = list(col = "#b15928", size = 3),
+    text_params2 = list(col = "#006d2c", size = 5)
+) +
+    ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+gghuan(a, mode = 2) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+gghuan(a, mode = 3) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
 }

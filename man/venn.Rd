@@ -8,9 +8,9 @@
 \usage{
 venn(...)
 
-\method{venn}{list}(aa, mode = "venn", ...)
+\method{venn}{list}(aa, mode = "venn", elements_label = TRUE, ...)
 
-\method{venn}{data.frame}(otutab, mode = "venn", ...)
+\method{venn}{data.frame}(otutab, mode = "venn", elements_label = TRUE, ...)
 }
 \arguments{
 \item{...}{add}
@@ -18,6 +18,8 @@ venn(...)
 \item{aa}{list}
 
 \item{mode}{"venn","venn2","upset","flower"}
+
+\item{elements_label}{logical, show elements label in network?}
 
 \item{otutab}{table}
 }
@@ -35,7 +37,7 @@ Plot a general venn (upset, flower)
 \donttest{
 aa <- list(a = 1:3, b = 3:7, c = 2:4)
 venn(aa, mode = "venn")
-venn(aa, mode = "venn2", type = "ChowRuskey")
+venn(aa, mode = "network")
 venn(aa, mode = "upset")
 data(otutab)
 venn(otutab, mode = "flower")

@@ -22,8 +22,8 @@ No value or a dataframe.
 anova (parametric) and kruskal.test (non-parametric). Perform one-way ANOVA test comparing multiple groups.
 LSD and TukeyHSD are post hoc test of anova.
 dunn and nemenyi are post hoc test of kruskal.test.
-ttest or wilcox is just perform wilcox-test in each two group (no p.adjust).
+t.test or wilcox is just perform t.test or wilcox.test in each two group (no p.adjust).
 }
 \examples{
-multitest(runif(30), rep(c("a", "b", "c"), each = 10), print = FALSE, return = "wilcox") -> aa
+multitest(runif(30), rep(c("A", "B", "C"), each = 10), print = FALSE, return = "wilcox") -> aa
 }
