@@ -287,14 +287,17 @@ how_to_use_parallel <- function(loop = function(i) {
                                 }) {
     lib_ps("clipr", library = FALSE)
     res_text <- paste0("#parallel
-  reps=100;threads=1
+  reps=100;threads=1;verbose=TRUE
   #main function
   loop=", paste(deparse(loop), collapse = "\n"), '
   {
   if(threads>1){
     pcutils::lib_ps("foreach","doSNOW","snow")
-    pb <- utils::txtProgressBar(max =reps, style = 3)
-    opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
+    if(verbose){
+      pb <- utils::txtProgressBar(max = reps, style = 3)
+      opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
+    }
+    else opts=NULL
     cl <- snow::makeCluster(threads)
     doSNOW::registerDoSNOW(cl)
     res <- foreach::foreach(i = 1:reps,.options.snow = opts,

@@ -36,7 +36,7 @@ data.frame(
     b = c("a", LETTERS[2:5]), c = 1:5
 ) \%>\% my_circo(mode = "circlize")
 data(otutab)
-cbind(taxonomy, num = rowSums(otutab))[1:10, c(3, 7, 8)] -> test
+cbind(taxonomy, num = rowSums(otutab))[1:10, c(2, 6, 8)] -> test
 my_circo(test)
 }
 

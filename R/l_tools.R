@@ -389,12 +389,13 @@ gsub.data.frame <- function(pattern, replacement, x, ...) {
 #' @param file file path
 #' @param format "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf","jpg", "png", "pdf", "svg"...
 #' @param just_print just print the file
+#' @param all_yes all_yes?
 #'
 #' @return data.frame
 #' @export
 #'
-read.file <- function(file, format = NULL, just_print = FALSE) {
-    if (file.size(file) > 10000) {
+read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE) {
+    if ((file.size(file) > 10000) & !all_yes) {
         message(paste0(file, ": this file is a little big, still open?"))
         flag <- readline("yes/no(y/n)?")
         if (!tolower(flag) %in% c("yes", "y")) {

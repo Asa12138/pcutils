@@ -1820,7 +1820,7 @@ my_synteny <- function() {
 #'     b = c("a", LETTERS[2:5]), c = 1:5
 #' ) %>% my_circo(mode = "circlize")
 #' data(otutab)
-#' cbind(taxonomy, num = rowSums(otutab))[1:10, c(3, 7, 8)] -> test
+#' cbind(taxonomy, num = rowSums(otutab))[1:10, c(2, 6, 8)] -> test
 #' my_circo(test)
 #' }
 #'
@@ -1852,7 +1852,9 @@ my_circo <- function(df, reorder = TRUE, pal = NULL, mode = c("circlize", "chord
         tab <- tab[s_name, ]
     }
 
-    if (is.null(pal)) pal <- get_cols(length(unique(c(colnames(tab), rownames(tab)))))
+    if (is.null(pal)) {
+        pal <- get_cols(length(unique(c(colnames(tab), rownames(tab)))))
+    } else if (is.null(names(pal))) pal <- rep(pal, length.out = length(unique(c(colnames(tab), rownames(tab)))))
 
     if (mode == "circlize") {
         lib_ps("circlize", library = FALSE)
@@ -2081,7 +2083,7 @@ ggheatmap <- function(otutab, pal = NULL, scale = "none",
     if (col_cluster) {
         hclust(dist(t(otutab))) %>% ape::as.phylo() -> b
         p <- p %>% aplot::insert_top(ggtree::ggtree(b, branch.length = "none") +
-                                         ggtree::layout_dendrogram(), height = .1)
+            ggtree::layout_dendrogram(), height = .1)
     }
     return(p)
 }
@@ -2266,4 +2268,47 @@ chunlian <- function(words = NULL, bg_size = 20, bg_shape = 22, bg_fill = "red2"
         theme_void() +
         coord_fixed()
     p
+}
+
+#' Plot the Olympic rings
+#'
+#' @return ggplot
+#' @export
+#'
+#' @examples
+#' Olympic_rings()
+Olympic_rings <- function() {
+    lib_ps("ggforce", library = FALSE)
+
+    r <- 1
+    pensize <- r / 6
+    rings_data <- data.frame(
+        x = c(-2 * (r + pensize), -(r + pensize), 0, (r + pensize), 2 * (r + pensize)),
+        y = c(r, 0, r, 0, r),
+        radius = rep(r, 5),
+        color = c("#0081C8", "#FCB131", "#000000", "#00A651", "#EE334E")
+    )
+    tao_data <- data.frame(
+        x = c(-(r + pensize), -(r + pensize), (r + pensize), (r + pensize)),
+        start = c(0, 5 / 4 * pi, 0, 5 / 4 * pi),
+        end = c(1 / 4 * pi, 7 / 4 * pi, 1 / 4 * pi, 7 / 4 * pi),
+        color = c("#FCB131", "#FCB131", "#00A651", "#00A651")
+    )
+    ggplot() +
+        ggforce::geom_circle(
+            data = rings_data[c(2, 4), ],
+            mapping = aes(r = radius, x0 = x, y0 = y, size = I(5), color = color)
+        ) +
+        ggforce::geom_circle(
+            data = rings_data[c(1, 3, 5), ],
+            mapping = aes(r = radius, x0 = x, y0 = y, size = I(5), color = color)
+        ) +
+        ggforce::geom_arc(data = tao_data, mapping = aes(
+            x0 = x, y0 = 0, r = r, size = I(5),
+            start = start, end = end, color = color
+        )) +
+        scale_color_identity() +
+        coord_fixed() +
+        theme_void() +
+        theme(legend.position = "none")
 }
