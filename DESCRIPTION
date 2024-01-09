@@ -98,7 +98,14 @@ Suggests:
     ggtree,
     aplot,
     ape,
-    ggforce
+    ggforce,
+    ggcor,
+    pheatmap,
+    corrplot,
+    ggradar,
+    ggsankey,
+    sankeyD3,
+    SoDA
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

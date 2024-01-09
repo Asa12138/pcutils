@@ -1,5 +1,14 @@
 # Some function depends on packages not in CRAN.
 
+# ggcor,
+# pheatmap,
+# corrplot,
+# ggradar,
+# ggsankey,
+# sankeyD3,
+# SoDA
+
+
 #' Transfer Geographical latitude and longitude to XY(m)
 #'
 #' @param geo a two-columns dataframe, first is latitude, second is longitude
