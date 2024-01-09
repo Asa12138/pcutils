@@ -17,7 +17,7 @@ my_circo(
 
 \item{reorder}{reorder by number?}
 
-\item{pal}{a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}}
+\item{pal}{a vector of colors, you can get from here too: \code{RColorBrewer::brewer.pal(5,"Set2")} or \code{ggsci::pal_aaas()(5)}}
 
 \item{mode}{"circlize","chorddiag"}
 

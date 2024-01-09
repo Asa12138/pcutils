@@ -663,7 +663,7 @@ download2 <- function(url, file_path, timeout = 300, force = FALSE) {
         # Download the file
         tryCatch(
             expr = {
-                download.file(url, destfile = file_path)
+                utils::download.file(url, destfile = file_path)
             },
             error = function(e) {
                 stop("Try downloading yourself from ", url)
@@ -748,7 +748,9 @@ search_browse <- function(search_terms, engine = "google", base_url = NULL) {
 #' @export
 #' @return vector
 #' @examples
+#' \dontrun{
 #' translator(c("love", "if"), mode = "e2z")
+#' }
 translator <- function(words, mode = "e2z") {
     lib_ps("fanyi", library = FALSE)
 
