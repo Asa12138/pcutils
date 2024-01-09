@@ -692,12 +692,13 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     # style can choose "group" or "sample"
     # others=TRUE is used to choose whether to draw other than TopN
     # pmode can choose fill/stack/dodge
+    variable <- value <- Taxonomy <- Taxonomy <- NULL
 
     data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order, facet_order, style)
     if (get_data) {
         return(data_all)
     }
-    variable <- value <- Taxonomy <- Taxonomy <- NULL
+
     # plot
     bar_params <- update_param(list(width = 0.7, position = "stack"), bar_params)
     flow_params <- update_param(list(lode.guidance = "frontback", color = "darkgray"), flow_params)
@@ -791,11 +792,11 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
                      stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
                      style = c("group", "sample")[1],
                      number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
+    variable <- value <- Taxonomy <- Taxonomy <- variable2 <- NULL
     data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order, facet_order, style)
     if (get_data) {
         return(data_all)
     }
-    variable <- value <- Taxonomy <- Taxonomy <- NULL
     # plot
     bar_params <- update_param(NULL, bar_params)
     format_params <- update_param(list(digits = 2), format_params)
@@ -1381,7 +1382,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
                        shp_file = NULL, crs = NULL, xlim = NULL, ylim = NULL,
                        add_scale = TRUE, scale_params = list(),
                        add_north_arrow = TRUE, north_arrow_params = list()) {
-    long <- lat <- group <- Longitude <- Latitude <- Group <- label <- NULL
+    long <- lat <- group <- Longitude <- Latitude <- Group <- label <- df2_sf <- NULL
 
     metadata <- data.frame(metadata, check.names = FALSE)
     if (is.null(group)) {
@@ -1609,7 +1610,7 @@ triangp <- function(group_df, class = NULL) {
     lib_ps("ggtern", library = FALSE)
     if (ncol(group_df) != 3) stop("ncol of group_df is not 3, can't plot trip")
     KO <- OE <- WT <- NULL
-
+    tmp <- group_df
     tmp %>%
         as.data.frame() %>%
         mutate(sum = rowSums(.)) -> tmp1
@@ -1806,7 +1807,7 @@ my_synteny <- function() {
 #
 #' @param df dataframe with three column
 #' @param reorder reorder by number?
-#' @param pal a vector of colors, you can get from here too.{RColorBrewer::brewer.pal(5,"Set2")} {ggsci::pal_aaas()(5)}
+#' @param pal a vector of colors, you can get from here too: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
 #' @param mode "circlize","chorddiag"
 #' @param ... \code{\link[circlize]{chordDiagram}}
 #'
@@ -2145,7 +2146,7 @@ give_you_a_rose <- function(color = "red3") {
         xlab = "Love youself",
         ylab = "Love youself",
         zlab = "Love youself",
-        col = colorRampPalette(c("#e4e9f6", color))(100),
+        col = grDevices::colorRampPalette(c("#e4e9f6", color))(100),
         border = "grey85",
         lwd = 0.1,
         facets = TRUE,
@@ -2224,6 +2225,7 @@ DNA_plot <- function(col_DNA = "#377EB8", col_ATCG = c("#7FC97F", "#FB8072", "#F
 #' @return A ggplot object representing the Chunlian
 #' @export
 chunlian <- function(words = NULL, bg_size = 20, bg_shape = 22, bg_fill = "red2", text_size = 10, text_params = list(), font_file = NULL, download_dir = "pcutils_temp") {
+    x <- y <- label <- NULL
     if (identical(words, 1)) {
         words <- c("\u6295\u5565\u4e2d\u5565", "SCI\u5929\u5929\u6709\u4e00\u533a", "CNS\u6708\u6708\u6709\u5c01\u9762")
     } else if (identical(words, 2)) words <- c("\u79d1\u7814\u987a\u5229", "\u6570\u636e\u5206\u6790\u597d\u5230\u7206", "\u6587\u7ae0\u6295\u54ea\u54ea\u90fd\u8981")
@@ -2278,6 +2280,8 @@ chunlian <- function(words = NULL, bg_size = 20, bg_shape = 22, bg_fill = "red2"
 #' @examples
 #' Olympic_rings()
 Olympic_rings <- function() {
+    radius <- x <- y <- color <- start <- end <- NULL
+
     lib_ps("ggforce", library = FALSE)
 
     r <- 1

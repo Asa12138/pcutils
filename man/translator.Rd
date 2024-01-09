@@ -18,5 +18,7 @@ vector
 translator
 }
 \examples{
+\dontrun{
 translator(c("love", "if"), mode = "e2z")
+}
 }

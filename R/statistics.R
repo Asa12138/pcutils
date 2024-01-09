@@ -589,23 +589,30 @@ group_test <- function(df, group, metadata = NULL, method = "wilcox.test",
                 .$`Pr(>F)` %>%
                 .[1]
         }
-        if (verbose & (i %% 100 == 0)) message(paste(i, "done."))
+        if (verbose & (i %% 100 == 0)) message(i, " done.")
         pval
     }
 
     {
         if (threads > 1) {
-            pcutils::lib_ps("foreach", "doSNOW", "snow")
-            pb <- utils::txtProgressBar(max = reps, style = 3)
-            opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
+            pcutils::lib_ps("foreach", "doSNOW", "snow", library = FALSE)
+            if (verbose) {
+                pb <- utils::txtProgressBar(max = reps, style = 3)
+                opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
+            } else {
+                opts <- NULL
+            }
             cl <- snow::makeCluster(threads)
             doSNOW::registerDoSNOW(cl)
-            res <- foreach::foreach(i = 1:reps, .options.snow = opts) %dopar% {
+            res <- foreach::`%dopar%`(
+                foreach::foreach(
+                    i = 1:reps,
+                    .options.snow = opts, .export = c("group")
+                ),
                 loop(i)
-            }
+            )
             snow::stopCluster(cl)
             gc()
-            pcutils::del_ps("doSNOW", "snow", "foreach")
         } else {
             res <- lapply(1:reps, loop)
         }
@@ -622,7 +629,7 @@ group_test <- function(df, group, metadata = NULL, method = "wilcox.test",
         "Time use: ", stime, attr(stime, "units"), "\n"
     )
 
-    message(resinfo)
+    if (verbose) message(resinfo)
     res.dt$p.adjust <- stats::p.adjust(res.dt$p.value, method = p.adjust.method)
     return(res.dt)
 }
@@ -737,7 +744,7 @@ lm_coefficients <- function(data, formula, each = TRUE) {
 #' @exportS3Method
 #' @method plot coefficients
 plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) {
-    variable <- coefficient <- type <- NULL
+    variable <- coefficient <- type <- adj_r2 <- NULL
 
     coefficients_df <- x
     coefficients_df$variable <- change_fac_lev(coefficients_df$variable, x_order)
