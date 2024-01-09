@@ -1894,7 +1894,7 @@ my_circle_packing <- function(test, anno = NULL, mode = 1,
                               Group = "level", Score = "weight", label = "label",
                               show_level_name = "all", show_tip_label = TRUE, str_width = 10) {
     weight <- level <- Level <- NULL
-    lib_ps("MetaNet", "ggraph", library = FALSE)
+    lib_ps("igraph", "ggraph", library = FALSE)
     test <- as.data.frame(test)
     if (length(unique(test[, 1])) > 1) {
         test <- cbind("Root" = " ", test)
