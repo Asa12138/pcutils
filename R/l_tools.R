@@ -222,7 +222,8 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
         "linkET" = "Hy4m/linkET",
         "deeplr" = "paulcbauer/deeplr",
         "ggchicklet" = "hrbrmstr/ggchicklet",
-        "ggkegg" = "noriakis/ggkegg"
+        "ggkegg" = "noriakis/ggkegg",
+        "SpiecEasi" = "zdk123/SpiecEasi"
     )
 
     p_list <- c(p_list, ...)
@@ -648,9 +649,8 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
 #' @param timeout timeout, 300s
 #' @param force FALSE, if TRUE, overwrite existed file
 #'
-#' @return NULL
+#' @return No value
 #' @export
-#'
 download2 <- function(url, file_path, timeout = 300, force = FALSE) {
     if (file.exists(file_path) & !force) {
         return(invisible())
@@ -740,33 +740,113 @@ search_browse <- function(search_terms, engine = "google", base_url = NULL) {
     }
 }
 
-#' translator
+#' Translator
+#'
+#' language: en, zh, jp, fra, th..., see \code{https://www.cnblogs.com/pieguan/p/10338255.html}
 #'
 #' @param words words
-#' @param mode "e2z","z2e"
+#' @param from source language, default "en"
+#' @param to target language, default "zh"
+#' @param split split to blocks when your words are too much
 #'
 #' @export
 #' @return vector
 #' @examples
 #' \dontrun{
-#' translator(c("love", "if"), mode = "e2z")
+#' translator(c("love", "if"), from = "en", to = "zh")
 #' }
-translator <- function(words, mode = "e2z") {
-    lib_ps("fanyi", library = FALSE)
-
+translator <- function(words, from = "en", to = "zh", split=TRUE) {
     pcutils_config <- show_pcutils_config()
     if (is.null(pcutils_config$baidu_appid) | is.null(pcutils_config$baidu_key)) {
         message("Please set the baidu_appid and baidu_key using set_pcutils_config:")
         message("first, get the appid and key from baidu: https://zhuanlan.zhihu.com/p/375789804 ,")
         message("then, set_pcutils_config('baidu_appid',your_appid),")
         message("and set_pcutils_config('baidu_key',your_key).")
+        return(invisible())
     }
 
-    fanyi::set_translate_option(appid = pcutils_config$baidu_appid, key = pcutils_config$baidu_key)
-
-    if (mode == "e2z" | mode == 1) {
-        lapply(words, \(i)fanyi::translate(i, from = "en", to = "zh"))
-    } else {
-        lapply(words, \(i)fanyi::translate(i, from = "zh", to = "en"))
+    if(length(words)>1){
+        if(any(grepl("\n",words,fixed = TRUE)))message("'\\n' was found in your words, change to ';'.")
+        words=gsub("\n",";",words,fixed = TRUE)
     }
+    else{
+        words=strsplit(words, "\n+")[[1]]
+    }
+    input_words=paste0(words,collapse = "\n")
+
+    if(split)split_words=split_text(input_words,nchr_each = 5000)
+    else split_words=input_words
+
+    if(length(split_words)>1){
+        res_ls=lapply(split_words, translator, from = from, to = to, split=FALSE)
+        return(do.call(c,res_ls))
+    }
+
+    res=baidu_translate(input_words, from = from, to = to)
+
+    if(length(res)==length(words))names(res)=words
+    return(res)
+}
+
+baidu_translate <- function(x, from = 'en', to = 'zh', pcutils_config=show_pcutils_config()) {
+    water <- sample.int(4711, 1)
+    sign <- sprintf("%s%s%s%s", pcutils_config$baidu_appid, x, water, pcutils_config$baidu_key)
+    sign2 <- openssl::md5(sign)
+
+    .query <- list(q = x, from = from, to = to,
+                   appid = pcutils_config$baidu_appid,
+                   salt = water,sign = sign2
+    )
+
+    url <- httr::modify_url("http://api.fanyi.baidu.com/api/trans/vip/translate",
+                            query = .query
+    )
+    url <- url(url, encoding = "utf-8")
+    res <- jsonlite::fromJSON(url)
+
+    return(res$trans_result$dst)
+}
+
+#' Split text into parts, each not exceeding a specified character count
+#'
+#' @param text Original text
+#' @param nchr_each Maximum character count for each part
+#' @return List of divided parts
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' original_text <- paste0(sample(c(letters,"\n"),400,replace = TRUE),collapse = "")
+#' parts <- split_text(original_text, nchr_each = 200)
+#' lapply(parts,nchar)
+#' }
+split_text <- function(text, nchr_each = 200) {
+    # Split the text by newline characters
+    parts <- strsplit(text, "\n+")[[1]]
+
+    # Initialize the result list
+    result <- list()
+
+    # Loop through each part to ensure each does not exceed the specified character count
+    current_part <- parts[1]
+
+    for (part in parts[-1]) {
+        if(nchar(current_part)>nchr_each)message("Characters number of this paragraph is more than ",nchr_each)
+        if (nchar(current_part) + nchar(part) <= nchr_each) {
+            # If adding the current part to the new part does not exceed the specified character count,
+            # merge them into the current part
+            current_part <- paste(current_part, part, sep = "\n")
+        } else {
+            # If it exceeds the specified character count, add the current part to the result list
+            # and start a new part
+            result <- c(result, current_part)
+            current_part <- part
+        }
+    }
+
+    # Add the last part to the result list
+    result <- c(result, current_part)
+
+    # Return the result
+    return(result)
 }

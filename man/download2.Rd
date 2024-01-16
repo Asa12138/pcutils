@@ -15,6 +15,9 @@ download2(url, file_path, timeout = 300, force = FALSE)
 
 \item{force}{FALSE, if TRUE, overwrite existed file}
 }
+\value{
+No value
+}
 \description{
 This function downloads a file from the provided URL and saves it to the specified location.
 }

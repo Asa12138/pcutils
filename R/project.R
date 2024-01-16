@@ -300,14 +300,13 @@ how_to_use_parallel <- function(loop = function(i) {
     else opts=NULL
     cl <- snow::makeCluster(threads)
     doSNOW::registerDoSNOW(cl)
-    res <- foreach::`%dopar%`(foreach::foreach(i = 1:reps,
-                                               .options.snow = opts),
+    res <- foreach::`%dopar%`(foreach::foreach(i = seq_len(reps),.options.snow = opts),
                               loop(i))
     snow::stopCluster(cl)
     gc()
   }
   else {
-    res <-lapply(1:reps, loop)
+    res <-lapply(seq_len(reps), loop)
   }}
   #simplify method
   res=do.call(c,res)
@@ -504,4 +503,98 @@ set_', package, '_config <- function(item,value) {
 ')
     clipr::write_clip(res_text)
     message(res_text)
+}
+
+# =======Packages========
+solve_no_visible_binding <- function(str) {
+    a <- strsplit(str, "\\n") %>%
+        .[[1]] %>%
+        gsub(".*'([^']+)'", "\\1", x = .) %>%
+        c(., "NULL") %>%
+        paste(., collapse = "=")
+    message(a)
+    clipr::write_clip(paste0(a, "\n"))
+}
+
+
+check_Rds <- function(package_folder_path = ".") {
+    man_folder_path <- file.path(package_folder_path, "man")
+    # 获取man文件夹下的所有文件
+    man_files <- list.files(man_folder_path, pattern = "\\.Rd$", full.names = TRUE)
+    # 存储结果的列表
+    no_values <- c()
+    not_good_examples <- c()
+
+    # 遍历每个文件
+    for (file_path in man_files) {
+        # 读取文件内容
+        content <- readLines(file_path)
+        content <- paste0(content, collapse = "\n")
+        # 检查是否包含\usage{}
+        has_usage <- grepl("\\\\usage", content)
+        # 如果包含\usage{}但没有\value{}
+        if (has_usage) {
+            # 检查是否包含\value{}
+            has_value <- grepl("\\\\value", content)
+            if (!has_value) no_values <- c(no_values, basename(file_path))
+        }
+
+        # 检查是否包含\examples{}
+        has_examples <- grepl("\\\\examples", content)
+        if (has_examples) {
+            # 检查是否包含 #
+            has_comment <- grepl("\\\\#", gsub(".*\\\\examples", "", content))
+            # 检查是否包含\dontrun{}
+            has_dontrun <- grepl("\\\\dontrun", content)
+            if (has_comment || has_dontrun) not_good_examples <- c(not_good_examples, basename(file_path))
+        }
+    }
+    pcutils::dabiao("Check \\value in .Rd files")
+    if (length(no_values) > 0) {
+        message("some .Rd files do not have \\value: \n", paste0(no_values, collapse = "\n"))
+    } else {
+        message("All is OK")
+    }
+    pcutils::dabiao("Check \\examples in .Rd files")
+    if (length(not_good_examples) > 0) {
+        message("some .Rd files do not have # or \\dontrun in \\examples: \n", paste0(not_good_examples, collapse = "\n"))
+    } else {
+        message("All is OK")
+    }
+}
+
+check_TF_in_R_files <- function(package_folder_path = ".") {
+    folder_path <- file.path(package_folder_path, "R")
+    # 获取文件夹下的所有.R文件
+    r_files <- list.files(folder_path, pattern = "\\.R$", full.names = TRUE)
+
+    # 存储结果的列表
+    results <- list()
+
+    # 遍历每个.R文件
+    for (file_path in r_files) {
+        # 读取文件内容
+        content <- readLines(file_path)
+
+        # 查找包含T或F的行数
+        lines_with_TF <- grepl("\\b[T|F]\\b", content)
+
+        # 如果有找到，记录结果
+        if (sum(lines_with_TF) > 0) {
+            # 记录文件路径和包含T或F的行数
+            message("Find T/F in ", file_path, ":")
+            message(paste0(paste0("line ", which(lines_with_TF)), collapse = "\n"))
+        }
+    }
+}
+
+
+prepare_package <- function(pkg_dir = ".") {
+    pcutils::dabiao("Styler all codes")
+    styler::style_pkg(pkg = pkg_dir, strict = TRUE, indent_by = 4)
+    pcutils::dabiao("Write documents")
+    devtools::document(pkg_dir)
+    check_Rds(pkg_dir)
+    pcutils::dabiao("Check T/F")
+    check_TF_in_R_files(pkg_dir)
 }

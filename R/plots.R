@@ -1499,7 +1499,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
             guides(fill = guide_legend(title = group))
 
         if (!is.null(label)) {
-            p <- p + do.call(geom_sf_text, update_param(list(data = anno_sf, mapping = aes(label = label), size = 2.5, check_overlap = T), label_params))
+            p <- p + do.call(geom_sf_text, update_param(list(data = anno_sf, mapping = aes(label = label), size = 2.5, check_overlap = TRUE), label_params))
         }
 
         p <- p + coord_sf(crs = crs, xlim = xlim, ylim = ylim)
@@ -2191,11 +2191,11 @@ DNA_plot <- function(col_DNA = "#377EB8", col_ATCG = c("#7FC97F", "#FB8072", "#F
         ytop <- cos(xx[i] + pi) # yup position
         rr <- sample(1:4, 1) ## ATCG, random select one pair
         if (rr == 1) {
-            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4) ## A-T
+            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
             graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
         }
         if (rr == 2) {
-            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4) ## T-A
+            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
             graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
         }
         if (rr == 3) {

@@ -2,23 +2,27 @@
 % Please edit documentation in R/l_tools.R
 \name{translator}
 \alias{translator}
-\title{translator}
+\title{Translator}
 \usage{
-translator(words, mode = "e2z")
+translator(words, from = "en", to = "zh", split = TRUE)
 }
 \arguments{
 \item{words}{words}
 
-\item{mode}{"e2z","z2e"}
+\item{from}{source language, default "en"}
+
+\item{to}{target language, default "zh"}
+
+\item{split}{split to blocks when your words are too much}
 }
 \value{
 vector
 }
 \description{
-translator
+language: en, zh, jp, fra, th..., see \code{https://www.cnblogs.com/pieguan/p/10338255.html}
 }
 \examples{
 \dontrun{
-translator(c("love", "if"), mode = "e2z")
+translator(c("love", "if"), from = "en", to = "zh")
 }
 }
