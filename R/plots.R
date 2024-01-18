@@ -355,6 +355,96 @@ match_df <- function(otutab, metadata) {
     return(list(otutab = otutab, metadata = metadata))
 }
 
+
+
+#' Translate axis label of a ggplot
+#'
+#' @param gg a ggplot object to be translated
+#' @param which vector contains one or more of 'x', 'y', 'label', 'fill', 'color'..., or 'labs' and 'all' to select which texts to be translated.
+#' @param from source language
+#' @param to target language
+#' @param verbose verbose
+#' @param keep_original_label keep the source language labels
+#' @param original_sep default, '\n'
+#'
+#' @return ggplot
+#' @export
+#' @examples
+#' \dontrun{
+#' df <- data.frame(
+#'     Subject = c("English", "Math"),
+#'     Score = c(59, 98), Motion = c("sad", "happy")
+#' )
+#' ggp <- ggplot(df, mapping = aes(x = Subject, y = Score, label = Motion)) +
+#'     geom_text() +
+#'     geom_point() +
+#'     labs(x = "Subject", y = "Score", title = "Final Examination")
+#' ggplot_translator(ggp)
+#' }
+ggplot_translator <- function(gg, which = "all", from = "en", to = "zh",
+                              keep_original_label = FALSE, original_sep = "\n", verbose = TRUE) {
+    if (verbose) {
+        message("Please set the font family to make the labels display well.\n see `how_to_set_font_for_plot()`.")
+        lib_ps("sysfonts", "showtext", library = FALSE)
+        showtext::showtext_auto()
+    }
+    if (identical(from, to)) {
+        to <- setdiff(c("en", "zh"), from)[1]
+        if (verbose) message("Same `from` and `to` language, change `to` to ", to)
+    }
+
+    stopifnot(inherits(gg, "gg"))
+    which <- unique(which)
+
+    # all_lab=c("x", "y", "label", "labs")
+    # if(length(which)==1)which <- match.arg(which, c(all_lab, "all"))
+    if (identical(which, "all")) which <- c(names(gg$mapping), "labs")
+
+    if (is.null(attributes(gg)$translated)) {
+        translated <- ""
+    } else {
+        translated <- attributes(gg)$translated
+    }
+
+    if (length(which) == 1) {
+        if (which == "labs") {
+            trans_labels <- translator(unlist(gg$labels), from = from, to = to)
+            if (keep_original_label) trans_labels <- paste0(trans_labels, original_sep, "(", names(trans_labels), ")")
+            gg$labels <- as.list(setNames(trans_labels, names(gg$labels)))
+        } else {
+            col_name <- rlang::quo_text(gg$mapping[[which]])
+            if (col_name %in% translated) {
+                return(gg)
+            } else {
+                attributes(gg)$translated <- c(translated, col_name)
+            }
+            words <- gg$data[[col_name]]
+            # if (is.null(words)) message("You should use the `mapping=aes(x=x,y=y)` in `ggplot()` instead of `geom_XX`.")
+            if (is.character(words) | is.factor(words)) {
+                trans_words <- translator(words, from = from, to = to)
+                if (keep_original_label) {
+                    trans_words <- setNames(
+                        paste0(trans_words, original_sep, "(", names(trans_words), ")"),
+                        names(trans_words)
+                    )
+                }
+                if (is.factor(words)) {
+                    trans_words <- factor(trans_words, levels = trans_words[levels(words)])
+                }
+                gg$data[[col_name]] <- trans_words
+            }
+        }
+    } else {
+        for (i in which) {
+            gg <- ggplot_translator(gg,
+                which = i, from = from, to = to, keep_original_label = keep_original_label,
+                original_sep = original_sep, verbose = FALSE
+            )
+        }
+    }
+    return(gg)
+}
+
 # ========Common plots=======
 
 #' Plot a general venn (upset, flower)

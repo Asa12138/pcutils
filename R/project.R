@@ -505,6 +505,35 @@ set_', package, '_config <- function(item,value) {
     message(res_text)
 }
 
+#' How to set font for ggplot
+#'
+#' @return No return value
+#' @export
+how_to_set_font_for_plot <- function() {
+    lib_ps("clipr", library = FALSE)
+    res_text <- paste0('
+    lib_ps("sysfonts", "showtext", library = FALSE)
+
+    font_file <- "/System/Library/Fonts/Supplemental/Songti.ttc"
+
+    showtext::showtext_auto()
+
+    # Add the font to showtext
+    sysfonts::font_add("Songti", font_file)
+
+    #Check the system font. If Songti appears, it indicates successful import
+    sysfonts::font_families()
+
+    ggplot(mtcars)+
+      geom_point(aes(x=mpg,y=wt))+
+      ggtitle("\u6211\u662f\u4e00\u4e2a\u4e2d\u6587\u6807\u9898")+
+      theme(text = element_text(family = "Songti"))')
+
+    clipr::write_clip(res_text)
+    message(res_text)
+}
+
+
 # =======Packages========
 solve_no_visible_binding <- function(str) {
     a <- strsplit(str, "\\n") %>%

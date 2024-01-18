@@ -4,7 +4,7 @@
 \alias{translator}
 \title{Translator}
 \usage{
-translator(words, from = "en", to = "zh", split = TRUE)
+translator(words, from = "en", to = "zh", split = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{words}{words}
@@ -14,6 +14,8 @@ translator(words, from = "en", to = "zh", split = TRUE)
 \item{to}{target language, default "zh"}
 
 \item{split}{split to blocks when your words are too much}
+
+\item{verbose}{verbose}
 }
 \value{
 vector

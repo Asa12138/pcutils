@@ -19,8 +19,8 @@ Split text into parts, each not exceeding a specified character count
 }
 \examples{
 \donttest{
-original_text <- paste0(sample(c(letters,"\n"),400,replace = TRUE),collapse = "")
+original_text <- paste0(sample(c(letters, "\n"), 400, replace = TRUE), collapse = "")
 parts <- split_text(original_text, nchr_each = 200)
-lapply(parts,nchar)
+lapply(parts, nchar)
 }
 }

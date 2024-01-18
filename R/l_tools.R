@@ -748,6 +748,7 @@ search_browse <- function(search_terms, engine = "google", base_url = NULL) {
 #' @param from source language, default "en"
 #' @param to target language, default "zh"
 #' @param split split to blocks when your words are too much
+#' @param verbose verbose
 #'
 #' @export
 #' @return vector
@@ -755,7 +756,7 @@ search_browse <- function(search_terms, engine = "google", base_url = NULL) {
 #' \dontrun{
 #' translator(c("love", "if"), from = "en", to = "zh")
 #' }
-translator <- function(words, from = "en", to = "zh", split=TRUE) {
+translator <- function(words, from = "en", to = "zh", split = TRUE, verbose = TRUE) {
     pcutils_config <- show_pcutils_config()
     if (is.null(pcutils_config$baidu_appid) | is.null(pcutils_config$baidu_key)) {
         message("Please set the baidu_appid and baidu_key using set_pcutils_config:")
@@ -765,41 +766,51 @@ translator <- function(words, from = "en", to = "zh", split=TRUE) {
         return(invisible())
     }
 
-    if(length(words)>1){
-        if(any(grepl("\n",words,fixed = TRUE)))message("'\\n' was found in your words, change to ';'.")
-        words=gsub("\n",";",words,fixed = TRUE)
-    }
-    else{
-        words=strsplit(words, "\n+")[[1]]
-    }
-    input_words=paste0(words,collapse = "\n")
-
-    if(split)split_words=split_text(input_words,nchr_each = 5000)
-    else split_words=input_words
-
-    if(length(split_words)>1){
-        res_ls=lapply(split_words, translator, from = from, to = to, split=FALSE)
-        return(do.call(c,res_ls))
+    if (identical(from, to)) {
+        to <- setdiff(c("en", "zh"), from)[1]
+        if (verbose) message("Same `from` and `to` language, change `to` to ", to)
     }
 
-    res=baidu_translate(input_words, from = from, to = to)
+    if (length(words) > 1) {
+        if (any(grepl("\n", words, fixed = TRUE))) {
+            if (verbose) message("'\\n' was found in your words, change to ';'.")
+        }
+        words <- gsub("\n", ";", words, fixed = TRUE)
+    } else {
+        words <- strsplit(words, "\n+")[[1]]
+    }
+    input_words <- paste0(words, collapse = "\n")
 
-    if(length(res)==length(words))names(res)=words
+    if (split) {
+        split_words <- split_text(input_words, nchr_each = 5000)
+    } else {
+        split_words <- input_words
+    }
+
+    if (length(split_words) > 1) {
+        res_ls <- lapply(split_words, translator, from = from, to = to, split = FALSE, verbose = FALSE)
+        return(do.call(c, res_ls))
+    }
+
+    res <- baidu_translate(input_words, from = from, to = to)
+
+    if (length(res) == length(words)) names(res) <- words
     return(res)
 }
 
-baidu_translate <- function(x, from = 'en', to = 'zh', pcutils_config=show_pcutils_config()) {
+baidu_translate <- function(x, from = "en", to = "zh", pcutils_config = show_pcutils_config()) {
     water <- sample.int(4711, 1)
     sign <- sprintf("%s%s%s%s", pcutils_config$baidu_appid, x, water, pcutils_config$baidu_key)
     sign2 <- openssl::md5(sign)
 
-    .query <- list(q = x, from = from, to = to,
-                   appid = pcutils_config$baidu_appid,
-                   salt = water,sign = sign2
+    .query <- list(
+        q = x, from = from, to = to,
+        appid = pcutils_config$baidu_appid,
+        salt = water, sign = sign2
     )
 
     url <- httr::modify_url("http://api.fanyi.baidu.com/api/trans/vip/translate",
-                            query = .query
+        query = .query
     )
     url <- url(url, encoding = "utf-8")
     res <- jsonlite::fromJSON(url)
@@ -816,9 +827,9 @@ baidu_translate <- function(x, from = 'en', to = 'zh', pcutils_config=show_pcuti
 #'
 #' @examples
 #' \donttest{
-#' original_text <- paste0(sample(c(letters,"\n"),400,replace = TRUE),collapse = "")
+#' original_text <- paste0(sample(c(letters, "\n"), 400, replace = TRUE), collapse = "")
 #' parts <- split_text(original_text, nchr_each = 200)
-#' lapply(parts,nchar)
+#' lapply(parts, nchar)
 #' }
 split_text <- function(text, nchr_each = 200) {
     # Split the text by newline characters
@@ -831,7 +842,7 @@ split_text <- function(text, nchr_each = 200) {
     current_part <- parts[1]
 
     for (part in parts[-1]) {
-        if(nchar(current_part)>nchr_each)message("Characters number of this paragraph is more than ",nchr_each)
+        if (nchar(current_part) > nchr_each) message("Characters number of this paragraph is more than ", nchr_each)
         if (nchar(current_part) + nchar(part) <= nchr_each) {
             # If adding the current part to the new part does not exceed the specified character count,
             # merge them into the current part

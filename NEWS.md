@@ -2,6 +2,7 @@
 
 Added <2023-06-13~>:
     added `split_text` for split a long text to multiple parts.
+    added `ggplot_translator` to translate a ggplot labels.
 Fixed:
     updated `translator`, use '\n'combine query words for a quicker translation. 
 

@@ -89,7 +89,6 @@ Suggests:
     devtools,
     multcompView,
     plot3D,
-    fanyi,
     rio,
     bookdown,
     sysfonts,
