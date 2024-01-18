@@ -6,7 +6,7 @@
 \usage{
 ggplot_translator(
   gg,
-  which = "all",
+  which = c("x", "y"),
   from = "en",
   to = "zh",
   keep_original_label = FALSE,
@@ -17,7 +17,7 @@ ggplot_translator(
 \arguments{
 \item{gg}{a ggplot object to be translated}
 
-\item{which}{vector contains one or more of 'x', 'y', 'label', 'fill', 'color'..., or 'labs' and 'all' to select which texts to be translated.}
+\item{which}{vector contains one or more of 'x', 'y', 'label', 'fill', 'color'..., or 'facet_x', 'facet_y', 'labs' and 'all' to select which texts to be translated.}
 
 \item{from}{source language}
 
@@ -25,7 +25,7 @@ ggplot_translator(
 
 \item{keep_original_label}{keep the source language labels}
 
-\item{original_sep}{default, '\n'}
+\item{original_sep}{default, '\\n'}
 
 \item{verbose}{verbose}
 }
@@ -45,6 +45,6 @@ ggp <- ggplot(df, mapping = aes(x = Subject, y = Score, label = Motion)) +
     geom_text() +
     geom_point() +
     labs(x = "Subject", y = "Score", title = "Final Examination")
-ggplot_translator(ggp)
+ggplot_translator(ggp, which = "all")
 }
 }

@@ -124,20 +124,23 @@ change_fac_lev <- function(x, levels = NULL, last = FALSE) {
 }
 
 #' Replace a vector by named vector
+#'
 #' @param x a vector need to be replaced
 #' @param y named vector
 #' @param fac consider the factor?
+#' @param keep_origin keep_origin?
 #'
 #' @return vector
 #' @export
 #' @examples
-#' tidai(c("a", "a", "b"), c("a" = "red", b = "blue"))
+#' tidai(c("a", "a", "b", "d"), c("a" = "red", b = "blue"))
 #' tidai(c("a", "a", "b", "c"), c("red", "blue"))
-tidai <- function(x, y, fac = FALSE) {
+#' tidai(c("A" = "a", "B" = "b"), c("a" = "red", b = "blue"))
+#' tidai(factor(c("A" = "a", "B" = "b", "C" = "c")), c("a" = "red", b = "blue", c = "green"))
+tidai <- function(x, y, fac = FALSE, keep_origin = FALSE) {
     if (is.null(y)) {
         return(x)
     }
-    x <- as.character(x)
     tmp <- y
     if (is.null(names(tmp))) {
         tmp <- rep(unique(tmp), len = length(unique(x)))
@@ -147,10 +150,14 @@ tidai <- function(x, y, fac = FALSE) {
             names(tmp) <- unique(x)
         }
     }
-    if (is.null(names(x))) {
-        return(unname(tmp[x]))
+    if (keep_origin) {
+        add <- setdiff(x, names(tmp))
+        tmp <- c(tmp, setNames(add, add))
     }
-    return(setNames(unname(tmp[x]), names(x)))
+    if (is.null(names(x))) {
+        return(unname(tmp[as.character(x)]))
+    }
+    return(setNames(unname(tmp[as.character(x)]), names(x)))
 }
 
 #' Update the parameters
@@ -771,7 +778,21 @@ translator <- function(words, from = "en", to = "zh", split = TRUE, verbose = TR
         if (verbose) message("Same `from` and `to` language, change `to` to ", to)
     }
 
-    if (length(words) > 1) {
+    words[words == ""] <- " "
+    orginal_words <- setNames(words, words)
+    idx <- grepl("^\\s+$", words)
+
+    if (sum(idx, na.rm = TRUE) > 0) {
+        if (verbose) message("Some of your words are invalid")
+        # words[idx]="NULL"
+        words <- words[!idx]
+    }
+    words <- unique(words)
+    if (length(words) == 0) {
+        return(orginal_words)
+    }
+
+    if (length(orginal_words) > 1) {
         if (any(grepl("\n", words, fixed = TRUE))) {
             if (verbose) message("'\\n' was found in your words, change to ';'.")
         }
@@ -794,11 +815,18 @@ translator <- function(words, from = "en", to = "zh", split = TRUE, verbose = TR
 
     res <- baidu_translate(input_words, from = from, to = to)
 
-    if (length(res) == length(words)) names(res) <- words
-    return(res)
+    if (length(res) == length(words)) {
+        names(res) <- words
+        res1 <- tidai(orginal_words, res, keep_origin = TRUE)
+    } else {
+        warning("Some thing wrong with your words, make the output length not equal to the input length")
+        res1 <- res
+    }
+    return(res1)
 }
 
 baidu_translate <- function(x, from = "en", to = "zh", pcutils_config = show_pcutils_config()) {
+    lib_ps("openssl","httr","jsonlite",library = FALSE)
     water <- sample.int(4711, 1)
     sign <- sprintf("%s%s%s%s", pcutils_config$baidu_appid, x, water, pcutils_config$baidu_key)
     sign2 <- openssl::md5(sign)

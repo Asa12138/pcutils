@@ -360,12 +360,12 @@ match_df <- function(otutab, metadata) {
 #' Translate axis label of a ggplot
 #'
 #' @param gg a ggplot object to be translated
-#' @param which vector contains one or more of 'x', 'y', 'label', 'fill', 'color'..., or 'labs' and 'all' to select which texts to be translated.
+#' @param which vector contains one or more of 'x', 'y', 'label', 'fill', 'color'..., or 'facet_x', 'facet_y', 'labs' and 'all' to select which texts to be translated.
 #' @param from source language
 #' @param to target language
 #' @param verbose verbose
 #' @param keep_original_label keep the source language labels
-#' @param original_sep default, '\n'
+#' @param original_sep default, '\\n'
 #'
 #' @return ggplot
 #' @export
@@ -379,9 +379,9 @@ match_df <- function(otutab, metadata) {
 #'     geom_text() +
 #'     geom_point() +
 #'     labs(x = "Subject", y = "Score", title = "Final Examination")
-#' ggplot_translator(ggp)
+#' ggplot_translator(ggp, which = "all")
 #' }
-ggplot_translator <- function(gg, which = "all", from = "en", to = "zh",
+ggplot_translator <- function(gg, which = c("x", "y"), from = "en", to = "zh",
                               keep_original_label = FALSE, original_sep = "\n", verbose = TRUE) {
     if (verbose) {
         message("Please set the font family to make the labels display well.\n see `how_to_set_font_for_plot()`.")
@@ -398,7 +398,18 @@ ggplot_translator <- function(gg, which = "all", from = "en", to = "zh",
 
     # all_lab=c("x", "y", "label", "labs")
     # if(length(which)==1)which <- match.arg(which, c(all_lab, "all"))
-    if (identical(which, "all")) which <- c(names(gg$mapping), "labs")
+
+    mappings <- unlist(lapply(gg$mapping, rlang::quo_text))
+    if (length(gg$facet$params) > 0) {
+        if (length(gg$facet$params$rows) > 0) {
+            mappings <- c(mappings, "facet_y" = names(gg$facet$params$rows)[1])
+        }
+        if (length(gg$facet$params$cols) > 0) {
+            mappings <- c(mappings, "facet_x" = names(gg$facet$params$cols)[1])
+        }
+    }
+
+    if (identical(which, "all")) which <- c(names(mappings), "labs")
 
     if (is.null(attributes(gg)$translated)) {
         translated <- ""
@@ -408,12 +419,13 @@ ggplot_translator <- function(gg, which = "all", from = "en", to = "zh",
 
     if (length(which) == 1) {
         if (which == "labs") {
-            trans_labels <- translator(unlist(gg$labels), from = from, to = to)
+            ori_labels <- unlist(gg$labels)
+            trans_labels <- translator(ori_labels, from = from, to = to)
             if (keep_original_label) trans_labels <- paste0(trans_labels, original_sep, "(", names(trans_labels), ")")
-            gg$labels <- as.list(setNames(trans_labels, names(gg$labels)))
+            gg$labels <- as.list(setNames(trans_labels, names(ori_labels)))
         } else {
-            col_name <- rlang::quo_text(gg$mapping[[which]])
-            if (col_name %in% translated) {
+            col_name <- mappings[which]
+            if (col_name %in% translated | is.na(col_name)) {
                 return(gg)
             } else {
                 attributes(gg)$translated <- c(translated, col_name)

@@ -4,7 +4,7 @@
 \alias{tidai}
 \title{Replace a vector by named vector}
 \usage{
-tidai(x, y, fac = FALSE)
+tidai(x, y, fac = FALSE, keep_origin = FALSE)
 }
 \arguments{
 \item{x}{a vector need to be replaced}
@@ -12,6 +12,8 @@ tidai(x, y, fac = FALSE)
 \item{y}{named vector}
 
 \item{fac}{consider the factor?}
+
+\item{keep_origin}{keep_origin?}
 }
 \value{
 vector
@@ -20,6 +22,8 @@ vector
 Replace a vector by named vector
 }
 \examples{
-tidai(c("a", "a", "b"), c("a" = "red", b = "blue"))
+tidai(c("a", "a", "b", "d"), c("a" = "red", b = "blue"))
 tidai(c("a", "a", "b", "c"), c("red", "blue"))
+tidai(c("A" = "a", "B" = "b"), c("a" = "red", b = "blue"))
+tidai(factor(c("A" = "a", "B" = "b", "C" = "c")), c("a" = "red", b = "blue", c = "green"))
 }
