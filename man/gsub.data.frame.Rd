@@ -13,7 +13,7 @@ gsub.data.frame(pattern, replacement, x, ...)
 
 \item{x}{your data.frame}
 
-\item{...}{addtitional arguments for gerpl()}
+\item{...}{additional arguments for gerpl()}
 }
 \value{
 a logical data.frame

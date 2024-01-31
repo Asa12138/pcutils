@@ -48,7 +48,7 @@ print_authors_affiliation <- function(authors = c("jc", "pc")) {
 dabiao <- function(str = "", ..., n = 80, char = "=", mode = c("middle", "left", "right"), print = FALSE) {
     str <- paste0(c(str, ...), collapse = "")
     mode <- match.arg(mode, c("middle", "left", "right"))
-    if (n < nchar(str)) n <- nchar(str) + 2
+    if (n < nchar(str)) n <- nchar(str)
     x <- (n - nchar(str)) %/% 2
     x2 <- n - nchar(str) - x
     switch(mode,
@@ -219,15 +219,14 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
         "sankeyD3" = "fbreitwieser/sankeyD3",
         "pctax" = "Asa12138/pctax",
         "MetaNet" = "Asa12138/MetaNet",
+        "plot4fun" = "Asa12138/plot4fun",
+        "iCRISPR" = "Asa12138/iCRISPR",
         "ReporterScore" = "Asa12138/ReporterScore",
         "ggcor" = "Github-Yilei/ggcor",
         "chorddiag" = "mattflor/chorddiag",
-        "inborutils" = "inbo/inborutils",
         "ggradar" = "ricardo-bion/ggradar",
         "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
-        "Vennerable" = "js229/Vennerable",
         "linkET" = "Hy4m/linkET",
-        "deeplr" = "paulcbauer/deeplr",
         "ggchicklet" = "hrbrmstr/ggchicklet",
         "ggkegg" = "noriakis/ggkegg",
         "SpiecEasi" = "zdk123/SpiecEasi"
@@ -237,7 +236,7 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
     for (p in p_list) {
         if (!requireNamespace(p, quietly = TRUE)) {
             if (!all_yes) {
-                message(paste0(p, ": this package haven't install, should install?"))
+                message(paste0(p, ": this package has not been installed yet, should it be installed?"))
                 flag <- readline("yes/no(y/n)?")
             } else {
                 flag <- "y"
@@ -245,17 +244,19 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
 
             if (tolower(flag) %in% c("yes", "y")) {
                 if (p %in% names(some_packages)) {
-                    remotes::install_github(some_packages[p])
+                    if (!requireNamespace("devtools", quietly = TRUE)) utils::install.packages("devtools")
+                    message("Install the ",p , "from github: ", some_packages[p])
+                    devtools::install_github(some_packages[p])
                 } else {
                     utils::install.packages(p)
                 }
             } else {
-                stop(paste0("exit, because '", p, "' need to install"))
+                stop(paste0("exit, because '", p, "' needs to be installed"))
             }
 
             if (!requireNamespace(p, quietly = TRUE)) {
                 if (!all_yes) {
-                    message(paste0(p, " is not available in CRAN, try Bioconductor?"))
+                    message(paste0(p, " is not available at CRAN, try Bioconductor?"))
                     flag <- readline("yes/no(y/n)?")
                 }
 
@@ -263,12 +264,12 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
                     if (!requireNamespace("BiocManager", quietly = TRUE)) utils::install.packages("BiocManager")
                     BiocManager::install(p)
                 } else {
-                    stop(paste0("exit, because '", p, "' need to install"))
+                    stop(paste0("exit, because '", p, "' needs to be installed"))
                 }
             }
 
             if (!requireNamespace(p, quietly = TRUE)) {
-                stop("\nplease try other way (github...) to install ", p)
+                stop("\nplease try other way (e.g. github...) to install ", p)
             }
         }
 
@@ -371,7 +372,7 @@ grepl.data.frame <- function(pattern, x, ...) {
 #' @param pattern search pattern
 #' @param replacement a replacement for matched pattern
 #' @param x your data.frame
-#' @param ... addtitional arguments for gerpl()
+#' @param ... additional arguments for gerpl()
 #'
 #' @return a logical data.frame
 #' @export
@@ -398,12 +399,14 @@ gsub.data.frame <- function(pattern, replacement, x, ...) {
 #' @param format "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf","jpg", "png", "pdf", "svg"...
 #' @param just_print just print the file
 #' @param all_yes all_yes?
+#' @param ... additional arguments
+#' @param density the resolution for reading pdf or svg
 #'
 #' @return data.frame
 #' @export
 #'
-read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE) {
-    if ((file.size(file) > 10000) & !all_yes) {
+read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, density = 120, ...) {
+    if ((file.size(file) > 1e6) & !all_yes) {
         message(paste0(file, ": this file is a little big, still open?"))
         flag <- readline("yes/no(y/n)?")
         if (!tolower(flag) %in% c("yes", "y")) {
@@ -411,12 +414,17 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE) 
         }
     }
     if (just_print) {
+        lib_ps("readr", library = FALSE)
         cat(readr::read_file(file))
     } else {
+        oldpar <- graphics::par(no.readonly = TRUE)
+        on.exit(graphics::par(oldpar))
+        graphics::par(mar = rep(0, 4))
+
         if (is.null(format)) format <- tools::file_ext(file)
         format <- match.arg(format, c(
             "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf",
-            "jpg", "png", "pdf", "svg", "biom"
+            "jpg", "png", "pdf", "svg", "gif", "biom"
         ))
 
         if (format %in% c("gff", "gtf")) {
@@ -443,46 +451,31 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE) 
             return(df)
         }
 
-        # if (format %in% c("biom")) {
-        #     if (file.size(file) > 10000) {
-        #         message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
-        #         flag <- readline("yes/no(y/n)?")
-        #         if (tolower(flag) %in% c("yes", "y")) {
-        #             lib_ps("biomformat", library = FALSE)
-        #             dat.b <- biomformat::read_biom(file)
-        #             df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
-        #         } else {
-        #             return(NULL)
-        #         }
-        #     }
-        #     return(df)
-        # }
-
-        if (format %in% c("jpg", "png")) {
-            lib_ps("jpeg", "png", "grid", library = FALSE)
-            switch(format,
-                "jpg" = {
-                    p1 <- jpeg::readJPEG(file)
-                },
-                "png" = {
-                    p1 <- png::readPNG(file)
+        if (format %in% c("biom")) {
+            if (file.size(file) > 10000) {
+                message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
+                flag <- readline("yes/no(y/n)?")
+                if (tolower(flag) %in% c("yes", "y")) {
+                    lib_ps("biomformat", library = FALSE)
+                    dat.b <- biomformat::read_biom(file)
+                    df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
+                } else {
+                    return(NULL)
                 }
-            )
-            g <- grid::rasterGrob(p1, interpolate = TRUE)
-            p <- ggplot2::ggplot() +
-                ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-                ggplot2::theme_void()
-            return(p)
-            # graphics::plot(1:2, type = "n", axes = FALSE, ylab = "n", xlab = "n", ann = FALSE)
-            # graphics::rasterImage(p1, 1, 1, 2, 2)
+            }
+            return(df)
         }
-        if (format == "svg") {
-            lib_ps("grImport2", "ggpubr", library = FALSE)
-            x <- grImport2::readPicture(file)
-            g <- grImport2::pictureGrob(x)
-            p <- ggpubr::as_ggplot(g)
-            p
-            return(p)
+
+        if (format %in% c("jpg", "png", "svg", "pdf")) {
+            lib_ps("magick", library = FALSE)
+            image <- magick::image_read(file, density = density, ...)
+            if (length(image) > 1) message("Your file has more than one page! Print the first one page.")
+            plot(image[1])
+        }
+        if (format %in% c("gif")) {
+            lib_ps("magick", library = FALSE)
+            image <- magick::image_read(file, ...)
+            print(image)
         }
     }
 }
@@ -576,7 +569,10 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
     out <- paste0(name, ".", to_format)
 
     if (to_format == "jpeg") to_format <- "jpg"
-    if (format == to_format) stop("don not need transfer")
+    if (format == to_format) {
+        message("do not need transfer")
+        return(invisible())
+    }
 
     lib_ps("ggplot2", library = FALSE)
     if (format == "svg") {
@@ -591,35 +587,9 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
             invisible(g)
         }
     }
-    if (format == "pdf") {
-        lib_ps("pdftools", library = FALSE)
-        switch(to_format,
-            "png" = {
-                pdftools::pdf_convert(file, "png", filenames = out)
-            },
-            "jpg" = {
-                pdftools::pdf_convert(file, "jpeg", filenames = out)
-            },
-            "jpeg" = {
-                pdftools::pdf_convert(file, "jpeg", filenames = out)
-            }
-        )
-    }
-    # https://phantomjs.org/download.html
-    # PhantomJS
-    if (format == "png") {
-        lib_ps("png", "grid", library = FALSE)
-        img <- png::readPNG(file)
-        g <- grid::rasterGrob(img, interpolate = TRUE)
-        p <- ggplot2::ggplot() +
-            ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
-            ggplot2::theme_void()
-        ggplot2::ggsave(p, filename = out, device = to_format, ...)
-        invisible(g)
-    }
-    if (format == "jpg") {
-        lib_ps("jpg", "grid", library = FALSE)
-        img <- jpeg::readJPEG(file)
+    if (format %in% c("pdf", "png", "jpg")) {
+        lib_ps("magick", "grid", library = FALSE)
+        img <- magick::image_read(file, density = 200, ...)
         g <- grid::rasterGrob(img, interpolate = TRUE)
         p <- ggplot2::ggplot() +
             ggplot2::annotation_custom(g, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
@@ -777,7 +747,7 @@ translator <- function(words, from = "en", to = "zh", split = TRUE, verbose = TR
         to <- setdiff(c("en", "zh"), from)[1]
         if (verbose) message("Same `from` and `to` language, change `to` to ", to)
     }
-
+    words <- as.character(words)
     words[words == ""] <- " "
     orginal_words <- setNames(words, words)
     idx <- grepl("^\\s+$", words)
@@ -826,7 +796,7 @@ translator <- function(words, from = "en", to = "zh", split = TRUE, verbose = TR
 }
 
 baidu_translate <- function(x, from = "en", to = "zh", pcutils_config = show_pcutils_config()) {
-    lib_ps("openssl","httr","jsonlite",library = FALSE)
+    lib_ps("openssl", "httr", "jsonlite", library = FALSE)
     water <- sample.int(4711, 1)
     sign <- sprintf("%s%s%s%s", pcutils_config$baidu_appid, x, water, pcutils_config$baidu_key)
     sign2 <- openssl::md5(sign)

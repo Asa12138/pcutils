@@ -4,14 +4,16 @@
 \alias{plotgif}
 \title{Plot a gif}
 \usage{
-plotgif(plist, file, mode = "gif")
+plotgif(plist, file, speed = 1, ...)
 }
 \arguments{
 \item{plist}{plot list}
 
 \item{file}{prefix of your .gif file}
 
-\item{mode}{"gif" or "html"}
+\item{speed}{1}
+
+\item{...}{add}
 }
 \value{
 No return value

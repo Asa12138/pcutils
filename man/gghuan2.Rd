@@ -6,23 +6,35 @@
 \usage{
 gghuan2(
   tab = NULL,
+  huan_width = 1,
+  circle_width = 1,
   space_width = 0.2,
+  circle_label = NULL,
   name = TRUE,
   percentage = FALSE,
   text_params = NULL,
+  circle_label_params = NULL,
   bar_params = NULL
 )
 }
 \arguments{
 \item{tab}{a dataframe with hierarchical structure}
 
+\item{huan_width}{the huan width (numeric vector)}
+
+\item{circle_width}{the center circle width}
+
 \item{space_width}{the space width between doughnuts (0~1).}
+
+\item{circle_label}{the center circle label}
 
 \item{name}{label the name}
 
 \item{percentage}{label the percentage}
 
 \item{text_params}{parameters parse to \code{\link[ggplot2]{geom_text}}}
+
+\item{circle_label_params}{parameters parse to \code{\link[ggplot2]{geom_text}}}
 
 \item{bar_params}{parameters parse to \code{\link[ggplot2]{geom_rect}}}
 }

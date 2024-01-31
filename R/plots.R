@@ -116,34 +116,33 @@ plotpdf <- function(plist, file, width = 8, height = 7, brower = "/Applications/
 #' Plot a gif
 #'
 #' @param plist plot list
+#' @param speed 1
 #' @param file prefix of your .gif file
-#' @param mode "gif" or "html"
+#' @param ... add
+#'
 #' @return No return value
 #' @export
-plotgif <- function(plist, file, mode = "gif") {
-    lib_ps("animation", library = FALSE)
-    if (mode == "gif") {
-        animation::saveGIF(
+plotgif <- function(plist, file, speed = 1, ...) {
+    lib_ps("gifski", library = FALSE)
+    gifski::save_gif(
+        {
             for (i in plist) {
                 print(i)
-            },
-            movie.name = paste0(file, ".gif")
-        )
-    }
-    # transfer pngs to a gif use gifski::gifski()
-    if (mode == "html") {
-        oldwd <- getwd()
-        on.exit(setwd(oldwd))
+            }
+        },
+        gif_file = paste0(file, ".gif"),
+        delay = 1 / speed,
+        ...
+    )
 
-        dir.create(paste0(file, "_html"))
-        setwd(paste0(file, "_html"))
-        animation::saveHTML(
-            for (i in plist) {
-                print(i)
-            },
-            movie.name = paste0(file, ".html")
-        )
-    }
+    # if (mode == "gif") {
+    #     animation::saveGIF(
+    #         for (i in plist) {
+    #             print(i)
+    #         },
+    #         movie.name = paste0(file, ".gif")
+    #     )
+    # }
 }
 
 #' Get n colors
@@ -500,15 +499,24 @@ venn_cal <- function(otu_time) {
 #' @exportS3Method
 venn.list <- function(aa, mode = "venn", elements_label = TRUE, ...) {
     if (is.null(names(aa))) names(aa) <- seq_along(aa)
-    if (length(aa) > 4 && mode == "venn") message("venn < 4, recommend upset or flower")
+    # if (length(aa) > 4 && mode == "venn") message("venn < 4, recommend upset or flower")
     if (mode == "venn") {
-        lib_ps("ggvenn", library = FALSE)
-        ggvenn::ggvenn(aa, ...) -> p
+        lib_ps("ggVennDiagram", library = FALSE)
+        do.call(
+            ggVennDiagram::ggVennDiagram,
+            update_param(
+                list(x = aa, label_geom = "text", label_alpha = 1),
+                list(...)
+            )
+        ) -> p
+        p <- p + scale_color_manual(values = rep("black", length(aa))) +
+            scale_fill_gradient(low = "white", high = "red2") +
+            theme(legend.position = "none")
         return(p)
     }
+
     # if (mode == "venn2") {
     #   if (!requireNamespace("RBGL")) BiocManager::install("RBGL")
-    #   if (!requireNamespace("graph")) BiocManager::install("graph")
     #   lib_ps("Vennerable", library = FALSE)
     #   Vennerable::Venn(aa) -> aap
     #   Vennerable::plot(aap)
@@ -517,6 +525,7 @@ venn.list <- function(aa, mode = "venn", elements_label = TRUE, ...) {
     #   # plot(aap, doWeights = FALSE,type="ellipses")
     #   # plot(aap, doWeights = FALSE,type="ChowRuskey")
     # }
+
     if (mode == "upset") {
         lib_ps("UpSetR", library = FALSE)
         UpSetR::upset(UpSetR::fromList(aa), order.by = "freq", nsets = length(aa), nintersects = 30, ...) -> p
@@ -569,6 +578,7 @@ venn_flower <- function(aa) {
     lib_ps("RColorBrewer", "plotrix", library = FALSE)
     oldpar <- graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(oldpar))
+    graphics::par(bty = "n", ann = FALSE, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
 
     otu_num <- length(aa[[1]])
     core_otu_id <- aa[[1]]
@@ -589,7 +599,6 @@ venn_flower <- function(aa) {
     ellipse_col <- ellipse_col
     circle_col <- "white"
 
-    graphics::par(bty = "n", ann = FALSE, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
 
     plot(c(0, 10), c(0, 10), type = "n")
     deg <- 360 / n
@@ -1256,6 +1265,10 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
 #' @param percentage label the percentage
 #' @param text_params parameters parse to \code{\link[ggplot2]{geom_text}}
 #' @param bar_params parameters parse to \code{\link[ggplot2]{geom_rect}}
+#' @param huan_width the huan width (numeric vector)
+#' @param circle_width the center circle width
+#' @param circle_label the center circle label
+#' @param circle_label_params parameters parse to \code{\link[ggplot2]{geom_text}}
 #'
 #' @import ggplot2 dplyr
 #' @return a ggplot
@@ -1266,12 +1279,13 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
 #'     a = c("a", "a", "b", "b", "c"), b = c("a", LETTERS[2:5]), c = rep("a", 5),
 #'     number = 1:5
 #' ) %>% gghuan2()
-gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
-                    percentage = FALSE, text_params = NULL, bar_params = NULL) {
+gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 0.2, circle_label = NULL,
+                    name = TRUE, percentage = FALSE, text_params = NULL, circle_label_params = NULL, bar_params = NULL) {
     if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
     if ((space_width < 0) | space_width >= 1) stop("space_width should be [0,1)")
     type <- ymax <- ymin <- xmin <- xmax <- lab <- fraction <- NULL
 
+    huan_widths <- c(circle_width, rep(huan_width, length = ncol(tab) - 1))
     plot_df_res <- data.frame()
     for (i in seq_len(ncol(tab) - 1)) {
         plot_df <- tab[, c(i, ncol(tab))]
@@ -1280,8 +1294,8 @@ gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
         dplyr::mutate(plot_df, fraction = n / sum(n)) -> plot_df
         plot_df$ymax <- cumsum(plot_df$fraction)
         plot_df$ymin <- c(0, head(plot_df$ymax, n = -1))
-        plot_df$xmax <- i + 1
-        plot_df$xmin <- i + space_width
+        plot_df$xmax <- sum(huan_widths[seq_len(i + 1)])
+        plot_df$xmin <- sum(huan_widths[seq_len(i)]) + space_width
 
         plot_df$lab <- ""
         if (percentage) {
@@ -1297,12 +1311,13 @@ gghuan2 <- function(tab = NULL, space_width = 0.2, name = TRUE,
 
     ggplot(data = plot_df_res, aes(fill = type, ymax = ymax, ymin = ymin, xmax = xmax, xmin = xmin)) +
         do.call(geom_rect, update_param(list(alpha = 0.8), bar_params)) +
-        xlim(c(0, i + 2)) +
+        xlim(c(0, sum(huan_widths) + 1)) +
         coord_polar(theta = "y") +
         do.call(geom_text, update_param(list(
             mapping = aes(x = ((xmin + xmax) / 2) + 1, y = ((ymin + ymax) / 2), label = lab),
             size = 3, nudge_x = -1
         ), text_params)) +
+        do.call(annotate, update_param(list(geom = "text", x = 0, y = 0, label = circle_label), circle_label_params)) +
         theme_light() +
         labs(x = "", y = "", fill = "") +
         theme(panel.grid = element_blank()) +
@@ -1672,28 +1687,6 @@ tax_pie <- function(otutab, topN = 6, ...) {
     ggpubr::ggpie(df, "va", fill = get_cols(length(b)), label = "labels", grepl = TRUE, ...)
 }
 
-#' Word cloud plot
-#'
-#' @param str_vector string vector
-#' @param ignore_words ignore_words
-#' @param topN topN, 50
-#'
-#' @export
-#' @return a htmlwidget
-#' @examples
-#' \donttest{
-#' data(otutab)
-#' tax_wordcloud(taxonomy$Genus)
-#' }
-tax_wordcloud <- function(str_vector,
-                          ignore_words = "Unclassified|uncultured|Ambiguous|Unknown|unknown|metagenome|Unassig", topN = 50) {
-    lib_ps("wordcloud2", library = FALSE)
-    str_vector <- str_vector[!grepl(ignore_words, str_vector)]
-    sort(table(str_vector), decreasing = TRUE)[1:topN] %>%
-        as.data.frame() %>%
-        stats::na.omit() %>%
-        wordcloud2::wordcloud2(., size = .7)
-}
 
 #' Triangle plot
 #'
@@ -2067,6 +2060,7 @@ my_circle_packing <- function(test, anno = NULL, mode = 1,
 #' @param row_cluster cluster the row?
 #' @param col_cluster cluster the column?
 #' @param annotation_pal the annotation color pal, a list. e.g. list(Group=c("red","blue"))
+#' @param tile_params tile_params parsed to \code{\link[ggplot2]{geom_tile}}
 #'
 #' @return a ggplot
 #' @export
@@ -2078,8 +2072,8 @@ my_circle_packing <- function(test, anno = NULL, mode = 1,
 #'     col_annotation = metadata[, c(2, 4)]
 #' )
 ggheatmap <- function(otutab, pal = NULL, scale = "none",
-                      rowname = TRUE, colname = TRUE,
-                      row_cluster = TRUE, col_cluster = TRUE,
+                      rowname = TRUE, colname = TRUE, tile_params = list(),
+                      row_cluster = FALSE, col_cluster = FALSE,
                       row_annotation = NULL, col_annotation = NULL, annotation_pal = NULL) {
     lib_ps("ggnewscale", "aplot", "reshape2", "ggtree", "ape", library = FALSE)
     sample <- otu <- value <- Id <- NULL
@@ -2087,6 +2081,9 @@ ggheatmap <- function(otutab, pal = NULL, scale = "none",
         pal <- get_cols(pal = "bluered")
     } else if (length(is.ggplot.color(pal)) < 2) stop("pal is wrong!")
 
+    otutab %>% as.data.frame() -> otutab
+    rownames(otutab) <- as.character(rownames(otutab))
+    colnames(otutab) <- as.character(colnames(otutab))
     otutab -> d
     if (scale == "row") {
         d <- trans(d, method = "standardize", margin = 1)
@@ -2095,9 +2092,11 @@ ggheatmap <- function(otutab, pal = NULL, scale = "none",
     rownames(d) -> d$otu
 
     dd <- reshape2::melt(d, id.vars = "otu", variable.name = "sample")
+    dd$otu <- factor(dd$otu, levels = rev(rownames(d)))
+    dd$sample <- factor(dd$sample, levels = colnames(d))
 
     p <- ggplot(dd, aes(x = sample, y = otu, fill = value)) +
-        geom_tile() +
+        do.call(geom_tile, tile_params) +
         scale_fill_gradientn(colours = pal) +
         scale_y_discrete(position = "right") +
         theme_minimal() +
@@ -2218,203 +2217,4 @@ my_cat <- function(mode = 1) {
             theme_void()
     }
     p
-}
-
-#' Give you a rose
-#'
-#' @param color "skyblue3"
-#'
-#' @return plot
-#' @export
-#' @references https://mp.weixin.qq.com/s/W-BYPR3UXL120XWpTmN3rA
-give_you_a_rose <- function(color = "red3") {
-    lib_ps("plot3D", library = FALSE)
-    # 生成绘图数据
-    x <- seq(0, 24) / 24
-    t <- seq(0, 575, by = 0.5) / 575 * 20 * pi + 4 * pi
-    grid <- expand.grid(x = x, t = t)
-    x <- matrix(grid$x, ncol = 25, byrow = TRUE)
-    t <- matrix(grid$t, ncol = 25, byrow = TRUE)
-    p <- (pi / 2) * exp(-t / (8 * pi))
-    change <- sin(15 * t) / 150
-    u <- 1 - (1 - (3.6 * t) %% (2 * pi) / pi)^4 / 2 + change
-    y <- 2 * (x^2 - x)^2 * sin(p)
-    r <- u * (x * sin(p) + y * cos(p))
-    # 绘图
-    plot3D::persp3D(
-        x = r * cos(t), y = r * sin(t), z = u * (x * cos(p) - y * sin(p)),
-        main = "To you",
-        # xlim=c(-0.5,0.5),ylim=c(-0.5,0.5),zlim=c(0,1),
-        xlab = "Love youself",
-        ylab = "Love youself",
-        zlab = "Love youself",
-        col = grDevices::colorRampPalette(c("#e4e9f6", color))(100),
-        border = "grey85",
-        lwd = 0.1,
-        facets = TRUE,
-        colkey = FALSE,
-        bty = "b2",
-        theta = -60, phi = 45
-    )
-    print("give you a rose \ud83c\udf39.")
-}
-
-
-#' Plot a DNA double helix
-#'
-#' @param col_DNA col_DNA, "#377EB8"
-#' @param col_ATCG col_ATCG, c("#7FC97F","#FB8072","#FFFFB3","#A6CEE3")
-#' @param DNA_length DNA_length, 2
-#' @return ggplot
-#' @export
-#' @references \code{https://github.com/SherryDong/create_plot_by_R_base}
-#' @examples
-#' DNA_plot()
-DNA_plot <- function(col_DNA = "#377EB8", col_ATCG = c("#7FC97F", "#FB8072", "#FFFFB3", "#A6CEE3"),
-                     DNA_length = 2) {
-    oldpar <- graphics::par(no.readonly = TRUE)
-    on.exit(graphics::par(oldpar))
-
-    graphics::par(pin = c(1.5 * DNA_length, 1.5))
-
-    DNA_length <- 2 * DNA_length ## the code only applies when DNA_length%%2==0, if DNA_length%%2==1, need to modify
-
-    x <- seq(-DNA_length * pi / 2, DNA_length * pi / 2, length.out = 1000) ##
-    y1 <- cos(x) ## backbone up
-    y2 <- cos(x + pi) ## backbone down
-    # get the position of nucleotides
-    xx <- seq(DNA_length * pi / 2, -DNA_length * pi / 2, length.out = DNA_length * 5 + 1)
-    xx <- xx + (xx[2] - xx[1]) / 2
-    # remove the first and the lines in the boundary region
-    xx <- setdiff(xx, c(xx[c(1:DNA_length) * 5 - 2], min(xx)))
-    plot(y1 ~ x, pch = 16, type = "l", xlab = "", ylab = "", xaxt = "n", yaxt = "n", main = "", bty = "n", col = "white")
-    for (i in 1:length(xx)) {
-        ybottom <- cos(xx[i]) # ybottom position
-        ytop <- cos(xx[i] + pi) # yup position
-        rr <- sample(1:4, 1) ## ATCG, random select one pair
-        if (rr == 1) {
-            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
-            graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
-        }
-        if (rr == 2) {
-            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[2], lwd = 4)
-            graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[1], lwd = 4)
-        }
-        if (rr == 3) {
-            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4) ## C-G
-            graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4)
-        }
-        if (rr == 4) {
-            graphics::segments(y0 = ybottom, y1 = 0, x0 = xx[i], x1 = xx[i], col = col_ATCG[4], lwd = 4) ## G-C
-            graphics::segments(y0 = 0, y1 = ytop, x0 = xx[i], x1 = xx[i], col = col_ATCG[3], lwd = 4)
-        }
-    }
-    graphics::lines(y1 ~ x, pch = 16, lwd = 8, col = col_DNA)
-    graphics::lines(y2 ~ x, pch = 16, lwd = 8, col = col_DNA)
-}
-
-#' Draw a Chunlian (Spring Festival couplet) using ggplot2
-#'
-#' @param words A character vector containing three strings for the three lines of the couplet
-#' @param bg_size Size of the points in geom_point, 20
-#' @param bg_shape Shape of the points in geom_point (21~25), 22 or 23 are very good.
-#' @param bg_fill Fill color of the points in geom_point
-#' @param font_file font file, e.g XX.ttf, XX.ttc
-#' @param download_dir download_dir for font_file
-#' @param text_size Size of the text in geom_text, 10
-#' @param text_params parameters parse to geom_text
-#'
-#' @return A ggplot object representing the Chunlian
-#' @export
-chunlian <- function(words = NULL, bg_size = 20, bg_shape = 22, bg_fill = "red2", text_size = 10, text_params = list(), font_file = NULL, download_dir = "pcutils_temp") {
-    x <- y <- label <- NULL
-    if (identical(words, 1)) {
-        words <- c("\u6295\u5565\u4e2d\u5565", "SCI\u5929\u5929\u6709\u4e00\u533a", "CNS\u6708\u6708\u6709\u5c01\u9762")
-    } else if (identical(words, 2)) words <- c("\u79d1\u7814\u987a\u5229", "\u6570\u636e\u5206\u6790\u597d\u5230\u7206", "\u6587\u7ae0\u6295\u54ea\u54ea\u90fd\u8981")
-
-    lib_ps("sysfonts", "showtext", library = FALSE)
-
-    if (is.null(font_file)) {
-        font_file <- file.path(download_dir, "SanJiChunLianZiTiJian.ttf")
-        chunlian_font_url <- "https://asa12138.github.io/FileList/SanJiChunLianZiTiJian.ttf"
-
-        download2(chunlian_font_url, font_file)
-    }
-
-    if (!file.exists(font_file)) stop("font_file don't exsit.")
-
-    showtext::showtext_auto()
-    # Add the font to showtext
-    sysfonts::font_add("chunlian", font_file)
-
-    words <- words[1:3]
-    words[is.na(words)] <- ""
-
-    hengpi_df <- shanglian_df <- xialian_df <- data.frame()
-    hengpi <- strsplit(words[1], "")[[1]]
-    if (length(hengpi) > 0) hengpi_df <- data.frame(y = 1, x = seq_along(hengpi), label = hengpi)
-
-    shanglian <- strsplit(words[2], "")[[1]]
-    xialian <- strsplit(words[3], "")[[1]]
-    if (length(shanglian) > 0) shanglian_df <- data.frame(x = 0, y = -seq_along(shanglian) + 0.5, label = shanglian)
-    if (length(xialian) > 0) xialian_df <- data.frame(x = nrow(hengpi_df) + 1, y = -seq_along(xialian) + 0.5, label = xialian)
-
-    dat <- rbind(hengpi_df, shanglian_df, xialian_df)
-
-    p <- ggplot(dat, aes(x = x, y = y)) +
-        geom_point(size = bg_size, shape = bg_shape, fill = bg_fill, color = "NA") +
-        do.call(geom_text, update_param(list(
-            mapping = aes(label = label),
-            size = text_size, family = "chunlian"
-        ), text_params)) +
-        xlim(range(c(dat$x - 1, dat$x + 1))) +
-        ylim(range(c(dat$y - 1, dat$y + 1))) +
-        theme_void() +
-        coord_fixed()
-    p
-}
-
-#' Plot the Olympic rings
-#'
-#' @return ggplot
-#' @export
-#'
-#' @examples
-#' Olympic_rings()
-Olympic_rings <- function() {
-    radius <- x <- y <- color <- start <- end <- NULL
-
-    lib_ps("ggforce", library = FALSE)
-
-    r <- 1
-    pensize <- r / 6
-    rings_data <- data.frame(
-        x = c(-2 * (r + pensize), -(r + pensize), 0, (r + pensize), 2 * (r + pensize)),
-        y = c(r, 0, r, 0, r),
-        radius = rep(r, 5),
-        color = c("#0081C8", "#FCB131", "#000000", "#00A651", "#EE334E")
-    )
-    tao_data <- data.frame(
-        x = c(-(r + pensize), -(r + pensize), (r + pensize), (r + pensize)),
-        start = c(0, 5 / 4 * pi, 0, 5 / 4 * pi),
-        end = c(1 / 4 * pi, 7 / 4 * pi, 1 / 4 * pi, 7 / 4 * pi),
-        color = c("#FCB131", "#FCB131", "#00A651", "#00A651")
-    )
-    ggplot() +
-        ggforce::geom_circle(
-            data = rings_data[c(2, 4), ],
-            mapping = aes(r = radius, x0 = x, y0 = y, size = I(5), color = color)
-        ) +
-        ggforce::geom_circle(
-            data = rings_data[c(1, 3, 5), ],
-            mapping = aes(r = radius, x0 = x, y0 = y, size = I(5), color = color)
-        ) +
-        ggforce::geom_arc(data = tao_data, mapping = aes(
-            x0 = x, y0 = 0, r = r, size = I(5),
-            start = start, end = end, color = color
-        )) +
-        scale_color_identity() +
-        coord_fixed() +
-        theme_void() +
-        theme(legend.position = "none")
 }

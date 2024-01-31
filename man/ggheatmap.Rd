@@ -10,8 +10,9 @@ ggheatmap(
   scale = "none",
   rowname = TRUE,
   colname = TRUE,
-  row_cluster = TRUE,
-  col_cluster = TRUE,
+  tile_params = list(),
+  row_cluster = FALSE,
+  col_cluster = FALSE,
   row_annotation = NULL,
   col_annotation = NULL,
   annotation_pal = NULL
@@ -27,6 +28,8 @@ ggheatmap(
 \item{rowname}{show row names?}
 
 \item{colname}{show column names?}
+
+\item{tile_params}{tile_params parsed to \code{\link[ggplot2]{geom_tile}}}
 
 \item{row_cluster}{cluster the row?}
 

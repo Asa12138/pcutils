@@ -4,7 +4,8 @@
 ## usethis namespace: start
 #' @importFrom utils data head download.file untar combn
 #' @importFrom stats rnorm sd var na.omit setNames median quantile as.formula coef cor dist start end hclust lm model.frame
-#' @importFrom grDevices colorRampPalette
+#' @importFrom grDevices colorRampPalette png pdf dev.off
+#' @importFrom graphics plot.new text legend hist par
 #' @import dplyr
 #' @import ggplot2
 ## usethis namespace: end

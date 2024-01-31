@@ -4,7 +4,14 @@
 \alias{read.file}
 \title{Read some special format file}
 \usage{
-read.file(file, format = NULL, just_print = FALSE, all_yes = FALSE)
+read.file(
+  file,
+  format = NULL,
+  just_print = FALSE,
+  all_yes = FALSE,
+  density = 120,
+  ...
+)
 }
 \arguments{
 \item{file}{file path}
@@ -14,6 +21,10 @@ read.file(file, format = NULL, just_print = FALSE, all_yes = FALSE)
 \item{just_print}{just print the file}
 
 \item{all_yes}{all_yes?}
+
+\item{density}{the resolution for reading pdf or svg}
+
+\item{...}{additional arguments}
 }
 \value{
 data.frame

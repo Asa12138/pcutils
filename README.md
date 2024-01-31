@@ -1,3 +1,11 @@
+<!-- badges: start -->
+[![](https://img.shields.io/badge/blog-@asa-blue.svg)](https://asa-blog.netlify.app/)
+[![](https://www.r-pkg.org/badges/version/pcutils?color=green)](https://CRAN.R-project.org/package=pcutils)
+[![](http://cranlogs.r-pkg.org/badges/grand-total/pcutils)](https://cran.r-project.org/package=pcutils)
+[![](http://cranlogs.r-pkg.org/badges/last-month/pcutils)](https://cran.r-project.org/package=pcutils)
+[![](https://img.shields.io/badge/devel%20version-0.2.2-green.svg)](https://github.com/Asa12138/pcutils)
+<!-- badges: end -->
+
 # pcutils
 
 `pcutils` contains many useful tools or functions for statistics or visualization. I always use this package for productivity.
@@ -93,8 +101,6 @@ library(pcutils)
 -   `tax_pie` plot a pie plot
 
 -   `tax_radar` plot a radar plot
-
--   `tax_wordcloud` plot a wordcloud plot
 
 -   `triangp` plot a triangle plot
 

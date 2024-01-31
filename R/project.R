@@ -1,24 +1,3 @@
-#' Re-install my packages
-#' @param pkgs pkgs
-#' @return No return value
-reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore")) {
-    for (i in pkgs) {
-        if (i == "pctax") i <- "pctax/pctax"
-        if (i == "MetaNet") i <- "MetaNet/MetaNet"
-        if (i == "ReporterScore") i <- "GRSA/ReporterScore"
-        devtools::document(paste0("~/Documents/R/", i))
-
-        tryCatch(
-            {
-                system(paste0("R CMD install ~/Documents/R/", i))
-            },
-            error = function(e) {
-                warning(i, "failed, please check.")
-            }
-        )
-    }
-}
-
 #' Make a R-analysis project
 #'
 #' @param pro_n project name
@@ -49,7 +28,7 @@ make_project <- function(pro_n, root_dir = "~/Documents/R/",
         file.copy(csl, paste(pro_dir, "analysis", "my.csl", sep = "/"))
     }
 
-    cat("Version: 1.0
+    writeLines("Version: 1.0
 
 RestoreWorkspace: Default
 SaveWorkspace: Default
@@ -61,7 +40,7 @@ NumSpacesForTab: 2
 Encoding: UTF-8
 
 RnwWeave: Sweave
-LaTeX: XeLaTeX", file = paste(pro_dir, "analysis", paste0(pro_n, ".Rproj"), sep = "/"))
+LaTeX: XeLaTeX", con = paste(pro_dir, "analysis", paste0(pro_n, ".Rproj"), sep = "/"), sep = "")
 
     tmp <- ""
     if (file.exists("~/Documents/R/pcutils")) {
@@ -81,7 +60,7 @@ kin_col=c(k__Bacteria="#a6bce3",k__Fungi="#fdbf6f",k__Metazoa="#fb9a99",k__Virid
           k__Archaea="#1f78b4",k__Eukaryota_others="#8dd3c7",k__Viruses="#bda7c9")
 
 add_theme()')
-    cat(tmp, file = paste(pro_dir, "analysis", "R_config.R", sep = "/"))
+    writeLines(tmp, con = paste(pro_dir, "analysis", "R_config.R", sep = "/"), sep = "")
 
     message(paste0("Set `", pro_n, "` sucessfully! Open project at directory: `", pro_dir, "`"))
 }
@@ -162,7 +141,7 @@ output:
     toc: true
     toc_depth: 3")[theme]
 
-    cat('---
+    writeLines(paste0('---
 title: "', title, '"
 author:
   - ', author, "
@@ -199,7 +178,7 @@ gghuan(a)+scale_fill_manual(values=get_cols(6,"col3"))
 ggsave("', paste0(analysis_n, "/test.pdf"), '")
 ```
 
-', file = paste0(analysis_n, ".Rmd"), sep = "")
+'), con = paste0(analysis_n, ".Rmd"), sep = "")
 }
 
 
@@ -235,9 +214,9 @@ make_gitbook <- function(book_n, root_dir = "~/Documents/R/", mode = c("gitbook"
 
     tmp <- readr::read_file(file.path(root_dir, book_n, "_output.yml"))
     tmp1 <- gsub("    toc:.*BRANCH/%s\n", "", tmp)
-    cat(tmp1, file = file.path(root_dir, book_n, "_output.yml"))
+    writeLines(tmp1, con = file.path(root_dir, book_n, "_output.yml"), sep = "")
 
-    cat("\nlibrary(kableExtra)", file = file.path(root_dir, book_n, "_common.R"), append = TRUE)
+    cat(paste0("\nlibrary(kableExtra)"), file = file.path(root_dir, book_n, "_common.R"), append = TRUE)
 
     {
         tmp <- readr::read_file(file.path(root_dir, book_n, "index.Rmd"))
@@ -535,6 +514,138 @@ how_to_set_font_for_plot <- function() {
 
 
 # =======Packages========
+
+parse_NEWS_md <- function(file_path = "NEWS.md") {
+    # Read the content of the NEW.md file
+    content <- readLines(file_path)
+
+    # Initialize a list to store version-wise changes
+    version_changes <- list()
+
+    # Initialize variables to track the current version and section
+    current_version <- NULL
+    current_section <- NULL
+
+    # Process each line in the file
+    for (line in content) {
+        # Check if the line indicates a version
+        if (grepl("^#\\s+.*Notes$", line)) {
+            # Extract the version number
+            current_version <- gsub("^#.* v", "", gsub(" Notes$", "", line))
+            # Create a new entry for the current version
+            version_changes[[current_version]] <- list()
+        } else if (grepl("^##", line)) {
+            # Extract the section name
+            section_name <- gsub("^##\\s*", "", line)
+            # Set the current section variable
+            current_section <- section_name
+            # Initialize the section content for the current version
+            version_changes[[current_version]][[current_section]] <- character()
+        } else if (!is.null(current_version) && !is.null(current_section) && line != "") {
+            # Add the line to the corresponding section
+            version_changes[[current_version]][[current_section]] <-
+                c(version_changes[[current_version]][[current_section]], line)
+        }
+    }
+
+    # Remove leading and trailing whitespaces
+    version_changes <- lapply(version_changes, function(version) {
+        lapply(version, function(section) trimws(section))
+    })
+
+    # Return the parsed version-wise changes
+    return(version_changes)
+}
+
+#' Update the NEW.md for a package
+#'
+#' @param package_dir default: "."
+#' @param new_features new_features
+#' @param bug_fixes bug_fixes
+#' @param other_changes other_changes
+#' @param ... additional info
+#'
+#' @return No value
+#' @export
+#'
+update_NEWS_md <- function(package_dir = ".", new_features = character(),
+                           bug_fixes = character(), other_changes = character(), ...) {
+    pkg_info <- get_package_info(package_dir)
+    pkg_name <- pkg_info$Package
+    new_version <- pkg_info$Version
+
+    file_path <- file.path(package_dir, "NEWS.md")
+    # Parse existing NEW.md content
+    if (file.exists(file_path)) {
+        existing_versions <- parse_NEWS_md(file_path)
+    } else {
+        existing_versions <- NULL
+    }
+
+    # If there are any new changes, insert them into the existing version
+    changes_to_insert <- c(list(
+        "Added" = new_features,
+        "Fixed" = bug_fixes,
+        "Others" = other_changes
+    ), list(...))
+    for (i in names(changes_to_insert)) {
+        if (length(changes_to_insert[[i]]) > 0) {
+            changes_to_insert[[i]] <- paste("-", changes_to_insert[[i]],
+                format(Sys.Date(), "<%Y-%m-%d, %a>"),
+                sep = " "
+            )
+        }
+    }
+
+    # Check if the new version already exists
+    if (new_version %in% names(existing_versions)) {
+        # Insert new features, bug fixes, and other changes
+        for (change_type in names(changes_to_insert)) {
+            if (length(changes_to_insert[[change_type]]) > 0) {
+                existing_versions[[new_version]][[change_type]] <-
+                    c(changes_to_insert[[change_type]], existing_versions[[new_version]][[change_type]])
+            }
+        }
+    } else {
+        # If the version is new, create a new entry
+        new_version_content <- changes_to_insert
+
+        # Insert the new version into the existing versions
+        existing_versions <- c(setNames(list(new_version_content), new_version), existing_versions)
+    }
+
+    # Write out the updated content to NEW.md
+    write_NEWS_md(pkg_name, existing_versions, file_path)
+}
+
+# Function to write out the updated content to NEW.md
+write_NEWS_md <- function(pkg_name, parsed_versions, file_path = "NEWS.md") {
+    # Open the file for writing
+    file <- file(file_path, "w")
+
+    # Write each version and its content to the file
+    for (version in names(parsed_versions)) {
+        cat(paste0("# ", pkg_name, " v", version, " Notes\n\n"), file = file)
+
+        # Write each section (New Features, Bug Fixes, Other Changes)
+        for (section_name in names(parsed_versions[[version]])) {
+            if (length(parsed_versions[[version]][[section_name]]) > 0) {
+                cat(paste0("## ", section_name, "\n\n"), file = file)
+                cat(paste(parsed_versions[[version]][[section_name]], collapse = "\n"), file = file)
+                cat(paste0("\n\n"), file = file)
+            }
+        }
+    }
+
+    # Close the file
+    close(file)
+}
+
+get_package_info <- function(package_dir = ".") {
+    pkg <- basename(normalizePath(package_dir))
+    utils::packageDescription(pkg, lib.loc = file.path(package_dir, ".."))
+}
+
 solve_no_visible_binding <- function(str) {
     a <- strsplit(str, "\\n") %>%
         .[[1]] %>%
@@ -597,28 +708,64 @@ check_TF_in_R_files <- function(package_folder_path = ".") {
     # 获取文件夹下的所有.R文件
     r_files <- list.files(folder_path, pattern = "\\.R$", full.names = TRUE)
 
-    # 存储结果的列表
-    results <- list()
+    results <- TRUE
 
     # 遍历每个.R文件
     for (file_path in r_files) {
         # 读取文件内容
         content <- readLines(file_path)
 
-        # 查找包含T或F的行数
-        lines_with_TF <- grepl("\\b[T|F]\\b", content)
+        # 查找包含T/F的行数
+        lines_with_TF <- grepl("(?<!['\",;:<>+{}\\[\\]^$@/_`])\\b[TF]\\b(?!['\",;:<>+{}\\[\\]^$@/_`])", content, perl = TRUE)
 
-        # 如果有找到，记录结果
+        # 如果有找到T/F，记录结果
         if (sum(lines_with_TF) > 0) {
-            # 记录文件路径和包含T或F的行数
+            results <- FALSE
+            # 记录文件路径和包含T/F的行数
             message("Find T/F in ", file_path, ":")
             message(paste0(paste0("line ", which(lines_with_TF)), collapse = "\n"))
         }
     }
+    if (results) message("All is OK")
 }
 
+check_print_cat_in_R_files <- function(package_folder_path = ".", exclude = "print.R") {
+    folder_path <- file.path(package_folder_path, "R")
+    # 获取文件夹下的所有.R文件
+    r_files <- list.files(folder_path, pattern = "\\.R$", full.names = TRUE)
+    r_files <- r_files[!grepl(exclude, r_files)]
 
-prepare_package <- function(pkg_dir = ".") {
+    results <- TRUE
+
+    # 遍历每个.R文件
+    for (file_path in r_files) {
+        # 读取文件内容
+        content <- readLines(file_path)
+
+        # 查找包含 cat 或 print 的行数
+        lines_with_cat_print <- grepl("\\b(cat|print)\\([\\\"|\\']", content)
+
+        # 如果有找到，记录结果
+        if (sum(lines_with_cat_print) > 0) {
+            results <- FALSE
+            # 记录文件路径和包含 cat 或 print 的行数
+            message("Find cat or print in ", file_path, ":")
+            message(paste0(paste0("line ", which(lines_with_cat_print)), collapse = "\n"))
+        }
+    }
+    if (results) message("All is OK")
+}
+
+#' Prepare a package
+#'
+#' @param pkg_dir defalut: "."
+#' @param exclude vector for excluding .R files
+#'
+#' @return No value
+#' @export
+prepare_package <- function(pkg_dir = ".", exclude = "print.R") {
+    # Check the package name is available or not
+    # available::available(get_package_info(pkg_dir)$Package)
     pcutils::dabiao("Styler all codes")
     styler::style_pkg(pkg = pkg_dir, strict = TRUE, indent_by = 4)
     pcutils::dabiao("Write documents")
@@ -626,4 +773,28 @@ prepare_package <- function(pkg_dir = ".") {
     check_Rds(pkg_dir)
     pcutils::dabiao("Check T/F")
     check_TF_in_R_files(pkg_dir)
+    pcutils::dabiao("Check cat/print")
+    check_print_cat_in_R_files(pkg_dir, exclude = exclude)
+}
+
+#' Re-install my packages
+#' @param pkgs pkgs
+#' @return No return value
+reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore")) {
+    for (i in pkgs) {
+        if (i == "pctax") i <- "pctax/pctax"
+        if (i == "MetaNet") i <- "MetaNet/MetaNet"
+        if (i == "ReporterScore") i <- "GRSA/ReporterScore"
+        if (i == "iCRISPR") i <- "CRISPR/iCRISPR"
+        devtools::document(paste0("~/Documents/R/", i))
+
+        tryCatch(
+            {
+                system(paste0("R CMD install ~/Documents/R/", i))
+            },
+            error = function(e) {
+                warning(i, "failed, please check.")
+            }
+        )
+    }
 }

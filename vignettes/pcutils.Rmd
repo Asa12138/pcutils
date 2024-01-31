@@ -113,8 +113,6 @@ library(pcutils)
 
 -   `tax_radar` plot a radar plot
 
--   `tax_wordcloud` plot a wordcloud plot
-
 -   `triangp` plot a triangle plot
 
 **Easter Egg**： `my_cat` will show my little cat named GuoDong.
