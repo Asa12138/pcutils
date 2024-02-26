@@ -3,7 +3,7 @@
 .gitignore
 .RData
 .Rhistory
-README.md
+.*\.md
 images
 images/.*
 ^data-raw$

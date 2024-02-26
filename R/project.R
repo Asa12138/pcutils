@@ -249,7 +249,9 @@ make_gitbook <- function(book_n, root_dir = "~/Documents/R/", mode = c("gitbook"
 }
 
 make_asa_web <- function() {
-    rmarkdown::render_site(encoding = "UTF-8", input = "~/Documents/GitHub/Asa_web/", quiet = TRUE)
+    # 改成了quarto构建网站
+    system("quarto render ~/Documents/GitHub/Asa_web/index.qmd --quiet")
+    # rmarkdown::render_site(encoding = "UTF-8", input = "~/Documents/GitHub/Asa_web/", quiet = TRUE)
     system("rsync -a ~/Documents/GitHub/Asa_web/_site/* ~/Documents/GitHub/Asa12138.github.io/")
 }
 
@@ -646,14 +648,46 @@ get_package_info <- function(package_dir = ".") {
     utils::packageDescription(pkg, lib.loc = file.path(package_dir, ".."))
 }
 
-solve_no_visible_binding <- function(str) {
-    a <- strsplit(str, "\\n") %>%
-        .[[1]] %>%
-        gsub(".*'([^']+)'", "\\1", x = .) %>%
-        c(., "NULL") %>%
-        paste(., collapse = "=")
-    message(a)
-    clipr::write_clip(paste0(a, "\n"))
+solve_no_visible_binding <- function(file = "~/Downloads/00check.log.txt") {
+    # 读入文件
+    log_file <- readLines("~/Downloads/00check.log.txt")
+
+    # 挑出带有 'no visible binding for global variable' 的行
+    error_lines <- grep("no visible binding for global variable", log_file, value = TRUE)
+
+    # 提取错误信息
+    error_messages <- gsub("(.*): no visible binding for global variable '([^']+).*", "\\1: \\2", error_lines)
+    if (length(error_messages) < 1) {
+        return(invisible())
+    }
+
+    # 初始化输出变量
+    output <- ""
+
+    # 初始化临时变量
+    tmp <- ""
+    tmp2 <- ""
+
+    # 循环处理错误信息
+    for (msg in error_messages) {
+        x <- strsplit(msg, ": ")[[1]]
+
+        if (tmp == x[1]) {
+            tmp2 <- paste0(tmp2, "=", x[2])
+        } else {
+            if (tmp != "") {
+                output <- paste(output, paste0(tmp, ":", tmp2, "=NULL\n"))
+            }
+            tmp <- x[1]
+            tmp2 <- x[2]
+        }
+    }
+
+    # 处理最后一个
+    output <- paste(output, paste0(tmp, ":", tmp2, "=NULL"))
+
+    # 输出结果
+    cat(output, sep = "\n")
 }
 
 
@@ -744,7 +778,10 @@ check_print_cat_in_R_files <- function(package_folder_path = ".", exclude = "pri
 
         # 查找包含 cat 或 print 的行数
         lines_with_cat_print <- grepl("\\b(cat|print)\\([\\\"|\\']", content)
+        # 如果是if (verbose)那就ok
+        lines_with_verbose <- grepl("if (verbose)", content)
 
+        lines_with_cat_print <- lines_with_cat_print & (!lines_with_verbose)
         # 如果有找到，记录结果
         if (sum(lines_with_cat_print) > 0) {
             results <- FALSE

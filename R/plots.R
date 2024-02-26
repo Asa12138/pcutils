@@ -1499,7 +1499,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
                        shp_file = NULL, crs = NULL, xlim = NULL, ylim = NULL,
                        add_scale = TRUE, scale_params = list(),
                        add_north_arrow = TRUE, north_arrow_params = list()) {
-    long <- lat <- group <- Longitude <- Latitude <- Group <- label <- df2_sf <- NULL
+    long <- lat <- Longitude <- Latitude <- Group <- label <- df2_sf <- NULL
 
     metadata <- data.frame(metadata, check.names = FALSE)
     if (is.null(group)) {
@@ -1687,43 +1687,6 @@ tax_pie <- function(otutab, topN = 6, ...) {
     ggpubr::ggpie(df, "va", fill = get_cols(length(b)), label = "labels", grepl = TRUE, ...)
 }
 
-
-#' Triangle plot
-#'
-#' @param group_df group_df
-#' @param class point color
-#'
-#' @export
-#' @return ggplot
-#' @examples
-#' \donttest{
-#' data(otutab)
-#' hebing(otutab, metadata$Group, act = "mean") -> tmp
-#' triangp(tmp, class = taxonomy$Phylum)
-#' }
-triangp <- function(group_df, class = NULL) {
-    lib_ps("ggtern", library = FALSE)
-    if (ncol(group_df) != 3) stop("ncol of group_df is not 3, can't plot trip")
-    KO <- OE <- WT <- NULL
-    tmp <- group_df
-    tmp %>%
-        as.data.frame() %>%
-        mutate(sum = rowSums(.)) -> tmp1
-    colnames(tmp1)[1:3] <- c("KO", "OE", "WT")
-
-    if (is.null(class)) {
-        p <- ggtern::ggtern(tmp1, aes(x = KO, y = OE, z = WT)) +
-            geom_point(aes(size = sum)) + # define data geometry
-            labs(x = names(tmp)[1], y = names(tmp)[2], z = names(tmp)[3])
-        return(p)
-    } else {
-        tmp1$class <- class
-        p <- ggtern::ggtern(tmp1, aes(x = KO, y = OE, z = WT)) +
-            geom_point(aes(size = sum, col = class)) + # define data geometry
-            labs(x = names(tmp)[1], y = names(tmp)[2], z = names(tmp)[3])
-        return(p)
-    }
-}
 
 #' My Sunburst plot
 #'
@@ -2046,148 +2009,6 @@ my_circle_packing <- function(test, anno = NULL, mode = 1,
         #                            filter=!leaf,size = weight),show.legend = FALSE,nudge_y = 0.5)+
         theme_void()
     p
-}
-
-#' Heatmap by ggplot
-#'
-#' @param otutab otutab
-#' @param pal the main color pal, a vector of colors
-#' @param scale "none", "row", "column"
-#' @param row_annotation row annotation
-#' @param col_annotation column annotation
-#' @param rowname show row names?
-#' @param colname show column names?
-#' @param row_cluster cluster the row?
-#' @param col_cluster cluster the column?
-#' @param annotation_pal the annotation color pal, a list. e.g. list(Group=c("red","blue"))
-#' @param tile_params tile_params parsed to \code{\link[ggplot2]{geom_tile}}
-#'
-#' @return a ggplot
-#' @export
-#'
-#' @examples
-#' data(otutab)
-#' ggheatmap(otutab[1:30, ],
-#'     scale = "row", row_annotation = otutab[1:30, 1:2],
-#'     col_annotation = metadata[, c(2, 4)]
-#' )
-ggheatmap <- function(otutab, pal = NULL, scale = "none",
-                      rowname = TRUE, colname = TRUE, tile_params = list(),
-                      row_cluster = FALSE, col_cluster = FALSE,
-                      row_annotation = NULL, col_annotation = NULL, annotation_pal = NULL) {
-    lib_ps("ggnewscale", "aplot", "reshape2", "ggtree", "ape", library = FALSE)
-    sample <- otu <- value <- Id <- NULL
-    if (is.null(pal)) {
-        pal <- get_cols(pal = "bluered")
-    } else if (length(is.ggplot.color(pal)) < 2) stop("pal is wrong!")
-
-    otutab %>% as.data.frame() -> otutab
-    rownames(otutab) <- as.character(rownames(otutab))
-    colnames(otutab) <- as.character(colnames(otutab))
-    otutab -> d
-    if (scale == "row") {
-        d <- trans(d, method = "standardize", margin = 1)
-    } else if (scale == "column") d <- trans(d, method = "standardize", margin = 2)
-
-    rownames(d) -> d$otu
-
-    dd <- reshape2::melt(d, id.vars = "otu", variable.name = "sample")
-    dd$otu <- factor(dd$otu, levels = rev(rownames(d)))
-    dd$sample <- factor(dd$sample, levels = colnames(d))
-
-    p <- ggplot(dd, aes(x = sample, y = otu, fill = value)) +
-        do.call(geom_tile, tile_params) +
-        scale_fill_gradientn(colours = pal) +
-        scale_y_discrete(position = "right") +
-        theme_minimal() +
-        xlab(NULL) +
-        ylab(NULL)
-
-    if (!rowname) {
-        p <- p + theme(
-            axis.text.y = element_blank(),
-            axis.ticks.y = element_blank()
-        )
-    }
-    if (!colname) {
-        p <- p + theme(
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank()
-        )
-    }
-
-    if (!is.null(row_annotation)) {
-        ca1 <- row_annotation
-        rownames(ca1) -> ca1$Id
-        pc1 <- ggplot()
-        for (i in 1:(ncol(ca1) - 1)) {
-            tmp <- ca1[, c(i, ncol(ca1))]
-            pd1 <- reshape2::melt(tmp, id.vars = "Id", variable.name = "sample")
-            if (i > 1) pc1 <- pc1 + ggnewscale::new_scale_fill()
-            pc1 <- pc1 +
-                geom_tile(data = pd1, aes(y = Id, x = sample, fill = value)) +
-                labs(fill = colnames(ca1)[i])
-            if (!is.null(annotation_pal[[colnames(ca1)[i]]])) {
-                if (is.numeric(pd1$value)) {
-                    pc1 <- pc1 + scale_fill_gradientn(colours = annotation_pal[[colnames(ca1)[i]]])
-                } else {
-                    pc1 <- pc1 + scale_fill_manual(values = annotation_pal[[colnames(ca1)[i]]])
-                }
-            }
-        }
-        pc1 <- pc1 +
-            theme_minimal() +
-            theme(
-                axis.text.y = element_blank(),
-                axis.ticks.y = element_blank()
-            ) +
-            xlab(NULL) + ylab(NULL)
-        p <- p %>% aplot::insert_left(pc1, width = 0.05 * (ncol(ca1) - 1))
-    }
-
-    if (row_cluster) {
-        hclust(dist(otutab)) %>% ape::as.phylo() -> a
-        p <- p %>% aplot::insert_left(ggtree::ggtree(a, branch.length = "none"), width = .1)
-    }
-
-    if (!is.null(col_annotation)) {
-        ca <- col_annotation
-        rownames(ca) -> ca$Id
-
-        pc <- ggplot()
-        for (i in 1:(ncol(ca) - 1)) {
-            tmp <- ca[, c(i, ncol(ca))]
-            pd <- reshape2::melt(tmp, id.vars = "Id", variable.name = "sample")
-
-            if (i > 1) pc <- pc + ggnewscale::new_scale_fill()
-            pc <- pc +
-                geom_tile(data = pd, aes(x = Id, y = sample, fill = value)) +
-                labs(fill = colnames(ca)[i]) +
-                scale_y_discrete(position = "right")
-            if (!is.null(annotation_pal[[colnames(ca)[i]]])) {
-                if (is.numeric(pd$value)) {
-                    pc <- pc + scale_fill_gradientn(colours = annotation_pal[[colnames(ca)[i]]])
-                } else {
-                    pc <- pc + scale_fill_manual(values = annotation_pal[[colnames(ca)[i]]])
-                }
-            }
-        }
-        pc <- pc +
-            theme_minimal() +
-            theme(
-                axis.text.x = element_blank(),
-                axis.ticks.x = element_blank()
-            ) +
-            xlab(NULL) + ylab(NULL)
-
-        p <- p %>% aplot::insert_top(pc, height = 0.05 * (ncol(ca) - 1))
-    }
-    if (col_cluster) {
-        hclust(dist(t(otutab))) %>% ape::as.phylo() -> b
-        p <- p %>% aplot::insert_top(ggtree::ggtree(b, branch.length = "none") +
-            ggtree::layout_dendrogram(), height = .1)
-    }
-    return(p)
 }
 
 # ========Easter eggs=======

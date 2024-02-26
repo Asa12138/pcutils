@@ -4,7 +4,7 @@ common_list <- list(
 
 print_authors_affiliation <- function(authors = c("jc", "pc")) {
     affiliations <- c(
-        "1" = "Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310058, China",
+        "1" = "MOE Key Laboratory of Biosystems Homeostasis & Protection, and Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310030, China",
         "2" = "State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, National Clinical Research Center for Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
         "3" = "Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
         "4" = "BGI Research, Wuhan, Hubei 430074, China",
@@ -13,12 +13,12 @@ print_authors_affiliation <- function(authors = c("jc", "pc")) {
     )
     author_list <- list(
         jc = 1:3,
-        pc = 1:3,
-        lye = 1:3,
-        lz = 1:3,
-        jlyq = 1:3,
-        hzn = 1:3,
-        cq = 1:3,
+        pc = 1:2,
+        lye = 1:2,
+        lz = 1:2,
+        jlyq = 1:2,
+        hzn = 1:2,
+        cq = 1:2,
         tsj = 4:5,
         sxt = 6
     )
@@ -245,7 +245,7 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
             if (tolower(flag) %in% c("yes", "y")) {
                 if (p %in% names(some_packages)) {
                     if (!requireNamespace("devtools", quietly = TRUE)) utils::install.packages("devtools")
-                    message("Install the ",p , "from github: ", some_packages[p])
+                    message("Install the ", p, "from github: ", some_packages[p])
                     devtools::install_github(some_packages[p])
                 } else {
                     utils::install.packages(p)
@@ -262,7 +262,7 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
 
                 if (tolower(flag) %in% c("yes", "y")) {
                     if (!requireNamespace("BiocManager", quietly = TRUE)) utils::install.packages("BiocManager")
-                    BiocManager::install(p)
+                    BiocManager::install(p, update = FALSE)
                 } else {
                     stop(paste0("exit, because '", p, "' needs to be installed"))
                 }
@@ -625,10 +625,11 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
 #' @param url The URL from which to download the file.
 #' @param timeout timeout, 300s
 #' @param force FALSE, if TRUE, overwrite existed file
+#' @param ... add
 #'
 #' @return No value
 #' @export
-download2 <- function(url, file_path, timeout = 300, force = FALSE) {
+download2 <- function(url, file_path, timeout = 300, force = FALSE, ...) {
     if (file.exists(file_path) & !force) {
         return(invisible())
     } else {
@@ -640,7 +641,7 @@ download2 <- function(url, file_path, timeout = 300, force = FALSE) {
         # Download the file
         tryCatch(
             expr = {
-                utils::download.file(url, destfile = file_path)
+                utils::download.file(url, destfile = file_path, ...)
             },
             error = function(e) {
                 stop("Try downloading yourself from ", url)
