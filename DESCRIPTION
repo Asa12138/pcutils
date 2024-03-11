@@ -1,7 +1,7 @@
 Package: pcutils
 Type: Package
 Title: Some Useful Functions for Statistics and Visualization
-Version: 0.2.3
+Version: 0.2.4
 Authors@R:
     person("Chen", "Peng", email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9449-7606"))
 Description: 
@@ -88,8 +88,8 @@ Suggests:
     httr,
     openssl,
     styler,
-    biomformat,
     aplot,
+    ggbeeswarm,
     ggVennDiagram,
     gifski,
     ggcor,
@@ -102,7 +102,8 @@ Suggests:
     ggtern,
     ggnewscale,
     ggtree,
-    ape
+    ape,
+    biomformat
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

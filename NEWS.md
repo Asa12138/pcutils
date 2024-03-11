@@ -1,3 +1,13 @@
+# pcutils v0.2.4 Notes
+
+## Added
+
+- added some modes in `group_box` <2024-03-11, Mon>
+
+## Fixed
+
+- solved all the dependencies for CRAN <2024-03-11, Mon>
+
 # pcutils v0.2.2 Notes
 
 ## Added

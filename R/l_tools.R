@@ -456,9 +456,7 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
                 message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
                 flag <- readline("yes/no(y/n)?")
                 if (tolower(flag) %in% c("yes", "y")) {
-                    lib_ps("biomformat", library = FALSE)
-                    dat.b <- biomformat::read_biom(file)
-                    df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
+                    df <- read_biom(file)
                 } else {
                     return(NULL)
                 }

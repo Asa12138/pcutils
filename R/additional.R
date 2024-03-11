@@ -11,7 +11,14 @@
 # ggnewscale,
 # ggtree,
 # ape
+# biomformat
 
+read_biom <- function(file) {
+    lib_ps("biomformat", library = FALSE)
+    dat.b <- biomformat::read_biom(file)
+    df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
+    return(df)
+}
 
 #' Transfer Geographical latitude and longitude to XY(m)
 #'

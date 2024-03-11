@@ -731,7 +731,7 @@ check_Rds <- function(package_folder_path = ".") {
     }
     pcutils::dabiao("Check \\examples in .Rd files")
     if (length(not_good_examples) > 0) {
-        message("some .Rd files do not have # or \\dontrun in \\examples: \n", paste0(not_good_examples, collapse = "\n"))
+        message("some .Rd files have # or \\dontrun in \\examples: \n", paste0(not_good_examples, collapse = "\n"))
     } else {
         message("All is OK")
     }

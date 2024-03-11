@@ -30,7 +30,7 @@ group_box(
 
 \item{metadata}{the dataframe contains the group}
 
-\item{mode}{1~3, plot style}
+\item{mode}{1~9, plot style, try yourself}
 
 \item{group_order}{the order of x group}
 

@@ -752,7 +752,7 @@ pre_stack_data <- function(otutab, metadata = NULL, group = "Group",
         # data_all <- dplyr::mutate(data_all, variable = change_fac_lev(variable, levels = group_order))
         data_all$variable <- change_fac_lev(data_all$variable, group_order)
     }
-
+    attributes(data_all)$pre_data <- TRUE
     return(data_all)
 }
 
@@ -805,7 +805,12 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     # pmode can choose fill/stack/dodge
     variable <- value <- Taxonomy <- Taxonomy <- NULL
 
-    data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order, facet_order, style)
+    if (is.null(attr(otutab, "pre_data"))) attr(otutab, "pre_data") <- FALSE
+    if (attr(otutab, "pre_data")) {
+        data_all <- otutab
+    } else {
+        data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order, facet_order, style)
+    }
     if (get_data) {
         return(data_all)
     }
@@ -904,7 +909,14 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
                      style = c("group", "sample")[1],
                      number = FALSE, format_params = list(digits = 2), text_params = list(position = position_stack())) {
     variable <- value <- Taxonomy <- Taxonomy <- variable2 <- NULL
-    data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order, facet_order, style)
+
+    if (is.null(attr(otutab, "pre_data"))) attr(otutab, "pre_data") <- FALSE
+
+    if (attr(otutab, "pre_data")) {
+        data_all <- otutab
+    } else {
+        data_all <- pre_stack_data(otutab, metadata, group, topN, others, relative, stack_order, group_order, facet_order, style)
+    }
     if (get_data) {
         return(data_all)
     }
@@ -964,7 +976,7 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
 #' @param tab your dataframe
 #' @param group which colname choose for group or a vector
 #' @param metadata the dataframe contains the group
-#' @param mode 1~3, plot style
+#' @param mode 1~9, plot style, try yourself
 #' @param group_order the order of x group
 #' @param facet_order the order of the facet
 #' @param alpha whether plot a group alphabeta by test of method
@@ -1041,12 +1053,67 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
         lib_ps("gghalves", library = FALSE)
         p <- ggplot(md, aes(x = group, y = value, color = group, group = group)) +
             gghalves::geom_half_violin(aes(fill = group), side = "l", trim = FALSE) +
-            do.call(gghalves::geom_half_point, update_param(list(side = "r", alpha = 0.8, size = 0.5), point_param)) +
             geom_boxplot(
-                position = position_nudge(x = .22),
+                # position = position_nudge(x = .22),
+                color = "black",
                 linewidth = 0.6,
-                width = 0.2,
+                width = 0.05,
                 outlier.shape = NA
+            ) +
+            do.call(gghalves::geom_half_point, update_param(list(side = "r", alpha = 0.8, size = 0.5), point_param))
+    }
+    if (mode == 4) {
+        p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
+            geom_violin(trim = FALSE) +
+            geom_boxplot(width = 0.1, outlier.shape = NA) +
+            do.call(geom_jitter, update_param(list(width = 0.15, alpha = 0.8, size = 0.5), point_param))
+    }
+    if (mode == 5) {
+        p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
+            do.call(geom_dotplot, update_param(list(binaxis = "y", stackdir = "center", position = "dodge"), point_param)) +
+            # 添加误差线
+            stat_summary(fun.data = "mean_sdl", fun.args = list(mult = 1), geom = "pointrange", color = "black", size = 1.2) + # 添加均值散点
+            stat_summary(fun = "mean", fun.args = list(mult = 1), geom = "point", color = "white", size = 4)
+    }
+    if (mode == 6) {
+        lib_ps("ggbeeswarm", library = FALSE)
+        p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
+            do.call(ggbeeswarm::geom_quasirandom, update_param(list(width = 0.5, alpha = 0.8, size = 2, shape = 21), point_param)) +
+            # 添加误差线
+            stat_summary(fun.data = "mean_sdl", fun.args = list(mult = 1), geom = "pointrange", color = "black", size = 1.2) +
+            # 添加均值散点
+            stat_summary(fun = "mean", fun.args = list(mult = 1), geom = "point", color = "white", size = 4)
+    }
+    if (mode == 7) {
+        p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
+            # 添加柱形图
+            stat_summary(fun = mean, geom = "bar", fun.args = list(mult = 1), colour = "black", fill = "white", width = .7) +
+            # 添加误差线
+            stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", color = "black", width = .2) +
+            # 添加抖动散点图
+            do.call(geom_jitter, update_param(list(width = 0.2, alpha = 0.8, size = 2, shape = 21), point_param))
+    }
+    if (mode == 8) {
+        p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
+            # 添加柱形图
+            stat_summary(fun = mean, geom = "bar", fun.args = list(mult = 1), colour = "black", width = .7) +
+            # 添加误差线
+            stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", color = "black", width = .2) +
+            # 添加抖动散点图
+            do.call(geom_jitter, update_param(list(width = 0.2, alpha = 0.8, size = 0.5), point_param))
+    }
+    if (mode == 9) {
+        p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
+            geom_violin(trim = FALSE, width = 0.5) +
+            geom_segment(aes(
+                x = as.numeric(as.factor(group)) - 0.05, y = value,
+                xend = as.numeric(as.factor(group)) + 0.05,
+                yend = value, group = group
+            ), color = "black") +
+            # 添加均值,作为一条宽度为0.3的黑线
+            stat_summary(
+                fun = mean, geom = "errorbar", aes(ymax = after_stat(y), ymin = after_stat(y)),
+                width = 0.55, color = "black", linewidth = 1
             )
     }
 
@@ -1085,6 +1152,12 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     if (is.character(p_value2) | p_value2 == TRUE) {
         lib_ps("ggpubr", library = FALSE)
         if (p_value2 == TRUE) p_value2 <- "wilcox"
+        if (!flag) {
+            if (only_sig) {
+                only_sig <- FALSE
+                warning("`only_sig` cannot be used when facet, we set `only_sig=FALSE`. \n  please use `cowplot` package for combining each facet plot with `only_sig=TRUE`.")
+            }
+        }
         if (!only_sig) {
             comparisons <- utils::combn(levels(md$group), 2) %>% split(col(.))
         } else {
@@ -1098,8 +1171,6 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                         }
                     }
                 }
-            } else {
-                stop("`only_sig` cannot be used when facet, please use `cowplot` for combining each plot.")
             }
         }
         p <- p + do.call(ggpubr::stat_compare_means, update_param(list(
@@ -1119,11 +1190,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
             summarise(low = min(value), high = max(value)) %>%
             left_join(aa, ., "indexes") -> aa
         aa$indexes <- factor(aa$indexes, levels = colnames(tab))
-        if (mode == 3) {
-            # p <- p + geom_text(
-            #   data = aa, aes(x = variable, y = (high + 0.15 * (high - low)), label = groups),
-            #   inherit.aes = FALSE, color = alpha_color, size = 5, position = position_nudge(x = .1)
-            # )
+        if (mode %in% c(3, 4)) {
             p <- p + do.call(geom_text, update_param(
                 list(
                     data = aa, mapping = aes(x = variable, y = (high + 0.15 * (high - low)), label = groups),
@@ -1132,10 +1199,6 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                 alpha_param
             ))
         } else {
-            # p <- p + geom_text(
-            #   data = aa, aes(x = variable, y = (high + 0.05 * (high - low)), label = groups),
-            #   inherit.aes = FALSE, color = alpha_color, size = 5
-            # )
             p <- p + do.call(geom_text, update_param(
                 list(
                     data = aa, mapping = aes(x = variable, y = (high + 0.05 * (high - low)), label = groups),
