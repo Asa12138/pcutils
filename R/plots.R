@@ -1008,7 +1008,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     # data transform
     g_name <- NULL
 
-    value <- indexes <- variable <- high <- low <- text_param <- NULL
+    value <- indexes <- variable <- high <- low <- text_param <- y <- NULL
     if (is.vector(tab)) {
         tab <- data.frame(value = tab)
     } else {

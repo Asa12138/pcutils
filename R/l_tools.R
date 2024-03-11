@@ -451,19 +451,6 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
             return(df)
         }
 
-        if (format %in% c("biom")) {
-            if (file.size(file) > 10000) {
-                message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
-                flag <- readline("yes/no(y/n)?")
-                if (tolower(flag) %in% c("yes", "y")) {
-                    df <- read_biom(file)
-                } else {
-                    return(NULL)
-                }
-            }
-            return(df)
-        }
-
         if (format %in% c("jpg", "png", "svg", "pdf")) {
             lib_ps("magick", library = FALSE)
             image <- magick::image_read(file, density = density, ...)

@@ -16,8 +16,4 @@ Useful links:
 }
 
 }
-\author{
-\strong{Maintainer}: Chen Peng \email{pengchen2001@zju.edu.cn} (\href{https://orcid.org/0000-0002-9449-7606}{ORCID})
-
-}
 \keyword{internal}
