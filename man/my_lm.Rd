@@ -25,7 +25,9 @@ Fit a linear model and plot
 }
 \examples{
 \donttest{
-my_lm(runif(50), var = 1:50)
-my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+if(requireNamespace("ggpmisc")){
+     my_lm(runif(50), var = 1:50)
+     my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+}
 }
 }

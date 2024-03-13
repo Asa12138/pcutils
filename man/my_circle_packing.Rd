@@ -45,7 +45,7 @@ My Circle packing plot
 \donttest{
 data(otutab)
 cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
-if (requireNamespace("igraph", "ggraph")) {
+if (requireNamespace("igraph") && requireNamespace("ggraph")) {
     my_circle_packing(test)
 }
 }

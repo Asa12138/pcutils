@@ -4,12 +4,14 @@
 \alias{lm_coefficients}
 \title{Get coefficients of linear regression model}
 \usage{
-lm_coefficients(data, formula, each = TRUE)
+lm_coefficients(data, formula, standardize = FALSE, each = TRUE)
 }
 \arguments{
 \item{data}{A data frame containing the response variable and predictors.}
 
 \item{formula}{A formula specifying the structure of the linear regression model.}
+
+\item{standardize}{Whether to standardize the data before fitting the model.}
 
 \item{each}{each variable do a lm or whole multi-lm}
 }
