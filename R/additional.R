@@ -318,6 +318,7 @@ tax_radar <- function(group_df, ...) {
 
 # 多余合并为others
 gettop <- \(a, top){
+    tmp <- NULL
     nc <- ncol(a)
     if (nc < 3) stop("as least 3-columns dataframe")
     if (!is.numeric(a[, nc])) stop("the last column must be numeric")

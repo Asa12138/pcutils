@@ -157,7 +157,6 @@ plotgif <- function(plist, file, speed = 1, ...) {
 #' scales::show_col(my_cols)
 #' \donttest{
 #' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-#' scales::show_col(get_cols(15, ggsci::pal_aaas()(5)))
 #' }
 get_cols <- function(n = 11, pal = "col1") {
     col1 <- c(

@@ -808,7 +808,7 @@ plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) 
 #'     multireg(env1 ~ Group * ., data = metadata[, 2:7])
 #' }
 multireg <- function(formula, data, TopN = 3) {
-    xGroup <- value <- variable <- NULL
+    xGroup <- value <- explained <- variable <- NULL
     model.frame(formula, data = data) -> metatbl
     colnames(metatbl)[1:2] <- c("test_v", "xGroup")
     metatbl$xGroup <- factor(metatbl$xGroup)
