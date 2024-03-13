@@ -204,6 +204,9 @@ pal_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n 
 #' Scale a fill color
 #' @param palette col1~3; or a vector of colors, you can get from: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
 #' @param alpha alpha
+#' @param n how many colors you need
+#' @param ... additional
+#' @param alpha alpha
 #' @return scale_fill
 #' @export
 scale_fill_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11, ...) {
@@ -215,8 +218,12 @@ scale_fill_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha 
 }
 
 #' Scale a fill color
+#'
 #' @param palette col1~3; or a vector of colors, you can get from: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
+#' @param n how many colors you need
+#' @param ... additional
 #' @param alpha alpha
+#'
 #' @return scale_color
 #' @export
 scale_color_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11, ...) {

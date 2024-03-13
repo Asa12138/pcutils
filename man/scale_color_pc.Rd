@@ -15,6 +15,10 @@ scale_color_pc(
 \item{palette}{col1~3; or a vector of colors, you can get from: \code{RColorBrewer::brewer.pal(5,"Set2")} or \code{ggsci::pal_aaas()(5)}}
 
 \item{alpha}{alpha}
+
+\item{n}{how many colors you need}
+
+\item{...}{additional}
 }
 \value{
 scale_color
