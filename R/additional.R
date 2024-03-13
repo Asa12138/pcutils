@@ -11,14 +11,6 @@
 # ggnewscale,
 # ggtree,
 # ape
-# biomformat
-
-read_biom <- function(file) {
-    lib_ps("biomformat", library = FALSE)
-    dat.b <- biomformat::read_biom(file)
-    df <- data.frame(data.matrix(biomformat::biom_data(dat.b)), check.names = FALSE)
-    return(df)
-}
 
 #' Transfer Geographical latitude and longitude to XY(m)
 #'
@@ -67,7 +59,7 @@ ggheatmap <- function(otutab, pal = NULL, scale = "none",
                       rowname = TRUE, colname = TRUE, tile_params = list(),
                       row_cluster = FALSE, col_cluster = FALSE,
                       row_annotation = NULL, col_annotation = NULL, annotation_pal = NULL) {
-    lib_ps("ggnewscale", "aplot", "reshape2", "ggtree", "ape", library = FALSE)
+    lib_ps("ggnewscale", "aplot", "ggtree", "ape", library = FALSE)
     sample <- otu <- value <- Id <- NULL
     if (is.null(pal)) {
         pal <- get_cols(pal = "bluered")
@@ -312,7 +304,7 @@ cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = TRUE
 #' tax_radar(otutab[1:6, 1:4])
 #' }
 tax_radar <- function(group_df, ...) {
-    lib_ps("ggradar", "scales", library = FALSE)
+    lib_ps("ggradar", library = FALSE)
     if (nrow(group_df) > 20 | ncol(group_df) > 6) {
         stop("too many columns or rows!")
     } else {

@@ -31,13 +31,15 @@ My circo plot
 }
 \examples{
 \donttest{
-data.frame(
-    a = c("a", "a", "b", "b", "c"),
-    b = c("a", LETTERS[2:5]), c = 1:5
-) \%>\% my_circo(mode = "circlize")
-data(otutab)
-cbind(taxonomy, num = rowSums(otutab))[1:10, c(2, 6, 8)] -> test
-my_circo(test)
+if (requireNamespace("circlize")) {
+    data.frame(
+        a = c("a", "a", "b", "b", "c"),
+        b = c("a", LETTERS[2:5]), c = 1:5
+    ) \%>\% my_circo(mode = "circlize")
+    data(otutab)
+    cbind(taxonomy, num = rowSums(otutab))[1:10, c(2, 6, 8)] -> test
+    my_circo(test)
+}
 }
 
 }

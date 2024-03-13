@@ -9,7 +9,7 @@ trans_format(
   to_format,
   format = NULL,
   ...,
-  brower = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+  browser = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ trans_format(
 
 \item{...}{additional argument}
 
-\item{brower}{the path of Google Chrome, Microsoft Edge or Chromium in your computer.}
+\item{browser}{the path of Google Chrome, Microsoft Edge or Chromium in your computer.}
 }
 \value{
 file at work directory

@@ -18,5 +18,7 @@ ggplot
 gg Histogram
 }
 \examples{
-gghist(rnorm(100))
+if (requireNamespace("ggpubr")) {
+    gghist(rnorm(100))
+}
 }

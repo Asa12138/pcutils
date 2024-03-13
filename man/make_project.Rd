@@ -4,21 +4,12 @@
 \alias{make_project}
 \title{Make a R-analysis project}
 \usage{
-make_project(
-  pro_n,
-  root_dir = "~/Documents/R/",
-  bib = "~/Documents/R/pc_blog/content/bib/My Library.bib",
-  csl = "~/Documents/R/pc_blog/content/bib/science.csl"
-)
+make_project(pro_n, root_dir = "~/Documents/R/")
 }
 \arguments{
 \item{pro_n}{project name}
 
 \item{root_dir}{root directory}
-
-\item{bib}{cite papers bib, from Zotero}
-
-\item{csl}{cite papers format, default science.csl}
 }
 \value{
 No return value

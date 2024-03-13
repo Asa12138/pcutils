@@ -21,7 +21,7 @@ remove.outliers <- function(x, factor = 1.5) {
 }
 
 
-#' Like uniq -c in shell to count a vector
+#' Like `uniq -c` in shell to count a vector
 #'
 #' @param df two columns: first is type, second is number
 #'
@@ -125,7 +125,6 @@ rm_low <- function(otutab, relative_threshold = 1e-4) {
 #' @return data.frame
 #' @export
 #' @examples
-#'
 #' data(otutab)
 #' trans(otutab, method = "cpm")
 #'
@@ -234,7 +233,6 @@ t2 <- function(data) {
 #' explode(df, "b", ",")
 #' }
 explode <- function(df, column, split = ",") {
-    lib_ps("tidyr", "dplyr", library = FALSE)
     df <- tidyr::as_tibble(df)
     df[[column]] <- strsplit(df[, column, drop = TRUE], split = split)
     tidyr::unnest(df, dplyr::all_of(column)) %>% as.data.frame()
@@ -294,9 +292,9 @@ pre_number_str <- function(str, split_str = ",", continuous_str = "-") {
 }
 
 
-#' df 2 link
+#' df to link table
 #'
-#' @param test df
+#' @param test df with at least 3 columns
 #' @param fun function to summary the elements number, defalut: `sum`, you can choose `mean`.
 #' @return data.frame
 #' @export
@@ -304,7 +302,6 @@ pre_number_str <- function(str, split_str = ",", continuous_str = "-") {
 #' data(otutab)
 #' cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
 #' df2link(test)
-#'
 df2link <- function(test, fun = sum) {
     from <- to <- weight <- NULL
 
@@ -377,7 +374,9 @@ twotest <- function(var, group) {
 #' @export
 #'
 #' @examples
-#' multitest(runif(30), rep(c("A", "B", "C"), each = 10), print = FALSE, return = "wilcox") -> aa
+#' if (requireNamespace("multcompView")) {
+#'     multitest(runif(30), rep(c("A", "B", "C"), each = 10), return = "wilcox")
+#' }
 multitest <- function(var, group, print = TRUE, return = FALSE) {
     methods <- c("LSD", "TukeyHSD", "dunn", "nemenyi", "wilcox.test", "t.test")
     if (is.character(return)) {
@@ -388,7 +387,7 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
         return <- methods
     }
 
-    lib_ps("agricolae", "multcompView", library = FALSE)
+    lib_ps("multcompView", library = FALSE)
     group <- factor(group)
     means <- stats::aggregate(var, by = list(group), mean)$x
     names(means) <- levels(group)
@@ -402,7 +401,10 @@ multitest <- function(var, group, print = TRUE, return = FALSE) {
         sapply(paste, collapse = "-")
 
     # LSD
-    if ("LSD" %in% return) lsdres <- agricolae::LSD.test(ano, "group", p.adj = "bonferroni")
+    if ("LSD" %in% return) {
+        lib_ps("agricolae", library = FALSE)
+        lsdres <- agricolae::LSD.test(ano, "group", p.adj = "bonferroni")
+    }
     if (identical(return, "LSD")) {
         return(data.frame(lsdres$groups, variable = rownames(lsdres$groups)))
     }
@@ -528,7 +530,7 @@ group_test <- function(df, group, metadata = NULL, method = "wilcox.test",
                        threads = 1, p.adjust.method = "BH", verbose = TRUE) {
     i <- NULL
     t1 <- Sys.time()
-    if (verbose) pcutils::dabiao("Checking group")
+    if (verbose) dabiao("Checking group")
     if (!is.null(metadata)) {
         if (length(group) != 1) stop("'group' should be one column name of metadata when metadata exsit!")
         idx <- rownames(metadata) %in% colnames(df)
@@ -554,8 +556,8 @@ group_test <- function(df, group, metadata = NULL, method = "wilcox.test",
     group <- sampFile$group
 
     res.dt <- data.frame("variable" = rownames(df))
-    if (verbose) pcutils::dabiao("Calculating each variable")
-    if (verbose) pcutils::dabiao("Using method: ", method)
+    if (verbose) dabiao("Calculating each variable")
+    if (verbose) dabiao("Using method: ", method)
 
     for (i in vs_group) {
         tmpdf <- data.frame(average = apply(df[, which(group == i)], 1, mean), sd = apply(df[, which(group == i)], 1, sd))
@@ -595,7 +597,7 @@ group_test <- function(df, group, metadata = NULL, method = "wilcox.test",
 
     {
         if (threads > 1) {
-            pcutils::lib_ps("foreach", "doSNOW", "snow", library = FALSE)
+            lib_ps("foreach", "doSNOW", "snow", library = FALSE)
             if (verbose) {
                 pb <- utils::txtProgressBar(max = reps, style = 3)
                 opts <- list(progress = function(n) utils::setTxtProgressBar(pb, n))
@@ -801,8 +803,10 @@ plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) 
 #' @return ggplot
 #' @export
 #' @examples
-#' data(otutab)
-#' multireg(env1 ~ Group * ., data = metadata[, 2:7])
+#' if (requireNamespace("relaimpo", "aplot")) {
+#'     data(otutab)
+#'     multireg(env1 ~ Group * ., data = metadata[, 2:7])
+#' }
 multireg <- function(formula, data, TopN = 3) {
     xGroup <- value <- variable <- NULL
     model.frame(formula, data = data) -> metatbl
@@ -850,8 +854,11 @@ multireg <- function(formula, data, TopN = 3) {
             plot.background = element_rect(fill = "transparent", colour = NA)
         )
 
-    p2 <- ggpubr::ggbarplot(n_explained, x = "xGroup", y = "explained", fill = "#4EA9E6") +
-        scale_y_continuous(expand = c(0, 0)) + labs(x = NULL, y = NULL, subtitle = "Explained variation") +
+    p2 <- ggplot(n_explained, aes(x = xGroup, y = explained)) +
+        geom_bar(stat = "identity", fill = "#4EA9E6", color = "black", width = 0.7) +
+        scale_y_continuous(expand = c(0, 0)) +
+        labs(x = NULL, y = NULL, subtitle = "Explained variation") +
+        pcutils_theme +
         theme(
             axis.text.x = element_blank(), axis.ticks.x = element_blank(),
             axis.text.y = element_text(size = 11)

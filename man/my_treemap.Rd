@@ -21,6 +21,8 @@ My Treemap plot
 \donttest{
 data(otutab)
 cbind(taxonomy, num = rowSums(otutab))[1:10, c(4, 7, 8)] -> test
-my_treemap(test)
+if (requireNamespace("treemap")) {
+    my_treemap(test)
+}
 }
 }

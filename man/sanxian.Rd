@@ -40,7 +40,9 @@ Three-line table
 }
 \examples{
 \donttest{
-data(otutab)
-sanxian(otutab)
+if (require("kableExtra")) {
+    data(otutab)
+    sanxian(otutab)
+}
 }
 }

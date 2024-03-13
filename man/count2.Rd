@@ -2,7 +2,7 @@
 % Please edit documentation in R/statistics.R
 \name{count2}
 \alias{count2}
-\title{Like uniq -c in shell to count a vector}
+\title{Like \code{uniq -c} in shell to count a vector}
 \usage{
 count2(df)
 }
@@ -13,7 +13,7 @@ count2(df)
 two columns: first is type, second is number
 }
 \description{
-Like uniq -c in shell to count a vector
+Like \code{uniq -c} in shell to count a vector
 }
 \examples{
 count2(data.frame(group = c("A", "A", "B", "C", "C", "A"), value = c(2, 2, 2, 1, 3, 1)))

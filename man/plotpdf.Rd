@@ -9,7 +9,7 @@ plotpdf(
   file,
   width = 8,
   height = 7,
-  brower = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+  browser = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
   ...
 )
 }
@@ -22,7 +22,7 @@ plotpdf(
 
 \item{height}{height}
 
-\item{brower}{the path of Google Chrome, Microsoft Edge or Chromium in your computer.}
+\item{browser}{the path of Google Chrome, Microsoft Edge or Chromium in your computer.}
 
 \item{...}{additional arguments}
 }

@@ -20,6 +20,8 @@ ggplot
 Multiple regression/ variance decomposition analysis
 }
 \examples{
-data(otutab)
-multireg(env1 ~ Group * ., data = metadata[, 2:7])
+if (requireNamespace("relaimpo", "aplot")) {
+    data(otutab)
+    multireg(env1 ~ Group * ., data = metadata[, 2:7])
+}
 }

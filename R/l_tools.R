@@ -2,10 +2,28 @@ common_list <- list(
     taxaclass = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 )
 
+some_packages <- c(
+    "ggsankey" = "davidsjoberg/ggsankey",
+    "sankeyD3" = "fbreitwieser/sankeyD3",
+    "pctax" = "Asa12138/pctax",
+    "MetaNet" = "Asa12138/MetaNet",
+    "plot4fun" = "Asa12138/plot4fun",
+    "iCRISPR" = "Asa12138/iCRISPR",
+    "ReporterScore" = "Asa12138/ReporterScore",
+    "ggcor" = "Github-Yilei/ggcor",
+    "chorddiag" = "mattflor/chorddiag",
+    "ggradar" = "ricardo-bion/ggradar",
+    "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
+    "linkET" = "Hy4m/linkET",
+    "ggchicklet" = "hrbrmstr/ggchicklet",
+    "ggkegg" = "noriakis/ggkegg",
+    "SpiecEasi" = "zdk123/SpiecEasi"
+)
+
 print_authors_affiliation <- function(authors = c("jc", "pc")) {
     affiliations <- c(
         "1" = "MOE Key Laboratory of Biosystems Homeostasis & Protection, and Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310030, China",
-        "2" = "State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, National Clinical Research Center for Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
+        "2" = "State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
         "3" = "Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
         "4" = "BGI Research, Wuhan, Hubei 430074, China",
         "5" = "BGI Research, Shenzhen, Guangdong 518083, China",
@@ -214,23 +232,14 @@ update_param <- function(default, update) {
 #' @export
 #'
 lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
-    some_packages <- c(
-        "ggsankey" = "davidsjoberg/ggsankey",
-        "sankeyD3" = "fbreitwieser/sankeyD3",
-        "pctax" = "Asa12138/pctax",
-        "MetaNet" = "Asa12138/MetaNet",
-        "plot4fun" = "Asa12138/plot4fun",
-        "iCRISPR" = "Asa12138/iCRISPR",
-        "ReporterScore" = "Asa12138/ReporterScore",
-        "ggcor" = "Github-Yilei/ggcor",
-        "chorddiag" = "mattflor/chorddiag",
-        "ggradar" = "ricardo-bion/ggradar",
-        "pairwiseAdonis" = "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis",
-        "linkET" = "Hy4m/linkET",
-        "ggchicklet" = "hrbrmstr/ggchicklet",
-        "ggkegg" = "noriakis/ggkegg",
-        "SpiecEasi" = "zdk123/SpiecEasi"
-    )
+    no_p <- p_list[!vapply(p_list, requireNamespace, quietly = TRUE, FUN.VALUE = logical(1))]
+
+    if (!interactive()) {
+        if (length(no_p) > 0) {
+            no_p <- paste0(seq_along(no_p), ". ", no_p)
+            stop(paste0("exit, because some packages need to be installed:\n", paste(no_p, collapse = "\n")))
+        }
+    }
 
     p_list <- c(p_list, ...)
     for (p in p_list) {
@@ -272,8 +281,12 @@ lib_ps <- function(p_list, ..., all_yes = FALSE, library = TRUE) {
                 stop("\nplease try other way (e.g. github...) to install ", p)
             }
         }
+    }
 
-        if (library) suppressPackageStartupMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE))
+    if (library) {
+        for (p in p_list) {
+            suppressPackageStartupMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE))
+        }
     }
 }
 
@@ -312,15 +325,17 @@ del_ps <- function(p_list, ..., origin = NULL) {
 #'
 #' @examples
 #' \donttest{
-#' data(otutab)
-#' sanxian(otutab)
+#' if (require("kableExtra")) {
+#'     data(otutab)
+#'     sanxian(otutab)
+#' }
 #' }
 sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, mode = 1, background = "#D7261E", ...) {
     if (nrow(df) > nrow) df <- df[1:nrow, , drop = FALSE]
     if (ncol(df) > ncol) df <- df[, 1:ncol, drop = FALSE]
 
     if (fig) {
-        lib_ps("ggpubr", "dplyr", library = FALSE)
+        lib_ps("ggpubr", library = FALSE)
         df %>%
             dplyr::mutate_if(is.numeric, \(x)round(x, digits = digits)) %>%
             ggpubr::ggtexttable(..., theme = ggpubr::ttheme("blank")) %>%
@@ -406,6 +421,13 @@ gsub.data.frame <- function(pattern, replacement, x, ...) {
 #' @export
 #'
 read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, density = 120, ...) {
+    if (!file.exists(file)) {
+        stop(paste0(file, " does not exist!"))
+    }
+    if (!interactive()) {
+        stop("This function is not allowed in non-interactive mode.")
+    }
+
     if ((file.size(file) > 1e6) & !all_yes) {
         message(paste0(file, ": this file is a little big, still open?"))
         flag <- readline("yes/no(y/n)?")
@@ -448,19 +470,6 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
                     "Qstart", "Qend", "Sstart", "Send", "E_value", "Bitscore"
                 )
             )
-            return(df)
-        }
-
-        if (format %in% c("biom")) {
-            if (file.size(file) > 10000) {
-                message(paste0(file, ": this biom file is a little big: ", file.size(file), " still open? (as 10Mb biom will be a about 3Gb data.frame!)"))
-                flag <- readline("yes/no(y/n)?")
-                if (tolower(flag) %in% c("yes", "y")) {
-                    df <- read_biom(file)
-                } else {
-                    return(NULL)
-                }
-            }
             return(df)
         }
 
@@ -556,23 +565,22 @@ write_fasta <- function(df, file_path, str_per_line = 70) {
 #' @param to_format transfer to
 #' @param format input file format
 #' @param ... additional argument
-#' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
+#' @param browser the path of Google Chrome, Microsoft Edge or Chromium in your computer.
 #'
 #' @return file at work directory
 #' @export
 #'
-trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge") {
+trans_format <- function(file, to_format, format = NULL, ..., browser = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge") {
     if (is.null(format)) format <- tools::file_ext(file)
-    name <- tools::file_path_sans_ext(basename(file))
+    name <- tools::file_path_sans_ext(file)
     out <- paste0(name, ".", to_format)
 
     if (to_format == "jpeg") to_format <- "jpg"
     if (format == to_format) {
-        message("do not need transfer")
+        message("The format is the same! No need to transfer.")
         return(invisible())
     }
 
-    lib_ps("ggplot2", library = FALSE)
     if (format == "svg") {
         if (to_format == "html") {
             file.copy(file, out)
@@ -585,8 +593,9 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
             invisible(g)
         }
     }
+
     if (format %in% c("pdf", "png", "jpg")) {
-        lib_ps("magick", "grid", library = FALSE)
+        lib_ps("magick", library = FALSE)
         img <- magick::image_read(file, density = 200, ...)
         g <- grid::rasterGrob(img, interpolate = TRUE)
         p <- ggplot2::ggplot() +
@@ -595,10 +604,11 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
         ggplot2::ggsave(p, filename = out, device = to_format, ...)
         invisible(g)
     }
+
     if (format == "html") {
         if (to_format %in% c("pdf", "png", "jpeg")) {
             pagedown::chrome_print(file, out,
-                wait = 0, browser = brower, format = to_format,
+                wait = 0, browser = browser, format = to_format,
                 options = list(
                     # paperWidth=width,
                     # pageRanges="1",
@@ -611,6 +621,7 @@ trans_format <- function(file, to_format, format = NULL, ..., brower = "/Applica
             file.copy(file, out)
         }
     }
+    message(paste0("Sucessfully transfered to ", to_format, " format!", "\nThe file is at ", out))
 }
 
 # ======= Web ========
@@ -648,22 +659,6 @@ download2 <- function(url, file_path, timeout = 300, force = FALSE, ...) {
     }
 }
 
-
-#' Download supplemental materials according to a doi
-#'
-#' @param doi doi
-#' @param dir dir
-#' @param bget_path your bget_path
-#'
-#' @return file at work directory
-#' @export
-#'
-get_doi <- function(doi, dir = "~/Downloads/", bget_path = "~/software/bget_0.3.2_Darwin_64-bit/bget") {
-    if (!file.exists(bget_path)) stop("Cann't find bget! check `bget_path`")
-    doi <- sub("https://doi.org/", "", doi)
-    command <- paste0(bget_path, " doi ", doi, " -t2 --suppl --full-text -o ", dir)
-    system(command)
-}
 
 #' Search and browse the web for specified terms
 #'
