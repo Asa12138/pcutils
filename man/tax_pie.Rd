@@ -22,6 +22,6 @@ Pie plot
 \examples{
 \donttest{
 data(otutab)
-tax_pie(otutab, topN = 7)
+tax_pie(otutab, topN = 7) + scale_fill_pc()
 }
 }

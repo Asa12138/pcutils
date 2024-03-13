@@ -2,14 +2,10 @@
 #'
 #' @param pro_n project name
 #' @param root_dir root directory
-#' @param bib cite papers bib, from Zotero
-#' @param csl cite papers format, default science.csl
 #'
 #' @export
 #' @return No return value
-make_project <- function(pro_n, root_dir = "~/Documents/R/",
-                         bib = "~/Documents/R/pc_blog/content/bib/My Library.bib",
-                         csl = "~/Documents/R/pc_blog/content/bib/science.csl") {
+make_project <- function(pro_n, root_dir = "~/Documents/R/") {
     # pro_n='test'
     if (substr(root_dir, nchar(root_dir), nchar(root_dir)) == "/") {
         pro_dir <- paste0(root_dir, pro_n)
@@ -17,16 +13,17 @@ make_project <- function(pro_n, root_dir = "~/Documents/R/",
         pro_dir <- paste0(root_dir, "/", pro_n)
     }
 
-    if (dir.exists(pro_dir)) stop("directory exist, try other name")
+    if (dir.exists(pro_dir)) stop("directory existed, try other name")
     dir.create(pro_dir)
-    lapply(c("data", "temp", "result", "summary", "analysis"), FUN = \(x)dir.create(paste(pro_dir, x, sep = "/")))
+    lapply(c("data", "temp", "summary", "analysis"), FUN = \(x)dir.create(paste(pro_dir, x, sep = "/")))
     lapply(c("R_config.R", paste0(pro_n, ".Rproj")), FUN = \(x)file.create(paste(pro_dir, "analysis", x, sep = "/")))
-    if (file.exists(bib)) {
-        file.copy(bib, paste(pro_dir, "analysis", "My_Library.bib", sep = "/"))
-    }
-    if (file.exists(csl)) {
-        file.copy(csl, paste(pro_dir, "analysis", "my.csl", sep = "/"))
-    }
+    writeLines(paste0("This is a project for `", pro_n, "`
+1. analysis: R project location, containing analysis codes and output files, use `add_analysis` to add a new analysis section.
+2. summary: summary files, such as ppt, word, etc.
+3. data: data files, including raw data, such as feature and metadata tables.
+4. temp: temp files"),
+        con = paste(pro_dir, "README", sep = "/"), sep = ""
+    )
 
     writeLines("Version: 1.0
 
@@ -48,36 +45,36 @@ LaTeX: XeLaTeX", con = paste(pro_dir, "analysis", paste0(pro_n, ".Rproj"), sep =
     } else {
         tmp <- paste0(tmp, "library(pcutils)")
     }
-    if (file.exists("~/Documents/R/pctax/pctax")) {
-        tmp <- paste0(tmp, '\ndevtools::load_all("~/Documents/R/pctax/pctax")')
-    } else {
-        tmp <- paste0(tmp, "\nlibrary(pctax)")
-    }
     tmp <- paste0(tmp, '
-Packages <- c("dplyr", "tidyr","ggsci","ggpubr","RColorBrewer","cowplot","readr","tibble","vegan","ggrepel")
+# Commonly used packages
+Packages <- c("ggplot2","dplyr","tidyr","ggsci","ggpubr","cowplot","readr","tibble","vegan","ggrepel")
 lib_ps(Packages)
+# Commonly used colors
 kin_col=c(k__Bacteria="#a6bce3",k__Fungi="#fdbf6f",k__Metazoa="#fb9a99",k__Viridiplantae="#a9d483",
           k__Archaea="#1f78b4",k__Eukaryota_others="#8dd3c7",k__Viruses="#bda7c9")
-
+# Commonly used theme
 add_theme()')
     writeLines(tmp, con = paste(pro_dir, "analysis", "R_config.R", sep = "/"), sep = "")
 
-    message(paste0("Set `", pro_n, "` sucessfully! Open project at directory: `", pro_dir, "`"))
+    message(paste0("Make project `", pro_n, "` sucessfully! Open project at directory: `", pro_dir, "`"))
 }
 
 #' Add an analysis for a project
 #'
 #' @param analysis_n analysis name
-#' @param title file title
-#' @param author author
-#' @param theme 1~10
+#' @param title Rmd file title
+#' @param pro_dir project directory, default is current directory
 #'
 #' @export
 #' @return No return value
-add_analysis <- function(analysis_n, title = analysis_n, author = "Asa12138", theme = 1) {
+add_analysis <- function(analysis_n, title = analysis_n, pro_dir = getwd()) {
+    oldwd <- getwd()
+    on.exit(setwd(oldwd))
+
+    setwd(pro_dir)
     pro_n <- list.files(pattern = "*.Rproj")
     pro_n <- gsub(".Rproj", "", pro_n)
-    if (length(pro_n) != 1) stop("make sure there is a *.Rproj file in your `getwd()`")
+    if (length(pro_n) != 1) stop("make sure there is a *.Rproj file in your `pro_dir`")
     message(paste0("Add ", analysis_n, " for project ", pro_n))
 
     # rmdls=list.files(pattern = "*.Rmd")%>%gsub(".Rmd","",.)
@@ -86,91 +83,39 @@ add_analysis <- function(analysis_n, title = analysis_n, author = "Asa12138", th
     if (dir.exists(analysis_n)) stop(paste0(analysis_n, " directory already exists!"))
     dir.create(analysis_n)
 
-    my_bib <- "\nbibliography: My_Library.bib"
-    if (!file.exists("My_Library.bib")) my_bib <- ""
-
-    my_csl <- "\ncsl: ./my.csl"
-    if (!file.exists("my.csl")) my_csl <- "\nbiblio-style: apa"
-
-    if (theme != 1) {
-        lib_ps("rmdformats", "prettydoc", "tufte", library = FALSE)
-    }
     output_theme <- c("
 output:
   html_document:
     toc: true
     toc_depth: 3
-    toc_float: true", "
-output:
-  rmdformats::html_clean:
-    toc: true
-    toc_depth: 3", "
-output:
-  rmdformats::readthedown:
-    toc_depth: 3", "
-output:
-  rmdformats::robobook:
-    toc_depth: 3", "
-output:
-  prettydoc::html_pretty:
-    toc: true
-    toc_depth: 3
-    theme: cayman", "
-output:
-  prettydoc::html_pretty:
-    toc: true
-    toc_depth: 3
-    theme: tactile", "
-output:
-  prettydoc::html_pretty:
-    toc: true
-    toc_depth: 3
-    theme: architect", "
-output:
-  prettydoc::html_pretty:
-    toc: true
-    toc_depth: 3
-    theme: leonids", "
-output:
-  prettydoc::html_pretty:
-    toc: true
-    toc_depth: 3
-    theme: hpstr", "
-output:
-  tufte::tufte_html:
-    toc: true
-    toc_depth: 3")[theme]
+    toc_float: true")
 
     writeLines(paste0('---
 title: "', title, '"
 author:
-  - ', author, "
-date: ", date(), my_bib, "
-link-citations: yes", my_csl, output_theme, '
-editor_options:
-  markdown:
-    wrap: 150
+  - ', "Asa12138", "
+date: ", date(), "
+link-citations: yes", output_theme, '
 ---
 
 ```{r setup, include = FALSE}
 path <- "', getwd(), '"
 knitr::opts_chunk$set(eval=TRUE, #run code in chunks (default = TRUE)
-                       highlight = TRUE, #highlight display
                        echo = TRUE, #whether to include the source code in the output
-                       tidy=TRUE, #whether to organize the code
                        error = TRUE, #Whether to include error information in the output
                        warning = FALSE, #Whether to include warnings in the output (default = TRUE)
-                       message = FALSE, #whether to include reference information in the output
+                       message = TRUE, #whether to include reference information in the output
                        cache=TRUE, #whether to cache
                        collapse = FALSE # output in one piece
                        )
 knitr::opts_knit$set(root.dir = path)
 ```
+
 Install and import all dependent packages, data import:
 ```{r import,echo=TRUE, message=FALSE, warning=FALSE, results="hide"}
 source("./R_config.R")
-output="', analysis_n, '/"
 ```
+
 # Header1
 ```{r test,echo=TRUE,fig.cap="Test fig"}
 a=data.frame(type=letters[1:6],num=c(1,3,3,4,5,10))
@@ -250,7 +195,7 @@ make_gitbook <- function(book_n, root_dir = "~/Documents/R/", mode = c("gitbook"
 
 make_asa_web <- function() {
     # 改成了quarto构建网站
-    system("quarto render ~/Documents/GitHub/Asa_web/index.qmd --quiet")
+    system("quarto render ~/Documents/GitHub/Asa_web/ --quiet")
     # rmarkdown::render_site(encoding = "UTF-8", input = "~/Documents/GitHub/Asa_web/", quiet = TRUE)
     system("rsync -a ~/Documents/GitHub/Asa_web/_site/* ~/Documents/GitHub/Asa12138.github.io/")
 }

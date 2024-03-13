@@ -30,6 +30,9 @@ Imports:
     reshape2,
     scales,
     tools,
+    tidyr,
+    tibble,
+    RColorBrewer,
     graphics
 Suggests:
     agricolae,
@@ -40,8 +43,6 @@ Suggests:
     kableExtra,
     htmlwidgets,
     pagedown,
-    tidyr,
-    RColorBrewer,
     ggsci,
     readr,
     grImport2,
@@ -62,7 +63,6 @@ Suggests:
     circlize,
     RIdeogram,
     igraph,
-    tibble,
     knitr,
     rmarkdown,
     prettydoc,
@@ -91,7 +91,18 @@ Suggests:
     aplot,
     ggbeeswarm,
     ggVennDiagram,
-    gifski
+    gifski,
+    ggcor,
+    pheatmap,
+    corrplot,
+    ggradar,
+    ggsankey,
+    sankeyD3,
+    SoDA,
+    ggtern,
+    ggnewscale,
+    ggtree,
+    ape
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

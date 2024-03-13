@@ -64,6 +64,8 @@ Plot the sampling map
 data(otutab)
 anno_df <- metadata[, c("Id", "long", "lat", "Group")]
 colnames(anno_df) <- c("Id", "Longitude", "Latitude", "Group")
-sample_map(anno_df, mode = 1, group = "Group", xlim = c(90, 135), ylim = c(20, 50))
+if (requireNamespace("ggspatial")) {
+    sample_map(anno_df, mode = 1, group = "Group", xlim = c(90, 135), ylim = c(20, 50))
+}
 }
 }

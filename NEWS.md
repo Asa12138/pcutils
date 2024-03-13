@@ -2,11 +2,17 @@
 
 ## Added
 
-- added some modes in `group_box` <2024-03-11, Mon>
+- added `scale_fill(color)_pc` for ggplot. <2024-03-13, Wed>
+- added some modes in `group_box`. <2024-03-11, Mon>
 
 ## Fixed
 
-- solved all the dependencies for CRAN <2024-03-11, Mon>
+- fixed `ggplot_translator`, when some different english words will be translated to a same word. <2024-03-12, Tue>
+- solved all the dependencies for CRAN. <2024-03-11, Mon>
+
+## Others
+
+- deleted `get_doi` <2024-03-13, Wed>
 
 # pcutils v0.2.2 Notes
 

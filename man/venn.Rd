@@ -35,11 +35,13 @@ Plot a general venn (upset, flower)
 }
 \examples{
 \donttest{
-aa <- list(a = 1:3, b = 3:7, c = 2:4)
-venn(aa, mode = "venn")
-venn(aa, mode = "network")
-venn(aa, mode = "upset")
-data(otutab)
-venn(otutab, mode = "flower")
+if (interactive()) {
+    aa <- list(a = 1:3, b = 3:7, c = 2:4)
+    venn(aa, mode = "venn")
+    venn(aa, mode = "network")
+    venn(aa, mode = "upset")
+    data(otutab)
+    venn(otutab, mode = "flower")
+}
 }
 }

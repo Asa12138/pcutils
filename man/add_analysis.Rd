@@ -4,16 +4,14 @@
 \alias{add_analysis}
 \title{Add an analysis for a project}
 \usage{
-add_analysis(analysis_n, title = analysis_n, author = "Asa12138", theme = 1)
+add_analysis(analysis_n, title = analysis_n, pro_dir = getwd())
 }
 \arguments{
 \item{analysis_n}{analysis name}
 
-\item{title}{file title}
+\item{title}{Rmd file title}
 
-\item{author}{author}
-
-\item{theme}{1~10}
+\item{pro_dir}{project directory, default is current directory}
 }
 \value{
 No return value

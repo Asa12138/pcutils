@@ -21,7 +21,6 @@ pcutils_theme <- {
 #' rgb2code(c(12, 23, 34))
 #' rgb2code("#69C404", rev = TRUE)
 rgb2code <- function(x, rev = FALSE) {
-    lib_ps("dplyr", library = FALSE)
     r <- g <- b <- NULL
     if (rev) {
         if (is.vector(x)) {
@@ -88,22 +87,22 @@ add_alpha <- function(color, alpha = 0.3) {
 #' @param file prefix of your .pdf file
 #' @param width width
 #' @param height height
-#' @param brower the path of Google Chrome, Microsoft Edge or Chromium in your computer.
+#' @param browser the path of Google Chrome, Microsoft Edge or Chromium in your computer.
 #' @param ... additional arguments
 #'
 #' @return No return value
 #' @export
-plotpdf <- function(plist, file, width = 8, height = 7, brower = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
+plotpdf <- function(plist, file, width = 8, height = 7, browser = "/Applications/Microsoft\ Edge.app/Contents/MacOS/Microsoft\ Edge", ...) {
     if (inherits(plist, "htmlwidget")) {
         lib_ps("pagedown", "htmlwidgets", library = FALSE)
-        if (!file.exists(brower)) stop(brower, "is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
+        if (!file.exists(browser)) stop(browser, "is not found in your computer, please give a right path for Google Chrome, Microsoft Edge or Chromium.")
         suppressMessages(htmlwidgets::saveWidget(plist, "tmppp.html"))
         pagedown::chrome_print("tmppp.html", paste0(file, ".pdf"),
-            wait = 0, browser = brower,
+            wait = 0, browser = browser,
             options = list(pageRanges = "1", paperWidth = width, paperHeight = height, ...)
         )
         file.remove("tmppp.html")
-        message("pdf saved sucessfully")
+        message("pdf saved sucessfully in ", file, ".pdf")
     } else {
         grDevices::pdf(paste0(file, ".pdf"), width, height, ...)
         for (i in plist) {
@@ -185,20 +184,6 @@ get_cols <- function(n = 11, pal = "col1") {
 
     if (length(pal) == 1) pal <- get(pal)
 
-    # if (!is.null(picture)) {
-    #     lib_ps("RImagePalette", "tools", "jpeg", "png", library = FALSE)
-    #     type <- tools::file_ext(picture)
-    #     switch(type,
-    #         "jpg" = {
-    #             p1 <- jpeg::readJPEG(picture)
-    #         },
-    #         "png" = {
-    #             p1 <- png::readPNG(picture)
-    #         }
-    #     )
-    #     pal <- RImagePalette::image_palette(p1, n = n)
-    # }
-
     if (length(pal) < n) {
         res <- grDevices::colorRampPalette(pal)(n)
         return(res)
@@ -206,6 +191,48 @@ get_cols <- function(n = 11, pal = "col1") {
     return(pal[seq_len(n)])
 }
 
+pal_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11) {
+    palette <- match.arg(palette)
+    if (alpha > 1L | alpha <= 0L) {
+        stop("alpha must be in (0, 1]")
+    }
+    raw_cols <- get_cols(n = n, pal = palette)
+    alpha_cols <- add_alpha(raw_cols, alpha)
+    scales::manual_pal(unname(alpha_cols))
+}
+
+#' Scale a fill color
+#' @param palette col1~3; or a vector of colors, you can get from: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
+#' @param alpha alpha
+#' @param n how many colors you need
+#' @param ... additional
+#' @param alpha alpha
+#' @return scale_fill
+#' @export
+scale_fill_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11, ...) {
+    palette <- match.arg(palette)
+    discrete_scale(
+        "fill", "pc", pal_pc(palette, alpha, n = 11),
+        ...
+    )
+}
+
+#' Scale a fill color
+#'
+#' @param palette col1~3; or a vector of colors, you can get from: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
+#' @param n how many colors you need
+#' @param ... additional
+#' @param alpha alpha
+#'
+#' @return scale_color
+#' @export
+scale_color_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11, ...) {
+    palette <- match.arg(palette)
+    discrete_scale(
+        "color", "pc", pal_pc(palette, alpha, n = 11),
+        ...
+    )
+}
 
 #' Add a global gg_theme and colors for plots
 #'
@@ -438,6 +465,14 @@ ggplot_translator <- function(gg, which = c("x", "y"), from = "en", to = "zh",
                         paste0(trans_words, original_sep, "(", names(trans_words), ")"),
                         names(trans_words)
                     )
+                } else {
+                    tmpdf <- data.frame(name = names(trans_words), trans = trans_words)
+                    tmpdf <- dplyr::distinct_all(tmpdf)
+                    if (any(duplicated(tmpdf$trans))) {
+                        duplicated_names <- tmpdf$trans[duplicated(tmpdf$trans)]
+                        indx <- which(trans_words %in% duplicated_names)
+                        trans_words[indx] <- paste0(trans_words[indx], original_sep, "(", names(trans_words[indx]), ")")
+                    }
                 }
                 if (is.factor(words)) {
                     trans_words <- factor(trans_words, levels = trans_words[levels(words)])
@@ -467,12 +502,14 @@ ggplot_translator <- function(gg, which = c("x", "y"), from = "en", to = "zh",
 #'
 #' @examples
 #' \donttest{
-#' aa <- list(a = 1:3, b = 3:7, c = 2:4)
-#' venn(aa, mode = "venn")
-#' venn(aa, mode = "network")
-#' venn(aa, mode = "upset")
-#' data(otutab)
-#' venn(otutab, mode = "flower")
+#' if (interactive()) {
+#'     aa <- list(a = 1:3, b = 3:7, c = 2:4)
+#'     venn(aa, mode = "venn")
+#'     venn(aa, mode = "network")
+#'     venn(aa, mode = "upset")
+#'     data(otutab)
+#'     venn(otutab, mode = "flower")
+#' }
 #' }
 venn <- function(...) {
     UseMethod("venn")
@@ -575,7 +612,7 @@ venn_net_internal <- function(vennlist, elements_label = TRUE, ...) {
 }
 
 venn_flower <- function(aa) {
-    lib_ps("RColorBrewer", "plotrix", library = FALSE)
+    lib_ps("plotrix", library = FALSE)
     oldpar <- graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(oldpar))
     graphics::par(bty = "n", ann = FALSE, xaxt = "n", yaxt = "n", mar = c(1, 1, 1, 1))
@@ -641,6 +678,7 @@ venn_flower <- function(aa) {
     graphics::text(x = 5, y = 5, paste("Core:", core_num))
 }
 
+
 #' @param otutab table
 #' @param mode "venn","venn2","upset","flower"
 #' @param elements_label logical, show elements label in network?
@@ -655,14 +693,11 @@ venn.data.frame <- function(otutab, mode = "venn", elements_label = TRUE, ...) {
 }
 
 
-
-
 # Preprocess data for stack plot
 pre_stack_data <- function(otutab, metadata = NULL, group = "Group",
                            topN = 8, others = TRUE, relative = TRUE,
                            stack_order = TRUE, group_order = FALSE, facet_order = FALSE,
                            style = c("group", "sample")[1]) {
-    lib_ps("reshape2", "dplyr", library = FALSE)
     variable <- Taxonomy <- value <- n <- NULL
     if (is.numeric(metadata[, group, drop = TRUE])) warning("Recommend categorical variables")
     # prepare otutab and sampFile
@@ -786,10 +821,12 @@ pre_stack_data <- function(otutab, metadata = NULL, group = "Group",
 #' data(otutab)
 #' stackplot(otutab, metadata, group = "Group")
 #' \donttest{
-#' stackplot(otutab, metadata,
-#'     group = "Group", style = "sample",
-#'     group_order = TRUE, flow = TRUE, relative = FALSE
-#' )
+#' if (interactive()) {
+#'     stackplot(otutab, metadata,
+#'         group = "Group", style = "sample",
+#'         group_order = TRUE, flow = TRUE, relative = FALSE
+#'     )
+#' }
 #' }
 stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
                       bar_params = list(width = 0.7, position = "stack"),
@@ -1004,7 +1041,6 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                       alpha = FALSE, method = "wilcox", alpha_param = list(color = "red"), point_param = NULL,
                       p_value1 = FALSE, p_value2 = FALSE, only_sig = TRUE, stat_compare_means_param = NULL,
                       trend_line = FALSE, trend_line_param = list(color = "blue")) {
-    lib_ps("ggplot2", "dplyr", "reshape2", library = FALSE)
     # data transform
     g_name <- NULL
 
@@ -1231,15 +1267,14 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
 #'
 #' @examples
 #' a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
-#' gghuan(a) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#' gghuan(a) + scale_fill_pc()
 #' gghuan(a,
 #'     bar_params = list(col = "black"),
 #'     text_params = list(col = "#b15928", size = 3),
 #'     text_params2 = list(col = "#006d2c", size = 5)
-#' ) +
-#'     ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-#' gghuan(a, mode = 2) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
-#' gghuan(a, mode = 3) + ggplot2::scale_fill_manual(values = get_cols(6, "col3"))
+#' ) + scale_fill_pc()
+#' gghuan(a, mode = 2) + scale_fill_pc()
+#' gghuan(a, mode = 3) + scale_fill_pc()
 gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, percentage = TRUE,
                    bar_params = NULL, text_params = NULL, text_params2 = NULL) {
     type <- ymax <- ymin <- rate_per <- fraction <- NULL
@@ -1298,9 +1333,6 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
             ), size = 4), text_params))
     }
     if (mode == 3) {
-        # lib_ps("ggpubr", library = FALSE)
-        # labs <- paste0(plot_df$type, "\n", plot_df$rate_per)
-        # p <- ggpubr::ggpie(plot_df, "fraction", label = labs, fill = "type") + theme(legend.position = "none")
         plt <- ggplot(data = plot_df, aes(fill = type, ymax = ymax, ymin = ymin, xmax = 3.2, xmin = 1.7)) +
             do.call(geom_rect, update_param(list(alpha = 0.8), bar_params)) +
             xlim(c(1.7, 3.5)) +
@@ -1399,11 +1431,19 @@ gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 
 #' @export
 #'
 #' @examples
-#' gghist(rnorm(100))
+#' if (requireNamespace("ggpubr")) {
+#'     gghist(rnorm(100))
+#' }
 gghist <- function(x, ...) {
     lib_ps("ggpubr")
-    a <- round(summary(x), 2)
     p <- do.call(ggpubr::gghistogram, update_param(list(data = x, fill = "skyblue2", add = "median", add_density = TRUE), list(...)))
+
+    # p <- ggplot()+
+    #     geom_histogram(aes(x = x,y = after_stat(density)), fill = "skyblue2", color = "black", binwidth = 0.5)+
+    #     geom_vline(aes(xintercept = median(x)), color = "red", linetype = "dashed", size = 1)+
+    #     geom_density(aes(x = x), fill = NA)
+
+    a <- round(summary(x), 2)
     lims <- ggplot_lim(p)
     p + annotate("text",
         x = 0.8 * lims$x[2] + 0.2 * lims$x[1], y = 0.8 * lims$y[2] + 0.2 * lims$y[1],
@@ -1429,7 +1469,7 @@ gghist <- function(x, ...) {
 #' my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
 #' }
 my_lm <- function(tab, var, metadata = NULL, lm_color = "red", ...) {
-    lib_ps("reshape2", "ggpmisc", library = FALSE)
+    lib_ps("ggpmisc", library = FALSE)
     # data transform
     g_name <- NULL
     value <- eq.label <- adj.rr.label <- p.value.label <- NULL
@@ -1554,7 +1594,9 @@ china_map <- function(china_shp = NULL, download_dir = "pcutils_temp") {
 #' data(otutab)
 #' anno_df <- metadata[, c("Id", "long", "lat", "Group")]
 #' colnames(anno_df) <- c("Id", "Longitude", "Latitude", "Group")
-#' sample_map(anno_df, mode = 1, group = "Group", xlim = c(90, 135), ylim = c(20, 50))
+#' if (requireNamespace("ggspatial")) {
+#'     sample_map(anno_df, mode = 1, group = "Group", xlim = c(90, 135), ylim = c(20, 50))
+#' }
 #' }
 sample_map <- function(metadata, mode = 1, map_params = list(),
                        group = NULL, point_params = list(),
@@ -1640,7 +1682,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
 
     # ggplot map
     if (mode == 1) {
-        # lib_ps("maps",library = FALSE)
+        lib_ps("ggspatial", library = FALSE)
         world_map <- ggplot2::map_data("world")
         p <- ggplot() +
             do.call(geom_polygon, update_param(list(
@@ -1727,7 +1769,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
 #' @examples
 #' \donttest{
 #' data(otutab)
-#' tax_pie(otutab, topN = 7)
+#' tax_pie(otutab, topN = 7) + scale_fill_pc()
 #' }
 tax_pie <- function(otutab, topN = 6, ...) {
     lib_ps("ggpubr", library = FALSE)
@@ -1737,17 +1779,9 @@ tax_pie <- function(otutab, topN = 6, ...) {
     } else {
         rowSums(otutab) -> a
     }
-    if (length(a) > topN) {
-        sort(a, decreasing = TRUE)[1:topN - 1] -> b
-        other <- sum(sort(a, decreasing = TRUE)[topN:length(a)])
-        b <- c(b, other)
-        names(b)[length(b)] <- "Others"
-    } else {
-        b <- a
-    }
 
-    df <- data.frame(va = b, labels = paste0(names(b), "\n(", round(b / sum(b) * 100, 2), "%)"))
-    ggpubr::ggpie(df, "va", fill = get_cols(length(b)), label = "labels", grepl = TRUE, ...)
+    df <- data.frame(labels = names(a), va = a)
+    gghuan(df, mode = 3, topN = topN, ...)
 }
 
 
@@ -1762,7 +1796,9 @@ tax_pie <- function(otutab, topN = 6, ...) {
 #' \donttest{
 #' data(otutab)
 #' cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
-#' my_sunburst(test)
+#' if (requireNamespace("plotly")) {
+#'     my_sunburst(test)
+#' }
 #' }
 my_sunburst <- function(test, ...) {
     test <- as.data.frame(test)
@@ -1816,7 +1852,9 @@ my_sunburst <- function(test, ...) {
 #' \donttest{
 #' data(otutab)
 #' cbind(taxonomy, num = rowSums(otutab))[1:10, c(4, 7, 8)] -> test
-#' my_treemap(test)
+#' if (requireNamespace("treemap")) {
+#'     my_treemap(test)
+#' }
 #' }
 my_treemap <- function(test, ...) {
     test <- as.data.frame(test)
@@ -1869,7 +1907,9 @@ my_treemap <- function(test, ...) {
 #' \donttest{
 #' data(otutab)
 #' cbind(taxonomy, num = rowSums(otutab))[1:10, c(4, 7, 8)] -> test
-#' my_voronoi_treemap(test)
+#' if (requireNamespace("voronoiTreemap")) {
+#'     my_voronoi_treemap(test)
+#' }
 #' }
 my_voronoi_treemap <- function(test, ...) {
     test <- as.data.frame(test)
@@ -1937,19 +1977,20 @@ my_synteny <- function() {
 #'
 #' @examples
 #' \donttest{
-#' data.frame(
-#'     a = c("a", "a", "b", "b", "c"),
-#'     b = c("a", LETTERS[2:5]), c = 1:5
-#' ) %>% my_circo(mode = "circlize")
-#' data(otutab)
-#' cbind(taxonomy, num = rowSums(otutab))[1:10, c(2, 6, 8)] -> test
-#' my_circo(test)
+#' if (requireNamespace("circlize")) {
+#'     data.frame(
+#'         a = c("a", "a", "b", "b", "c"),
+#'         b = c("a", LETTERS[2:5]), c = 1:5
+#'     ) %>% my_circo(mode = "circlize")
+#'     data(otutab)
+#'     cbind(taxonomy, num = rowSums(otutab))[1:10, c(2, 6, 8)] -> test
+#'     my_circo(test)
+#' }
 #' }
 #'
 my_circo <- function(df, reorder = TRUE, pal = NULL, mode = c("circlize", "chorddiag")[1], ...) {
     mode <- match.arg(mode, c("circlize", "chorddiag"))
     colnames(df) <- c("from", "to", "count")
-    lib_ps("reshape2", "tibble", library = FALSE)
     if (mode == "chorddiag") {
         # need a square matrix
         all_g <- unique(df$from, df$to)
@@ -2008,9 +2049,10 @@ my_circo <- function(df, reorder = TRUE, pal = NULL, mode = c("circlize", "chord
 #' \donttest{
 #' data(otutab)
 #' cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
-#' my_circle_packing(test)
+#' if (requireNamespace("igraph", "ggraph")) {
+#'     my_circle_packing(test)
 #' }
-#'
+#' }
 my_circle_packing <- function(test, anno = NULL, mode = 1,
                               Group = "level", Score = "weight", label = "label",
                               show_level_name = "all", show_tip_label = TRUE, str_width = 10) {

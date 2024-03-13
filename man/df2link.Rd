@@ -2,12 +2,12 @@
 % Please edit documentation in R/statistics.R
 \name{df2link}
 \alias{df2link}
-\title{df 2 link}
+\title{df to link table}
 \usage{
 df2link(test, fun = sum)
 }
 \arguments{
-\item{test}{df}
+\item{test}{df with at least 3 columns}
 
 \item{fun}{function to summary the elements number, defalut: \code{sum}, you can choose \code{mean}.}
 }
@@ -15,11 +15,10 @@ df2link(test, fun = sum)
 data.frame
 }
 \description{
-df 2 link
+df to link table
 }
 \examples{
 data(otutab)
 cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
 df2link(test)
-
 }

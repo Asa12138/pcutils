@@ -23,7 +23,6 @@ data.frame
 Transfer your data
 }
 \examples{
-
 data(otutab)
 trans(otutab, method = "cpm")
 

@@ -21,6 +21,8 @@ My Sunburst plot
 \donttest{
 data(otutab)
 cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
-my_sunburst(test)
+if (requireNamespace("plotly")) {
+    my_sunburst(test)
+}
 }
 }
