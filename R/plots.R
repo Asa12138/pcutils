@@ -175,11 +175,7 @@ get_cols <- function(n = 11, pal = "col1") {
         "#F8CC00", "#b15928"
     )
 
-    bluered <- c(
-        "#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
-        "#F7F7F7", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B",
-        "#67001F"
-    )
+    bluered <- rev(RColorBrewer::brewer.pal(11, "RdBu"))
 
     if (length(pal) == 1) pal <- get(pal)
 
@@ -1464,8 +1460,10 @@ gghist <- function(x, ...) {
 #' @import ggplot2 dplyr
 #' @examples
 #' \donttest{
-#' my_lm(runif(50), var = 1:50)
-#' my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+#' if (requireNamespace("ggpmisc")) {
+#'     my_lm(runif(50), var = 1:50)
+#'     my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
+#' }
 #' }
 my_lm <- function(tab, var, metadata = NULL, lm_color = "red", ...) {
     lib_ps("ggpmisc", library = FALSE)
@@ -2048,7 +2046,7 @@ my_circo <- function(df, reorder = TRUE, pal = NULL, mode = c("circlize", "chord
 #' \donttest{
 #' data(otutab)
 #' cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
-#' if (requireNamespace("igraph", "ggraph")) {
+#' if (requireNamespace("igraph") && requireNamespace("ggraph")) {
 #'     my_circle_packing(test)
 #' }
 #' }

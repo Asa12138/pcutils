@@ -674,6 +674,7 @@ fittest <- function(a) {
 #' @param data A data frame containing the response variable and predictors.
 #' @param each each variable do a lm or whole multi-lm
 #' @param formula A formula specifying the structure of the linear regression model.
+#' @param standardize Whether to standardize the data before fitting the model.
 #'
 #' @return coefficients The coefficients of the linear regression model.
 #' @export
@@ -687,13 +688,13 @@ fittest <- function(a) {
 #' coefficients_df <- lm_coefficients(data, response ~ x1 + x2 + x3)
 #' print(coefficients_df)
 #' plot(coefficients_df)
-lm_coefficients <- function(data, formula, each = TRUE) {
+lm_coefficients <- function(data, formula, standardize = FALSE, each = TRUE) {
     if (each) {
         # Get the response variable name
         response_name <- as.character(formula[[2]])
         # Get the predictor variable names
         data <- model.frame(formula, data = data)
-        data <- trans(data, "standardize")
+        if (standardize) data <- trans(data, "standardize")
         predictor_names <- setdiff(colnames(data), response_name)
         coff <- c()
         r2 <- adj_r2 <- c()
@@ -803,7 +804,7 @@ plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) 
 #' @return ggplot
 #' @export
 #' @examples
-#' if (requireNamespace("relaimpo", "aplot")) {
+#' if (requireNamespace("relaimpo") && requireNamespace("aplot")) {
 #'     data(otutab)
 #'     multireg(env1 ~ Group * ., data = metadata[, 2:7])
 #' }
