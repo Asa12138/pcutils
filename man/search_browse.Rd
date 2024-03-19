@@ -26,8 +26,8 @@ with search results for each term.
 \examples{
 \dontrun{
 search_terms <- c(
-    "s__Pandoraea_pnomenusa",
-    "s__Alicycliphilus_sp._B1"
+  "s__Pandoraea_pnomenusa",
+  "s__Alicycliphilus_sp._B1"
 )
 
 # Using Google search engine

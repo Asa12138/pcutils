@@ -45,9 +45,9 @@ Plot a doughnut chart
 a <- data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))
 gghuan(a) + scale_fill_pc()
 gghuan(a,
-    bar_params = list(col = "black"),
-    text_params = list(col = "#b15928", size = 3),
-    text_params2 = list(col = "#006d2c", size = 5)
+  bar_params = list(col = "black"),
+  text_params = list(col = "#b15928", size = 3),
+  text_params2 = list(col = "#006d2c", size = 5)
 ) + scale_fill_pc()
 gghuan(a, mode = 2) + scale_fill_pc()
 gghuan(a, mode = 3) + scale_fill_pc()

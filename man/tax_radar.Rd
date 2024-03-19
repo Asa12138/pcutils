@@ -19,9 +19,9 @@ Radar plot
 }
 \examples{
 \donttest{
-if(interactive()){
-data(otutab)
-tax_radar(otutab[1:6, 1:4])
+if (interactive()) {
+  data(otutab)
+  tax_radar(otutab[1:6, 1:4])
 }
 }
 }

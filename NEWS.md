@@ -1,3 +1,10 @@
+# pcutils v0.2.5 Notes
+
+## Others
+
+- fixed all examples without suggested packages <2024-03-19, Tue>
+- deleted vignette and other useless functions <2024-03-19, Tue>
+
 # pcutils v0.2.4 Notes
 
 ## Added

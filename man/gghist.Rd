@@ -19,6 +19,6 @@ gg Histogram
 }
 \examples{
 if (requireNamespace("ggpubr")) {
-    gghist(rnorm(100))
+  gghist(rnorm(100))
 }
 }

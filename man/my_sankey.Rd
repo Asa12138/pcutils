@@ -37,12 +37,17 @@ My Sankey plot
 }
 \examples{
 \donttest{
-if(interactive()){
-data.frame(a = c("a", "a", "b", "b", "c"), aa = rep("a", 5), b = c("a", LETTERS[2:5]), c = 1:5) \%>\%
+if (interactive()) {
+  data.frame(
+    a = c("a", "a", "b", "b", "c"),
+    aa = rep("a", 5),
+    b = c("a", LETTERS[2:5]),
+    c = 1:5
+  ) \%>\%
     my_sankey(., "gg", num = TRUE)
-data(otutab)
-cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
-my_sankey(test)
+  data(otutab)
+  cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
+  my_sankey(test)
 }
 }
 }

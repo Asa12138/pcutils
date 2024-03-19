@@ -38,13 +38,13 @@ Translate axis label of a ggplot
 \examples{
 \dontrun{
 df <- data.frame(
-    Subject = c("English", "Math"),
-    Score = c(59, 98), Motion = c("sad", "happy")
+  Subject = c("English", "Math"),
+  Score = c(59, 98), Motion = c("sad", "happy")
 )
 ggp <- ggplot(df, mapping = aes(x = Subject, y = Score, label = Motion)) +
-    geom_text() +
-    geom_point() +
-    labs(x = "Subject", y = "Score", title = "Final Examination")
+  geom_text() +
+  geom_point() +
+  labs(x = "Subject", y = "Score", title = "Final Examination")
 ggplot_translator(ggp, which = "all")
 }
 }

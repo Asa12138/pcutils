@@ -41,8 +41,8 @@ Three-line table
 \examples{
 \donttest{
 if (require("kableExtra")) {
-    data(otutab)
-    sanxian(otutab)
+  data(otutab)
+  sanxian(otutab)
 }
 }
 }

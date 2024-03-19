@@ -17,9 +17,9 @@ Transfer Geographical latitude and longitude to XY(m)
 }
 \examples{
 \donttest{
-if(interactive()){
-data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
-toXY(geo)
+if (interactive()) {
+  data.frame(row.names = letters[1:18], x = runif(18, 30, 35), y = runif(18, 40, 45)) -> geo
+  toXY(geo)
 }
 }
 }

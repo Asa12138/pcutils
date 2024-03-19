@@ -22,7 +22,7 @@ My Sunburst plot
 data(otutab)
 cbind(taxonomy, num = rowSums(otutab))[1:10, ] -> test
 if (requireNamespace("plotly")) {
-    my_sunburst(test)
+  my_sunburst(test)
 }
 }
 }
