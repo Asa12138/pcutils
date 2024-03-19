@@ -7,7 +7,7 @@ Authors@R:
 Description: 
     Offers a range of utilities and functions for everyday programming tasks. 
     1.Data Manipulation. Such as grouping and merging, column splitting, and character expansion.
-    2.File Handling. Read and convert files in popular formats, including "blast", "diamond", "fasta", "gff", "gtf", and various image formats like "jpg", "png", "pdf", and "svg". 
+    2.File Handling. Read and convert files in popular formats. 
     3.Plotting Assistance. Helpful utilities for generating color palettes, validating color formats, and adding transparency. 
     4.Statistical Analysis. Includes functions for pairwise comparisons and multiple testing corrections, 
     enabling perform statistical analyses with ease.
@@ -91,7 +91,6 @@ Suggests:
     ggbeeswarm,
     ggVennDiagram,
     gifski
-VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
 Date/Publication: 2024-01-08 12:30:02 UTC

@@ -41,7 +41,7 @@
 ## Fixed
 
 - fixed CRAN check <2024-01-09>
-- available on CRAN <https://cran.r-project.org/web/packages/pcutils/> <2024-01-09>
+- available on CRAN <https://CRAN.R-project.org/package=pcutils> <2024-01-09>
 
 # pcutils v0.2.0 Notes
 
@@ -62,5 +62,5 @@
 - fixed R CMD check <2023-06-10>
 - submit to CRAN <2023-06-11>
 - revise and re-submit to CRAN <2023-06-12>
-- available on CRAN <https://cran.r-project.org/web/packages/pcutils/> <2023-06-13>
+- available on CRAN <https://CRAN.R-project.org/package=pcutils> <2023-06-13>
 
