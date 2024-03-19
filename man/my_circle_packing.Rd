@@ -46,7 +46,7 @@ My Circle packing plot
 data(otutab)
 cbind(taxonomy, weight = rowSums(otutab))[1:10, ] -> test
 if (requireNamespace("igraph") && requireNamespace("ggraph")) {
-    my_circle_packing(test)
+  my_circle_packing(test)
 }
 }
 }

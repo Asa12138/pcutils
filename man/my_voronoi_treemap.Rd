@@ -22,7 +22,7 @@ My Voronoi treemap plot
 data(otutab)
 cbind(taxonomy, num = rowSums(otutab))[1:10, c(4, 7, 8)] -> test
 if (requireNamespace("voronoiTreemap")) {
-    my_voronoi_treemap(test)
+  my_voronoi_treemap(test)
 }
 }
 }

@@ -1,13 +1,1 @@
-^.*\.Rproj$
-^\.Rproj\.user$
-.gitignore
-.RData
-.Rhistory
 .*\.md
-images
-images/.*
-^data-raw$
-\.DS_Store
-^_pkgdown\.yml$
-^docs$
-^pkgdown$

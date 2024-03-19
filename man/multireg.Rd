@@ -21,7 +21,7 @@ Multiple regression/ variance decomposition analysis
 }
 \examples{
 if (requireNamespace("relaimpo") && requireNamespace("aplot")) {
-    data(otutab)
-    multireg(env1 ~ Group * ., data = metadata[, 2:7])
+  data(otutab)
+  multireg(env1 ~ Group * ., data = metadata[, 2:7])
 }
 }

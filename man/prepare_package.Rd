@@ -4,12 +4,16 @@
 \alias{prepare_package}
 \title{Prepare a package}
 \usage{
-prepare_package(pkg_dir = ".", exclude = "print.R")
+prepare_package(pkg_dir = ".", exclude = "print.R", indent_by = 2, ...)
 }
 \arguments{
 \item{pkg_dir}{defalut: "."}
 
 \item{exclude}{vector for excluding .R files}
+
+\item{indent_by}{indent_by, default: 2}
+
+\item{...}{other parameters for devtools::check}
 }
 \value{
 No value

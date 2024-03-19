@@ -23,10 +23,10 @@ This function fits a linear regression model using the given data and formula, a
 }
 \examples{
 data <- data.frame(
-    response = c(2, 4, 6, 7, 9),
-    x1 = c(1, 2, 3, 4, 5),
-    x2 = c(2, 3, 6, 8, 9),
-    x3 = c(3, 6, 5, 12, 12)
+  response = c(2, 4, 6, 7, 9),
+  x1 = c(1, 2, 3, 4, 5),
+  x2 = c(2, 3, 6, 8, 9),
+  x3 = c(3, 6, 5, 12, 12)
 )
 coefficients_df <- lm_coefficients(data, response ~ x1 + x2 + x3)
 print(coefficients_df)

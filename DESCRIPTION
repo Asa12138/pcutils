@@ -1,7 +1,7 @@
 Package: pcutils
 Type: Package
 Title: Some Useful Functions for Statistics and Visualization
-Version: 0.2.4
+Version: 0.2.5
 Authors@R:
     person("Chen", "Peng", email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9449-7606"))
 Description: 
@@ -61,11 +61,9 @@ Suggests:
     plotrix,
     vegan,
     circlize,
-    RIdeogram,
     igraph,
     knitr,
     rmarkdown,
-    prettydoc,
     plotly,
     htmltools,
     leaflet,
@@ -88,10 +86,21 @@ Suggests:
     httr,
     openssl,
     styler,
+    lintr,
     aplot,
     ggbeeswarm,
     ggVennDiagram,
-    gifski
+    gifski,
+    ggcor,
+    pheatmap,
+    corrplot,
+    ggradar,
+    ggsankey,
+    sankeyD3,
+    SoDA,
+    ggnewscale,
+    ggtree,
+    ape
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils

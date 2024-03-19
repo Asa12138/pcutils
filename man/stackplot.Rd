@@ -100,18 +100,18 @@ data(otutab)
 stackplot(otutab, metadata, group = "Group")
 \donttest{
 if (interactive()) {
-    stackplot(otutab, metadata,
-        group = "Group", style = "sample",
-        group_order = TRUE, flow = TRUE, relative = FALSE
-    )
+  stackplot(otutab, metadata,
+    group = "Group", style = "sample",
+    group_order = TRUE, flow = TRUE, relative = FALSE
+  )
 }
 }
 data(otutab)
 areaplot(otutab, metadata, group = "Id")
 \donttest{
 areaplot(otutab, metadata,
-    group = "Group", style = "sample",
-    group_order = TRUE, relative = FALSE
+  group = "Group", style = "sample",
+  group_order = TRUE, relative = FALSE
 )
 }
 }

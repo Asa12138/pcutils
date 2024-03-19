@@ -26,6 +26,6 @@ t.test or wilcox is just perform t.test or wilcox.test in each two group (no p.a
 }
 \examples{
 if (requireNamespace("multcompView")) {
-    multitest(runif(30), rep(c("A", "B", "C"), each = 10), return = "wilcox")
+  multitest(runif(30), rep(c("A", "B", "C"), each = 10), return = "wilcox")
 }
 }

@@ -40,5 +40,5 @@ library(ggplot2)
 labels <- vapply(1:8, \(i)paste0(sample(LETTERS, 4), collapse = ""), character(1))
 df <- data.frame(label = labels, generate_labels(labels))
 ggplot(data = df) +
-    geom_label(aes(x = X1, y = X2, label = label))
+  geom_label(aes(x = X1, y = X2, label = label))
 }
