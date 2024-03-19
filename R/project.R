@@ -521,7 +521,6 @@ update_NEWS_md <- function(package_dir = ".", new_features = character(),
   pkg_name <- pkg_info$Package
   new_version <- pkg_info$Version
 
-  writeLines(".*\\.md", file.path(package_dir, ".Rbuildignore"))
   file_path <- file.path(package_dir, "NEWS.md")
   # Parse existing NEW.md content
   if (file.exists(file_path)) {
