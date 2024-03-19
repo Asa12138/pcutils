@@ -90,17 +90,7 @@ Suggests:
     aplot,
     ggbeeswarm,
     ggVennDiagram,
-    gifski,
-    ggcor,
-    pheatmap,
-    corrplot,
-    ggradar,
-    ggsankey,
-    sankeyD3,
-    SoDA,
-    ggnewscale,
-    ggtree,
-    ape
+    gifski
 VignetteBuilder: knitr
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
