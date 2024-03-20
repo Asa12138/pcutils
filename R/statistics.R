@@ -746,6 +746,7 @@ lm_coefficients <- function(data, formula, standardize = FALSE, each = TRUE) {
 #' @return ggplot
 #' @exportS3Method
 #' @method plot coefficients
+#' @seealso [lm_coefficients]
 plot.coefficients <- function(x, mode = 1, number = FALSE, x_order = NULL, ...) {
   variable <- coefficient <- type <- adj_r2 <- NULL
 

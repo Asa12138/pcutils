@@ -5,6 +5,9 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/Asa12138/pcutils/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Asa12138/pcutils/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/Asa12138/pcutils/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Asa12138/pcutils?branch=main)
 [![](https://img.shields.io/badge/blog-@asa-blue.svg)](https://asa-blog.netlify.app/)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/pcutils)](https://cran.r-project.org/package=pcutils)
 [![](http://cranlogs.r-pkg.org/badges/last-month/pcutils)](https://cran.r-project.org/package=pcutils)
@@ -15,6 +18,9 @@
 pcutils is a package that contains some useful functions for me, it
 offers a range of utilities and functions for everyday programming
 tasks.
+
+The HTML documentation of the latest version is available at
+[Github](https://asa12138.github.io/pcutils/).
 
 ## Installation
 
@@ -152,8 +158,6 @@ devtools::install_github("Asa12138/pcutils")
 
 - `my_circo` plot a circlize plot
 
-- `my_synteny` plot a synteny plot
-
 - `my_sunburst` plot a sunburst plot
 
 - `my_treemap` plot a treemap plot
@@ -162,7 +166,7 @@ devtools::install_github("Asa12138/pcutils")
 
 - `my_circle_packing` plot a circle packing plot
 
-## project
+## Project
 
 - `make_project` build a R project
 
@@ -170,7 +174,7 @@ devtools::install_github("Asa12138/pcutils")
 
 - `make_gitbook` build a git book
 
-## package
+## Package
 
 - `prepare_package` prepare a package
 

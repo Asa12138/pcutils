@@ -1,4 +1,4 @@
-#' @title test data for pcutils package.
+#' @title test data for pcutils package
 #' @description an otutab, metadata and a taxonomy table.
 #'
 #' @docType data
@@ -12,7 +12,7 @@
 #'
 NULL
 
-#' @title test data for pcutils package.
+#' @title test data for pcutils package
 #' @description an otutab, metadata and a taxonomy table.
 #'
 #' @docType data
@@ -26,7 +26,7 @@ NULL
 #'
 NULL
 
-#' @title test data for pcutils package.
+#' @title test data for pcutils package
 #' @description an otutab, metadata and a taxonomy table.
 #'
 #' @docType data
@@ -40,7 +40,7 @@ NULL
 #'
 NULL
 
-#' @title My cat.
+#' @title My cat
 #' @description my little cat named Guo Dong which drawn by my girlfriend.
 #'
 #' @docType data

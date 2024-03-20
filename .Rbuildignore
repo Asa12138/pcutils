@@ -11,3 +11,5 @@ images/.*
 ^docs$
 ^pkgdown$
 ^README\.Rmd$
+^\.github$
+^codecov\.yml$

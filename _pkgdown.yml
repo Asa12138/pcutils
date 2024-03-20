@@ -1,4 +1,119 @@
 url: ~
+
+development:
+  mode: release
+  version_label: default
+
 template:
   bootstrap: 5
+  bootswatch: spacelab
 
+reference:
+  - title: Little tools
+    desc:  A collection of little tools for analysis
+    contents:
+      - lib_ps
+      - del_ps
+      - dabiao
+      - copy_vector
+      - copy_df
+      - change_fac_lev
+      - tidai
+      - update_param
+      - sanxian
+      - grepl.data.frame
+      - gsub.data.frame
+      - read.file
+      - trans_format
+      - read_fasta
+      - write_fasta
+      - download2
+      - search_browse
+      - translator
+  - title: Statistics
+    desc:  A collection of statistical tools
+    contents:
+      - remove.outliers
+      - count2
+      - hebing
+      - guolv
+      - rm_low
+      - trans
+      - mmscale
+      - strsplit2
+      - t2
+      - explode
+      - squash
+      - df2link
+      - pre_number_str
+      - split_text
+      - twotest
+      - multitest
+      - group_test
+      - fittest
+      - toXY
+      - lm_coefficients
+      - plot.coefficients
+      - multireg
+  - title: Visualization
+    desc:  A collection of visualization tools
+    contents:
+      - rgb2code
+      - is.ggplot.color
+      - add_alpha
+      - plotpdf
+      - plotgif
+      - get_cols
+      - scale_fill_pc
+      - scale_color_pc
+      - add_theme
+      - legend_size
+      - ggplot_lim
+      - generate_labels
+      - ggplot_translator
+      - stackplot
+      - areaplot
+      - cor_plot
+      - group_box
+      - gghuan
+      - gghuan2
+      - my_lm
+      - china_map
+      - sample_map
+      - gghist
+      - ggheatmap
+      - venn
+      - tax_pie
+      - tax_radar
+      - my_sankey
+      - my_circo
+      - my_sunburst
+      - my_treemap
+      - my_voronoi_treemap
+      - my_circle_packing
+  - title: Project
+    desc:  A collection of project tools
+    contents:
+      - make_project
+      - add_analysis
+      - make_gitbook
+      - how_to_set_font_for_plot
+      - how_to_set_options
+      - how_to_update_parameters
+      - how_to_use_parallel
+      - how_to_use_sbatch
+  - titile: Package
+    desc:  A collection of package tools
+    contents:
+      - prepare_package
+      - update_NEWS_md
+      - set_pcutils_config
+      - show_pcutils_config
+      - my_cat
+  - title: Data
+    desc:  A collection of data
+    contents:
+      - otutab
+      - metadata
+      - taxonomy
+      - little_guodong

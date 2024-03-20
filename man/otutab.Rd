@@ -3,7 +3,7 @@
 \docType{data}
 \name{otutab}
 \alias{otutab}
-\title{test data for pcutils package.}
+\title{test data for pcutils package}
 \format{
 contains an otutab, metadata and a taxonomy table.
 \describe{

@@ -772,6 +772,7 @@ prepare_package <- function(pkg_dir = ".", exclude = "print.R", indent_by = 2, .
 #' Re-install my packages
 #' @param pkgs pkgs
 #' @return No return value
+#' @noRd
 reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore")) {
   for (i in pkgs) {
     if (i == "pctax") i <- "pctax/pctax"
@@ -789,4 +790,75 @@ reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "Repor
       }
     )
   }
+}
+
+#' Build CRAN version package
+#'
+#' @param pkg_dir pkg_dir
+#' @param additional additional
+#'
+#' @return No value
+#' @noRd
+build_cran_pkg <- function(pkg_dir = "./", additional = "R/additional.R") {
+  pkg_dir <- normalizePath(pkg_dir)
+
+  # 先复制一份pkg_dir到临时目录
+  tmp_dir <- tempdir()
+  temp_pkg_dir <- file.path(tmp_dir, basename(pkg_dir))
+
+  # 检查是不是R包目录
+  if (!file.exists(file.path(pkg_dir, "DESCRIPTION"))) {
+    stop("It's not a R package directory!")
+  }
+
+  if (dir.exists(temp_pkg_dir)) {
+    unlink(temp_pkg_dir, recursive = TRUE)
+  }
+  file.copy(from = pkg_dir, to = tmp_dir, recursive = TRUE, overwrite = TRUE)
+  # 进入临时目录
+  old_dir <- getwd()
+  on.exit(setwd(old_dir))
+  setwd(temp_pkg_dir)
+
+  # 读取DESCRIPTION文件
+  desc_file <- file.path(temp_pkg_dir, "DESCRIPTION")
+  desc <- read.dcf(desc_file) %>% as.data.frame()
+  sugg_pkgs <- strsplit(desc$Suggests, ",")[[1]] %>% trimws()
+
+  # 获取additional文件中的## some suggested pkgs: start到## some suggested pkgs: end中间部分的包
+  if (!is.null(additional)) {
+    if (file.exists(additional)) {
+      additional_content <- readLines(additional)
+      additional_content <- additional_content[(which(grepl("## some suggested pkgs: start", additional_content)) + 1):(which(grepl("## some suggested pkgs: end", additional_content)) - 1)]
+      # 然后在desc中删除这部分additional_content
+      gsub("#", "", additional_content) %>%
+        gsub(",$", "", .) %>%
+        strsplit(",") %>%
+        unlist() %>%
+        trimws() -> additional_pkgs
+      message("additional_pkgs: ", paste0(additional_pkgs, collapse = ", "))
+      sugg_pkgs <- setdiff(sugg_pkgs, additional_pkgs)
+      desc$Suggests <- paste0(sugg_pkgs, collapse = ",\n")
+      write.dcf(desc, desc_file)
+    }
+  }
+
+  # 删除additional
+  if (!is.null(additional)) {
+    if (file.exists(additional)) {
+      file.remove(additional)
+    }
+  }
+
+  # 重新检查
+  pcutils::prepare_package()
+  # 重新构建
+  system(paste0("R CMD build ../", basename(pkg_dir)))
+  # 复制到原目录下
+  pkg <- dir(file.path(temp_pkg_dir), pattern = "*.tar.gz", full.names = TRUE)
+  file.copy(pkg, old_dir)
+  # 删除临时目录
+  setwd(old_dir)
+  unlink(temp_pkg_dir, recursive = TRUE)
+  message("The CRAN version package has been built successfully! at ", old_dir)
 }

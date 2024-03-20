@@ -90,7 +90,17 @@ Suggests:
     aplot,
     ggbeeswarm,
     ggVennDiagram,
-    gifski
+    gifski,
+    ggcor,
+    pheatmap,
+    corrplot,
+    ggradar,
+    ggsankey,
+    sankeyD3,
+    SoDA,
+    ggnewscale,
+    ggtree,
+    ape
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
 Date/Publication: 2024-01-08 12:30:02 UTC

@@ -3,7 +3,7 @@
 \docType{data}
 \name{little_guodong}
 \alias{little_guodong}
-\title{My cat.}
+\title{My cat}
 \format{
 rastergrob object.
 }

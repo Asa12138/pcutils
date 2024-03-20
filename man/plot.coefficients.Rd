@@ -23,3 +23,6 @@ ggplot
 \description{
 This function takes the coefficients and generates a plot to visualize their magnitudes.
 }
+\seealso{
+\link{lm_coefficients}
+}
