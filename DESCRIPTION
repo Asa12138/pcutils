@@ -101,6 +101,9 @@ Suggests:
     ggnewscale,
     ggtree,
     ape
+Config/Needs/website:
+    pkgdown,
+    rnabioco/rbitemplate
 BugReports: https://github.com/Asa12138/pcutils/issues
 URL: https://github.com/Asa12138/pcutils
 Date/Publication: 2024-01-08 12:30:02 UTC

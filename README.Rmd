@@ -17,11 +17,10 @@ devtools::load_all("~/Documents/R/pcutils/")
 library(badger)
 ```
 
-# pcutils
+# pcutils <img src="man/figures/pcutils.png" align="right" width="120" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/Asa12138/pcutils/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Asa12138/pcutils/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/Asa12138/pcutils/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Asa12138/pcutils?branch=main)
 `r badge_custom("blog", "@asa", "blue", "https://asa-blog.netlify.app/")`
 `r badge_cran_download("pcutils", type = "grand-total")`
 `r badge_cran_download("pcutils", type = "last-month")`
@@ -31,7 +30,7 @@ library(badger)
 
 pcutils is a package that contains some useful functions for me, it offers a range of utilities and functions for everyday programming tasks. 
 
-The HTML documentation of the latest version is available at [Github](https://asa12138.github.io/pcutils/).
+The HTML documentation of the latest version is available at [Github page](https://asa12138.github.io/pcutils/).
 
 ## Installation
 
@@ -131,9 +130,61 @@ devtools::install_github("Asa12138/pcutils")
 
 ### plot functions
 
+```{r include=FALSE,eval=FALSE}
+p1 <- stackplot(hebing(otutab, taxonomy$Class, 1, act = "sum"), metadata, group = "Group", style = "sample") +
+  scale_fill_pc() + theme(legend.position = "none")
+cbind(taxonomy, num = rowSums(otutab))[10:15, c(1:4, 8)] -> test
+p1_1 <- my_sankey(test, "gg", num = FALSE, space = 1e4)
+p2 <- cor_plot(metadata[, 3:10])
+a <- data.frame(value = c(rnorm(50, 10, 3), rnorm(50, 13, 5)))
+p3 <- group_box(a, group = rep(c("a", "b"), each = 50), p_value2 = T, mode = 3) +
+  scale_color_pc(palette = "col3") + scale_fill_pc(palette = "col3") +
+  mytheme + theme(legend.position = "none")
+p4 <- group_box(a, group = rep(c("a", "b"), each = 50), p_value2 = T, mode = 9) +
+  scale_color_pc(palette = "col3") + scale_fill_pc(palette = "col3") +
+  mytheme + theme(legend.position = "none")
+
+(p5 <- gghuan(data.frame(type = letters[1:6], num = c(1, 3, 3, 4, 5, 10))) + scale_fill_pc() + xlim(0, 3.7))
+(p6 <- gghuan2(test[, c(1:3, 5)]) + scale_fill_pc() + xlim(0, 5))
+(p7 <- my_lm(c(1:50) + runif(50, 0, 5), var = 1:50, lm_color = "blue3") + mytheme)
+(p8 <- china_map(china_shp = "~/Documents/GitHub/Asa12138.github.io/FileList/china.json", text_param = list(size = 1.5)) +
+  mytheme + labs(x = NULL, y = NULL) + theme(axis.text = element_text(size = 9)))
+(p9 <- gghist(rnorm(500)) + labs(x = NULL))
+
+aa <- list(a = 1:15, b = 13:20, c = 8:15)
+p10 <- venn(aa, mode = "venn")
+p11 <- ggplot() +
+  theme_void() # venn(aa, mode = "network")
+p12 <- ggplot() +
+  theme_void() # venn(aa, mode = "upset")
+p13 <- ggplot() +
+  theme_void() # venn(otutab, mode = "flower")
+
+p14 <- ggplot() +
+  theme_void()
+data.frame(
+  a = c("a", "a", "b", "b", "c"),
+  b = c("a", LETTERS[2:5]), c = 1:5
+) %>% my_circo(mode = "circlize")
+
+
+pdf("images/pcutils1.pdf", width = 20, height = 10)
+cowplot::plot_grid(p1, p1_1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14,
+  ncol = 5, align = "hv",
+  labels = c(
+    "stackplot", "my_sankey", "cor_plot", "group_box(mode=3)", "group_box(mode=9)",
+    "gghuan", "gghuan2", "my_lm", "china_map", "gghist",
+    "venn(mode='venn')", "venn(mode='network')", "venn(mode='upset')", "venn(mode = 'flower')", "my_circo"
+  ), scale = 0.9, label_size = 17
+)
+dev.off()
+```
+
 ![](man/figures/pcutils1.png)
 
 -   `stackplot` plot a bar plot or stack bar plot easily; `areaplot` plot a area plot easily
+
+-   `my_sankey` plot a sankey plot
 
 -   `cor_plot` plot a correlation plot
 
@@ -147,25 +198,35 @@ devtools::install_github("Asa12138/pcutils")
 
 -   `gghist` plot a histogram
 
-![](man/figures/pcutils2.png)
-
 -   `venn` plot a venn plot
 
 -   `tax_pie` plot a pie plot
 
 -   `tax_radar` plot a radar plot
 
--   `my_sankey` plot a sankey plot
-
 -   `my_circo` plot a circlize plot
 
+```{r include=FALSE,eval=FALSE}
+cbind(taxonomy, num = rowSums(otutab))[1:10, c(2:4, 8)] -> test
+my_sunburst(test)
+my_circle_packing(test, show_level_name = F) + scale_color_pc("col3") +
+  scale_fill_gradient(low = "white", high = "red3", na.value = NA)
+
+cbind(taxonomy, num = rowSums(otutab))[1:10, c(4, 7, 8)] -> test
+if (requireNamespace("treemap")) {
+  my_treemap(test)
+}
+my_voronoi_treemap(test)
+```
+![](man/figures/pcutils2.png)
+
 -   `my_sunburst` plot a sunburst plot
+
+-   `my_circle_packing` plot a circle packing plot
 
 -   `my_treemap` plot a treemap plot
 
 -   `my_voronoi_treemap` plot a voronoi treemap plot
-
--   `my_circle_packing` plot a circle packing plot
 
 ## Project
 

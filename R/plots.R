@@ -1311,7 +1311,7 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
   if (mode == "1") {
     plt <- ggplot(data = plot_df, aes(fill = type, ymax = ymax, ymin = ymin, xmax = 3.2, xmin = 1.7)) +
       do.call(geom_rect, update_param(list(alpha = 0.8), bar_params)) +
-      xlim(c(0, 5)) +
+      xlim(c(0, 4)) +
       coord_polar(theta = "y") +
       do.call(geom_text, update_param(list(mapping = aes(x = 2.5, y = ((ymin + ymax) / 2), label = rate_per), size = 3.6, col = "white"), text_params))
 
@@ -1523,11 +1523,12 @@ my_lm <- function(tab, var, metadata = NULL, lm_color = "red", ...) {
 #'
 #' @param china_shp china.json file
 #' @param download_dir download_dir, "pcutils_temp"
+#' @param text_param parameters parse to \code{\link[ggplot2]{geom_text}}
 #'
 #' @return a ggplot
 #' @export
 #' @import ggplot2
-china_map <- function(china_shp = NULL, download_dir = "pcutils_temp") {
+china_map <- function(china_shp = NULL, download_dir = "pcutils_temp", text_param = NULL) {
   name <- NULL
   lib_ps("ggspatial", "sf", library = FALSE)
 
@@ -1541,12 +1542,16 @@ china_map <- function(china_shp = NULL, download_dir = "pcutils_temp") {
 
   china <- sf::read_sf(china_shp)
 
+  lib_ps("sysfonts", "showtext", library = FALSE)
+  showtext::showtext_auto()
   ggplot() +
     geom_sf(
       data = china, fill = pcutils::get_cols(35, pal = "col3"),
       alpha = 0.8, linewidth = 0.5, color = "black"
     ) +
-    geom_sf_text(data = china, aes(label = name), size = 3, family = "STKaiti") +
+    do.call(geom_sf_text, update_param(list(
+      data = china, mapping = aes(label = name), size = 3
+    ), text_param)) +
     # spatial-aware automagic north arrow
     ggspatial::annotation_scale(location = "bl") +
     ggspatial::annotation_north_arrow(
@@ -1554,9 +1559,6 @@ china_map <- function(china_shp = NULL, download_dir = "pcutils_temp") {
       style = ggspatial::north_arrow_fancy_orienteering
     ) +
     theme(
-      # aspect.ratio = 1.25,
-      # axis.text = element_blank(),
-      # axis.ticks = element_blank(),
       axis.title = element_blank(),
       # panel.grid = element_blank(),
       panel.background = element_blank(),

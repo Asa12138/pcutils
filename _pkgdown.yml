@@ -1,12 +1,8 @@
 url: ~
 
-development:
-  mode: release
-  version_label: default
-
 template:
-  bootstrap: 5
-  bootswatch: spacelab
+  params:
+    bootswatch: cosmo
 
 reference:
   - title: Little tools

@@ -1,13 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# pcutils
+# pcutils <img src="man/figures/pcutils.png" align="right" width="120" />
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/Asa12138/pcutils/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Asa12138/pcutils/actions/workflows/R-CMD-check.yaml)
-[![Codecov test
-coverage](https://codecov.io/gh/Asa12138/pcutils/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Asa12138/pcutils?branch=main)
 [![](https://img.shields.io/badge/blog-@asa-blue.svg)](https://asa-blog.netlify.app/)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/pcutils)](https://cran.r-project.org/package=pcutils)
 [![](http://cranlogs.r-pkg.org/badges/last-month/pcutils)](https://cran.r-project.org/package=pcutils)
@@ -19,8 +17,8 @@ pcutils is a package that contains some useful functions for me, it
 offers a range of utilities and functions for everyday programming
 tasks.
 
-The HTML documentation of the latest version is available at
-[Github](https://asa12138.github.io/pcutils/).
+The HTML documentation of the latest version is available at [Github
+page](https://asa12138.github.io/pcutils/).
 
 ## Installation
 
@@ -134,6 +132,8 @@ devtools::install_github("Asa12138/pcutils")
 - `stackplot` plot a bar plot or stack bar plot easily; `areaplot` plot
   a area plot easily
 
+- `my_sankey` plot a sankey plot
+
 - `cor_plot` plot a correlation plot
 
 - `group_box` plot a boxplot easily
@@ -146,25 +146,23 @@ devtools::install_github("Asa12138/pcutils")
 
 - `gghist` plot a histogram
 
-![](man/figures/pcutils2.png)
-
 - `venn` plot a venn plot
 
 - `tax_pie` plot a pie plot
 
 - `tax_radar` plot a radar plot
 
-- `my_sankey` plot a sankey plot
-
 - `my_circo` plot a circlize plot
 
+![](man/figures/pcutils2.png)
+
 - `my_sunburst` plot a sunburst plot
+
+- `my_circle_packing` plot a circle packing plot
 
 - `my_treemap` plot a treemap plot
 
 - `my_voronoi_treemap` plot a voronoi treemap plot
-
-- `my_circle_packing` plot a circle packing plot
 
 ## Project
 

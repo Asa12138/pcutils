@@ -4,12 +4,14 @@
 \alias{china_map}
 \title{Plot china map}
 \usage{
-china_map(china_shp = NULL, download_dir = "pcutils_temp")
+china_map(china_shp = NULL, download_dir = "pcutils_temp", text_param = NULL)
 }
 \arguments{
 \item{china_shp}{china.json file}
 
 \item{download_dir}{download_dir, "pcutils_temp"}
+
+\item{text_param}{parameters parse to \code{\link[ggplot2]{geom_text}}}
 }
 \value{
 a ggplot
