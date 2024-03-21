@@ -430,8 +430,8 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
   if (!file.exists(file)) {
     stop(paste0(file, " does not exist!"))
   }
-  if (!interactive()) {
-    stop("This function is not allowed in non-interactive mode.")
+  if (!all_yes & !interactive()) {
+    stop("This function is not allowed in non-interactive mode when all_yes is FALSE.")
   }
 
   if ((file.size(file) > 1e6) & !all_yes) {
@@ -445,10 +445,6 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
     lib_ps("readr", library = FALSE)
     cat(readr::read_file(file))
   } else {
-    oldpar <- graphics::par(no.readonly = TRUE)
-    on.exit(graphics::par(oldpar))
-    graphics::par(mar = rep(0, 4))
-
     if (is.null(format)) format <- tools::file_ext(file)
     format <- match.arg(format, c(
       "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf",
@@ -456,8 +452,14 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
     ))
 
     if (format %in% c("gff", "gtf")) {
-      df <- utils::read.delim(file,
-        header = FALSE, stringsAsFactors = FALSE, comment.char = "#",
+      # 读取文件内容
+      lines <- readLines(file)
+      # 过滤掉注释行
+      data_lines <- lines[!grepl("^#", lines)]
+
+      df <- utils::read.table(
+        text = data_lines, sep = "\t",
+        header = FALSE, stringsAsFactors = FALSE, comment.char = "",
         col.names = c("seqid", "source", "feature", "start", "end", "score", "strand", "phase", "attributes")
       )
       return(df)
@@ -470,7 +472,7 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
 
     if (format %in% c("blast", "diamond")) {
       df <- utils::read.table(file,
-        sep = "\t",
+        sep = "\t", header = FALSE, stringsAsFactors = FALSE, comment.char = "",
         col.names = c(
           "Qseqid", "Sseqid", "Pident", "Length", "Mismatch", "Gapopen",
           "Qstart", "Qend", "Sstart", "Send", "E_value", "Bitscore"
@@ -480,6 +482,10 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
     }
 
     if (format %in% c("jpg", "png", "svg", "pdf")) {
+      oldpar <- graphics::par(no.readonly = TRUE)
+      on.exit(graphics::par(oldpar))
+      graphics::par(mar = rep(0, 4))
+
       lib_ps("magick", library = FALSE)
       image <- magick::image_read(file, density = density, ...)
       if (length(image) > 1) message("Your file has more than one page! Print the first one page.")

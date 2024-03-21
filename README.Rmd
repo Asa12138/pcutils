@@ -28,7 +28,7 @@ library(badger)
 `r badge_devel("Asa12138/pcutils", color = "green")`
 <!-- badges: end -->
 
-pcutils is a package that contains some useful functions for me, it offers a range of utilities and functions for everyday programming tasks. 
+`pcutils` is a package that contains some useful functions for me, it offers a range of utilities and functions for everyday programming tasks. 
 
 The HTML documentation of the latest version is available at [Github page](https://asa12138.github.io/pcutils/).
 
@@ -40,7 +40,7 @@ The stable version is available on CRAN:
 install.packages("pcutils")
 ```
 
-Or you can install the development version of pcutils from [GitHub](https://github.com/) with:
+Or you can install the development version of `pcutils` from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
@@ -131,6 +131,16 @@ devtools::install_github("Asa12138/pcutils")
 ### plot functions
 
 ```{r include=FALSE,eval=FALSE}
+library(hexSticker)
+showtext::showtext_auto()
+sticker("~/Documents/R/test/icons/工具箱.png",
+  package = "pcutils",
+  p_size = 30, p_color = "black", p_fontface = "bold",
+  s_x = 1, s_y = .7, s_width = 0.4, s_height = 0.4,
+  h_fill = "#DFF5FF", h_color = "#008DDA",
+  filename = "man/figures/pcutils.png", dpi = 300
+)
+
 p1 <- stackplot(hebing(otutab, taxonomy$Class, 1, act = "sum"), metadata, group = "Group", style = "sample") +
   scale_fill_pc() + theme(legend.position = "none")
 cbind(taxonomy, num = rowSums(otutab))[10:15, c(1:4, 8)] -> test
@@ -243,4 +253,3 @@ my_voronoi_treemap(test)
 -   `update_NEWS_md` update the NEWS.md
 
 **Easter Egg**： `my_cat` will show my little cat named GuoDong.
-

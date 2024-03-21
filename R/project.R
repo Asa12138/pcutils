@@ -595,7 +595,7 @@ get_package_info <- function(package_dir = ".") {
 
 solve_no_visible_binding <- function(file = "~/Downloads/00check.log.txt") {
   # 读入文件
-  log_file <- readLines("~/Downloads/00check.log.txt")
+  log_file <- readLines(file)
 
   # 挑出带有 'no visible binding for global variable' 的行
   error_lines <- grep("no visible binding for global variable", log_file, value = TRUE)
@@ -611,17 +611,18 @@ solve_no_visible_binding <- function(file = "~/Downloads/00check.log.txt") {
 
   # 初始化临时变量
   tmp <- ""
-  tmp2 <- ""
+  tmp2 <- c()
 
   # 循环处理错误信息
   for (msg in error_messages) {
     x <- strsplit(msg, ": ")[[1]]
 
     if (tmp == x[1]) {
-      tmp2 <- paste0(tmp2, "=", x[2])
+      # tmp2 <- paste0(tmp2, " <- ", x[2])
+      tmp2 <- c(tmp2, x[2])
     } else {
       if (tmp != "") {
-        output <- paste(output, paste0(tmp, ":", tmp2, "=NULL\n"))
+        output <- paste(output, paste0(tmp, ": ", paste0(unique(tmp2), collapse = " <- "), " <- NULL\n"))
       }
       tmp <- x[1]
       tmp2 <- x[2]
@@ -629,7 +630,7 @@ solve_no_visible_binding <- function(file = "~/Downloads/00check.log.txt") {
   }
 
   # 处理最后一个
-  output <- paste(output, paste0(tmp, ":", tmp2, "=NULL"))
+  output <- paste(output, paste0(tmp, ": ", paste0(unique(tmp2), collapse = " <- "), " <- NULL"))
 
   # 输出结果
   cat(output, sep = "\n")
@@ -770,10 +771,20 @@ prepare_package <- function(pkg_dir = ".", exclude = "print.R", indent_by = 2, .
 }
 
 #' Re-install my packages
+#'
+#' @param are_you_pc are_you_pc? default: TRUE
 #' @param pkgs pkgs
+#'
 #' @return No return value
 #' @noRd
-reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore")) {
+reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "ReporterScore"), are_you_pc = TRUE) {
+  if (!are_you_pc) {
+    for (i in pkgs) {
+      devtools::install_github(paste0("Asa12138/", i))
+    }
+    return(invisible())
+  }
+
   for (i in pkgs) {
     if (i == "pctax") i <- "pctax/pctax"
     if (i == "MetaNet") i <- "MetaNet/MetaNet"

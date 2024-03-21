@@ -13,7 +13,7 @@
 [![](https://img.shields.io/badge/devel%20version-0.2.5-green.svg)](https://github.com/Asa12138/pcutils)
 <!-- badges: end -->
 
-pcutils is a package that contains some useful functions for me, it
+`pcutils` is a package that contains some useful functions for me, it
 offers a range of utilities and functions for everyday programming
 tasks.
 
@@ -26,7 +26,7 @@ The stable version is available on CRAN:
 
     install.packages("pcutils")
 
-Or you can install the development version of pcutils from
+Or you can install the development version of `pcutils` from
 [GitHub](https://github.com/) with:
 
 ``` r

@@ -9,6 +9,10 @@
 
 - added package page and R CMD check github action <2024-03-20, Wed>
 
+## Fixed
+
+- fixed the `read.file`. <2024-03-20, Wed>
+
 # pcutils v0.2.4 Notes
 
 ## Added
