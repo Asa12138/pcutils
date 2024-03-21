@@ -17,7 +17,9 @@
 <script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Some Useful Functions for Statistics and Visualization">
+<script src="pkgdown.js"></script><!-- docsearch --><script src="docsearch.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.6.3/docsearch.min.css" integrity="sha256-QOSRU/ra9ActyXkIBbiIB144aDBdtvXBcNc3OTNuX/Q=" crossorigin="anonymous">
+<link href="docsearch.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script><meta property="og:title" content="Some Useful Functions for Statistics and Visualization">
 <meta property="og:description" content="
     Offers a range of utilities and functions for everyday programming tasks. 
     1.Data Manipulation. Such as grouping and merging, column splitting, and character expansion.
@@ -55,21 +57,63 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="reference/index.html">Reference</a>
+  <a href="index.html">
+    <span class="fa fa-home fa-lg"></span>
+     
+  </a>
 </li>
 <li>
-  <a href="news/index.html">Changelog</a>
+  <a href="reference/index.html">Functions</a>
+</li>
+<li>
+  <a href="news/index.html">News</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Other Packages
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="https://asa12138.github.io/pcutils" class="external-link">pcutils</a>
+    </li>
+    <li>
+      <a href="https://asa12138.github.io/pctax" class="external-link">pctax</a>
+    </li>
+    <li>
+      <a href="https://asa12138.github.io/ReporterScore" class="external-link">ReporterScore</a>
+    </li>
+    <li>
+      <a href="https://asa12138.github.io/MetaNet" class="external-link">MetaNet</a>
+    </li>
+    <li>
+      <a href="https://iphylo.net" class="external-link">iPhylo</a>
+    </li>
+    <li>
+      <a href="https://asa12138.github.io/plot4fun" class="external-link">plot4fun</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="https://asa12138.github.io/" class="external-link">Asa_web</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/Asa12138/pcutils/" class="external-link">
-    <span class="fab fa-github fa-lg"></span>
+  <a href="https://github.com/Asa12138/pcutils" class="external-link">
+    <span class="fa fa-github"></span>
      
   </a>
 </li>
       </ul>
+<form class="navbar-form navbar-right hidden-xs hidden-sm" role="search">
+        <div class="form-group">
+          <input type="search" class="form-control" name="search-input" id="search-input" placeholder="Search..." aria-label="Search for..." autocomplete="off">
 </div>
+      </form>
+      
+    </div>
 <!--/.nav-collapse -->
   </div>
 <!--/.container -->
@@ -85,14 +129,14 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>pcutils is a package that contains some useful functions for me, it offers a range of utilities and functions for everyday programming tasks.</p>
+<p><code>pcutils</code> is a package that contains some useful functions for me, it offers a range of utilities and functions for everyday programming tasks.</p>
 <p>The HTML documentation of the latest version is available at <a href="https://asa12138.github.io/pcutils/" class="external-link">Github page</a>.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>The stable version is available on CRAN:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"pcutils"</span>)</span></code></pre></div>
-<p>Or you can install the development version of pcutils from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<p>Or you can install the development version of <code>pcutils</code> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"Asa12138/pcutils"</span><span class="op">)</span></span></code></pre></div>
@@ -282,9 +326,20 @@
 </div>
 
   
-
-
-  
-
-  </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.6.1/docsearch.min.js" integrity="sha256-GKvGqXDznoRYHCwKXGnuchvKSwmx9SRMrZOTh2g4Sb0=" crossorigin="anonymous"></script><script>
+  docsearch({
+    
+    
+    apiKey: '599cec31baffa4868cae4e79f180729b',
+    indexName: 'docsearch',
+    inputSelector: 'input#search-input.form-control',
+    transformData: function(hits) {
+      return hits.map(function (hit) {
+        hit.url = updateHitURL(hit);
+        return hit;
+      });
+    }
+  });
+</script>
+</body>
 </html>
