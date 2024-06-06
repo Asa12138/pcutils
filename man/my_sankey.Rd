@@ -11,6 +11,7 @@ my_sankey(
   space = 1,
   width = 0.1,
   str_width = 20,
+  D3_params = NULL,
   ...
 )
 }
@@ -27,7 +28,9 @@ my_sankey(
 
 \item{str_width}{str_width}
 
-\item{...}{look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}}
+\item{D3_params}{look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}}
+
+\item{...}{additional parameters}
 }
 \value{
 ggplot or htmlwidget

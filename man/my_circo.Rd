@@ -9,6 +9,7 @@ my_circo(
   reorder = TRUE,
   pal = NULL,
   mode = c("circlize", "chorddiag")[1],
+  legend = TRUE,
   ...
 )
 }
@@ -20,6 +21,8 @@ my_circo(
 \item{pal}{a vector of colors, you can get from here too: \code{RColorBrewer::brewer.pal(5,"Set2")} or \code{ggsci::pal_aaas()(5)}}
 
 \item{mode}{"circlize","chorddiag"}
+
+\item{legend}{plot legend?}
 
 \item{...}{\code{\link[circlize]{chordDiagram}}}
 }

@@ -100,14 +100,15 @@ link-citations: yes", output_theme, '
 
 ```{r setup, include = FALSE}
 path <- "', getwd(), '"
-knitr::opts_chunk$set(eval=TRUE, #run code in chunks (default = TRUE)
-                       echo = TRUE, #whether to include the source code in the output
-                       error = TRUE, #Whether to include error information in the output
-                       warning = FALSE, #Whether to include warnings in the output (default = TRUE)
-                       message = TRUE, #whether to include reference information in the output
-                       cache=TRUE, #whether to cache
-                       collapse = FALSE # output in one piece
-                       )
+knitr::opts_chunk$set(
+  eval = TRUE, # run code in chunks (default = TRUE)
+  echo = TRUE, # whether to include the source code in the output
+  error = TRUE, # Whether to include error information in the output
+  warning = FALSE, # Whether to include warnings in the output (default = TRUE)
+  message = TRUE, # whether to include reference information in the output
+  cache = TRUE, # whether to cache
+  collapse = FALSE # output in one piece
+)
 knitr::opts_knit$set(root.dir = path)
 ```
 
@@ -198,6 +199,65 @@ make_asa_web <- function() {
   system("quarto render ~/Documents/GitHub/Asa_web/ --quiet")
   # rmarkdown::render_site(encoding = "UTF-8", input = "~/Documents/GitHub/Asa_web/", quiet = TRUE)
   system("rsync -a ~/Documents/GitHub/Asa_web/_site/* ~/Documents/GitHub/Asa12138.github.io/")
+}
+
+add_common_gitignore <- function(dir = getwd(), rm_DS_Store = TRUE) {
+  if (!dir.exists(dir)) stop("directory not exist")
+  old_dir <- getwd()
+  on.exit(setwd(old_dir))
+  setwd(dir)
+  if (!dir.exists(".git")) stop("not a git repository")
+  common_r <- "# Common R files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+*.Rproj
+.quarto
+.quarto/
+.DS_Store
+**/.DS_Store
+.DS_Store?
+*_cache/
+/cache/
+# R books
+_bookdown_files
+_book
+_freeze
+# pkgdown site
+docs/
+# RStudio Connect folder
+rsconnect/
+"
+  # 读取.gitignore文件已有内容
+  if (file.exists(".gitignore")) {
+    readLines(".gitignore") -> tmp
+    if (any(grepl("# Common R files", tmp))) {
+      message("already have common R files")
+    } else {
+      writeLines(paste0(common_r, paste0(tmp, collapse = "\n"), "\n"), ".gitignore")
+    }
+  } else {
+    writeLines(common_r, ".gitignore")
+  }
+
+  if (rm_DS_Store) system("find . -name .DS_Store -print0 | xargs -0 git rm -f --ignore-unmatch")
+}
+
+publish_book2github <- function(dir, overwrite = FALSE) {
+  if (!dir.exists(dir)) stop("directory not exist")
+  old_dir <- getwd()
+  on.exit(setwd(old_dir))
+  setwd(dir)
+  if (!dir.exists("_book")) stop("not a book repository")
+  # rmarkdown::render_site(encoding = "UTF-8", input = "~/Documents/GitHub/Asa_web/", quiet = TRUE)
+  destination <- paste0("~/Documents/GitHub/Asa12138.github.io/", basename(dir))
+  if (overwrite) {
+    system(paste0("rm -rf ", destination))
+    system(paste0("cp -R _book ", destination))
+  }
+  system(paste0("rsync -a _book/* ", destination))
 }
 
 # =======Some tips========
@@ -745,20 +805,26 @@ check_print_cat_in_R_files <- function(package_folder_path = ".", exclude = "pri
 #' @param exclude vector for excluding .R files
 #' @param indent_by indent_by, default: 2
 #' @param ... other parameters for devtools::check
+#' @param check check or not, default: TRUE
 #'
 #' @return No value
 #' @export
-prepare_package <- function(pkg_dir = ".", exclude = "print.R", indent_by = 2, ...) {
+prepare_package <- function(pkg_dir = ".", exclude = "print.R", indent_by = 2, check = TRUE, ...) {
   if (!interactive()) stop("This function is only for interactive use")
   # Check the package name is available or not
   # available::available(get_package_info(pkg_dir)$Package)
   pcutils::dabiao("Styler all codes")
   styler::style_pkg(pkg = pkg_dir, strict = TRUE, indent_by = indent_by)
-  pcutils::dabiao("Lint all codes")
-  my_linters <- lintr::linters_with_defaults(
-    indentation_linter = lintr::indentation_linter(indent = indent_by)
-  )
-  lintr::lint_package(path = pkg_dir, linters = my_linters)
+  if (FALSE) {
+    pcutils::dabiao("Lint all codes")
+    my_linters <- lintr::linters_with_defaults(
+      indentation_linter = lintr::indentation_linter(indent = indent_by)
+    )
+    lintr::lint_package(path = pkg_dir, linters = my_linters)
+  } else {
+    message("Skip linting, do `lintr::lint_package` yourself.")
+  }
+
   pcutils::dabiao("Write documents")
   devtools::document(pkg_dir)
   check_Rds(pkg_dir)
@@ -766,8 +832,10 @@ prepare_package <- function(pkg_dir = ".", exclude = "print.R", indent_by = 2, .
   check_TF_in_R_files(pkg_dir)
   pcutils::dabiao("Check cat/print")
   check_print_cat_in_R_files(pkg_dir, exclude = exclude)
-  pcutils::dabiao("Check")
-  devtools::check(pkg_dir, ...)
+  if (check) {
+    pcutils::dabiao("Check")
+    devtools::check(pkg_dir, ...)
+  }
 }
 
 #' Re-install my packages
@@ -807,10 +875,11 @@ reinstall_my_packages <- function(pkgs = c("pcutils", "pctax", "MetaNet", "Repor
 #'
 #' @param pkg_dir pkg_dir
 #' @param additional additional
+#' @param check check, default: TRUE
 #'
 #' @return No value
 #' @noRd
-build_cran_pkg <- function(pkg_dir = "./", additional = "R/additional.R") {
+build_cran_pkg <- function(pkg_dir = "./", additional = "R/additional.R", check = TRUE) {
   pkg_dir <- normalizePath(pkg_dir)
 
   # 先复制一份pkg_dir到临时目录
@@ -861,8 +930,11 @@ build_cran_pkg <- function(pkg_dir = "./", additional = "R/additional.R") {
     }
   }
 
+  # 删除NAMESPACE文件
+  file.remove(file.path(temp_pkg_dir, "NAMESPACE"))
+
   # 重新检查
-  pcutils::prepare_package()
+  prepare_package(check = check)
   # 重新构建
   system(paste0("R CMD build ../", basename(pkg_dir)))
   # 复制到原目录下

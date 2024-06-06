@@ -254,6 +254,45 @@ squash <- function(df, column, split = ",") {
   stats::aggregate(stats::reformulate(".", response = column), df, paste, collapse = split)
 }
 
+#' Convert Three-column Data to Distance Matrix
+#'
+#' This function converts a data frame with three columns (from, to, count) into a distance matrix.
+#' The rows and columns of the matrix are all unique names from the 'from' and 'to' columns,
+#' and the matrix values are filled with counts.
+#'
+#' @param data A data frame containing three columns: from, to, count.
+#' @return A distance matrix where rows and columns are all unique names from 'from' and 'to' columns.
+#' @export
+#' @examples
+#' data <- data.frame(
+#'   from = c("A", "A", "B", "D"),
+#'   to = c("B", "C", "A", "B"),
+#'   count = c(1, 2, 3, 4)
+#' )
+#' df2distance(data)
+df2distance <- function(data) {
+  # Get all unique node names
+  nodes <- unique(c(data$from, data$to))
+
+  # Create an empty distance matrix
+  distance_matrix <- matrix(0, nrow = length(nodes), ncol = length(nodes), dimnames = list(nodes, nodes))
+
+  # Fill the distance matrix according to the data
+  for (i in 1:nrow(data)) {
+    from <- data$from[i]
+    to <- data$to[i]
+    count <- data$count[i]
+
+    # Fill the count value into the corresponding position
+    distance_matrix[from, to] <- count
+  }
+  # 如果需要对称矩阵，可以通过下面的代码实现
+  distance_matrix[upper.tri(distance_matrix)] <- distance_matrix[upper.tri(distance_matrix)] + t(distance_matrix)[upper.tri(distance_matrix)]
+  distance_matrix[lower.tri(distance_matrix)] <- t(distance_matrix)[lower.tri(distance_matrix)]
+
+  return(distance_matrix)
+}
+
 #' Prepare a numeric string
 #'
 #' @param str  a string contain ',' and '-'

@@ -7,11 +7,11 @@
 cor_plot(
   env,
   env2 = NULL,
+  geom = ggcor::geom_square,
   mode = 1,
   method = "pearson",
-  heat = TRUE,
-  mode3_param = NULL,
-  ...
+  mode_param = NULL,
+  colors = get_cols(pal = "bluered")[2:10]
 )
 }
 \arguments{
@@ -19,15 +19,15 @@ cor_plot(
 
 \item{env2}{dataframe2 (default:NULL)}
 
-\item{mode}{plot mode (1~3)}
+\item{geom}{geom, default: \code{\link[ggcor]{geom_square}}}
+
+\item{mode}{plot mode (1~4)}
 
 \item{method}{one of "pearson","kendall","spearman"}
 
-\item{heat}{plot heatmap when columns >30}
+\item{mode_param}{parameters parse to \code{geom} (mode=1~2) or \code{\link[corrplot]{corrplot}} (mode=3)}
 
-\item{mode3_param}{parameters parse to \code{\link[corrplot]{corrplot}}}
-
-\item{...}{for \code{\link[pheatmap]{pheatmap}}}
+\item{colors}{color, default is \code{get_cols(pal="bluered")[2:10]}}
 }
 \value{
 ggplot
@@ -41,7 +41,8 @@ if (interactive()) {
   data(otutab)
   cor_plot(metadata[, 3:10])
   cor_plot(metadata[, 3:10], mode = 2)
-  cor_plot(t(otutab)[, 1:50], mode = 3, heat = FALSE)
+  cor_plot(metadata[, 3:10], mode = 3)
+  cor_plot(t(otutab)[, 1:50], mode = 4)
 }
 }
 }

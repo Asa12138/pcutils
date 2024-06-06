@@ -185,11 +185,12 @@ ggheatmap <- function(otutab, pal = NULL, scale = "none",
 #'
 #' @param env dataframe1
 #' @param env2 dataframe2 (default:NULL)
-#' @param mode plot mode (1~3)
+#' @param mode plot mode (1~4)
 #' @param method one of "pearson","kendall","spearman"
-#' @param heat plot heatmap when columns >30
-#' @param ... for \code{\link[pheatmap]{pheatmap}}
-#' @param mode3_param parameters parse to \code{\link[corrplot]{corrplot}}
+#' @param geom geom, default: \code{\link[ggcor]{geom_square}}
+#' @param mode_param parameters parse to `geom` (mode=1~2) or \code{\link[corrplot]{corrplot}} (mode=3)
+#' @param colors color, default is `get_cols(pal="bluered")[2:10]`
+#'
 #' @return ggplot
 #' @import ggplot2
 #' @export
@@ -200,103 +201,106 @@ ggheatmap <- function(otutab, pal = NULL, scale = "none",
 #'   data(otutab)
 #'   cor_plot(metadata[, 3:10])
 #'   cor_plot(metadata[, 3:10], mode = 2)
-#'   cor_plot(t(otutab)[, 1:50], mode = 3, heat = FALSE)
+#'   cor_plot(metadata[, 3:10], mode = 3)
+#'   cor_plot(t(otutab)[, 1:50], mode = 4)
 #' }
 #' }
-cor_plot <- function(env, env2 = NULL, mode = 1, method = "pearson", heat = TRUE, mode3_param = NULL, ...) {
-  if (ncol(env) > 30 & heat) {
-    lib_ps("pheatmap", library = FALSE)
-    stats::cor(env) -> a
-    pheatmap::pheatmap(a, show_rownames = FALSE, show_colnames = FALSE, border_color = FALSE, ...)
-  } else {
+cor_plot <- function(env, env2 = NULL, geom = ggcor::geom_square, mode = 1,
+                     method = "pearson", mode_param = NULL,
+                     colors = get_cols(pal = "bluered")[2:10]) {
+  if (mode %in% c(1, 2)) {
     lib_ps("ggcor", library = FALSE)
     if (isNamespaceLoaded("linkET")) lapply(c("ggcor", "linkET"), unloadNamespace)
+  } else if (mode == 3) {
+    lib_ps("corrplot", library = FALSE)
+  } else if (mode == 4) {
+    lib_ps("pheatmap", library = FALSE)
+  }
 
-    # ggcor::set_scale(bluered, type = "gradient2n")
-    if (is.null(env2)) {
-      if (mode == 1) {
-        p <- ggcor::quickcor(env, method = method, cor.test = TRUE) +
-          ggcor::geom_square(data = ggcor::get_data(type = "lower", show.diag = FALSE)) +
-          ggcor::geom_mark(data = ggcor::get_data(type = "upper", show.diag = FALSE), size = 2.5) +
-          geom_abline(slope = -1, intercept = ncol(env) + 1) +
-          scale_fill_gradientn(colours = get_cols(pal = "bluered"), limit = c(-1, 1))
-        return(p)
+  if (is.null(env2)) {
+    if (mode == 1) {
+      p <- ggcor::quickcor(env, method = method, cor.test = TRUE) +
+        geom_abline(slope = -1, intercept = ncol(env) + 1)
+    }
+    if (mode == 2) {
+      p <- env %>% ggcor::quickcor(
+        circular = TRUE, cluster = TRUE, open = 45,
+        method = method, cor.test = TRUE
+      )
+    }
+
+    if (mode %in% c(3, 4)) {
+      ggcor::correlate(env, method = method, cor.test = TRUE) -> res2
+    }
+  } else {
+    indx <- intersect(rownames(env), rownames(env2))
+    env <- env[indx, ]
+    env2 <- env2[indx, ]
+
+    if (mode == 1) {
+      if (ncol(env2) == 1) {
+        env2 <- cbind(env2, env2)
+      } else if (ncol(env) == 1) {
+        env <- cbind(env, env)
       }
-
-      if (mode == 2) {
-        p <- env %>% ggcor::quickcor(
-          circular = TRUE, cluster = TRUE, open = 45,
-          method = method, cor.test = TRUE
-        ) +
-          ggcor::geom_colour(colour = "white", size = 0.125) +
-          ggcor::anno_row_tree() +
-          ggcor::anno_col_tree() +
-          ggcor::set_p_xaxis() +
-          ggcor::set_p_yaxis() +
-          scale_fill_gradientn(colours = get_cols(pal = "bluered"), limit = c(-1, 1))
-        return(p)
-      }
-
-      if (mode == 3) {
-        lib_ps("corrplot", library = FALSE)
-        ggcor::correlate(env, method = method, cor.test = TRUE, p.adjust = TRUE, p.adjust.method = "fdr") -> res2
-        rownames(res2$p.value) <- rownames(res2$r)
-        colnames(res2$p.value) <- colnames(res2$r)
-
-        do.call(corrplot::corrplot, update_param(list(
-          corr = res2$r, order = "hclust", p.mat = res2$p.value, sig.level = 0.05, insig = "blank",
-          diag = FALSE, tl.cex = 0.5, addrect = 5, method = "color", outline = TRUE,
-          col = RColorBrewer::brewer.pal(n = 10, name = "PuOr"), tl.srt = 45, tl.col = "black"
-        ), mode3_param))
-      }
-    } else {
-      if (mode == 1) {
-        if (ncol(env2) == 1) {
-          env2 <- cbind(env2, env2)
-          p <- ggcor::quickcor(env, env2, method = method, cor.test = TRUE) +
-            ggcor::geom_square(data = ggcor::get_data(show.diag = FALSE)) +
-            ggcor::geom_mark(data = ggcor::get_data(show.diag = FALSE), size = 2.5)
-          p <- p + coord_fixed(xlim = c(0.5, 1.5))
-        } else if (ncol(env) == 1) {
-          env <- cbind(env, env)
-          p <- ggcor::quickcor(env, env2, method = method, cor.test = TRUE) +
-            ggcor::geom_square(data = ggcor::get_data(show.diag = FALSE)) +
-            ggcor::geom_mark(data = ggcor::get_data(show.diag = FALSE), size = 2.5)
-          p <- p + coord_fixed(ylim = c(0.5, 1.5))
-        } else {
-          p <- ggcor::quickcor(env, env2, method = method, cor.test = TRUE) +
-            ggcor::geom_square(data = ggcor::get_data(show.diag = FALSE)) +
-            ggcor::geom_mark(data = ggcor::get_data(show.diag = FALSE), size = 2.5)
-        }
-        return(p + scale_fill_gradientn(colours = get_cols(pal = "bluered"), limit = c(-1, 1)))
-      }
-
-      if (mode == 2) {
-        p <- ggcor::quickcor(env, env2,
-          circular = TRUE, cluster = TRUE, open = 45,
-          method = method, cor.test = TRUE
-        ) +
-          ggcor::geom_colour(colour = "white", size = 0.125) +
-          ggcor::anno_row_tree() +
-          ggcor::anno_col_tree() +
-          ggcor::set_p_xaxis() +
-          ggcor::set_p_yaxis() +
-          scale_fill_gradientn(colours = get_cols(pal = "bluered"), limit = c(-1, 1))
-        return(p)
-      }
-
-      if (mode == 3) {
-        lib_ps("corrplot", library = FALSE)
-        ggcor::correlate(env, env2, method = method, cor.test = TRUE, p.adjust = TRUE, p.adjust.method = "fdr") -> res2
-        rownames(res2$p.value) <- rownames(res2$r)
-        colnames(res2$p.value) <- colnames(res2$r)
-
-        corrplot::corrplot(res2$r,
-          p.mat = res2$p.value, sig.level = 0.05, diag = FALSE, method = "square",
-          tl.srt = 45, tl.col = "black", addCoef.col = "black", insig = "label_sig"
-        )
+      p <- ggcor::quickcor(env, env2, method = method, cor.test = TRUE)
+      if (ncol(env2) == 1) {
+        p <- p + coord_fixed(xlim = c(0.5, 1.5))
+      } else if (ncol(env) == 1) {
+        p <- p + coord_fixed(ylim = c(0.5, 1.5))
       }
     }
+
+    if (mode == 2) {
+      p <- ggcor::quickcor(env, env2,
+        circular = TRUE, cluster = TRUE, open = 45,
+        method = method, cor.test = TRUE
+      )
+    }
+
+    if (mode %in% c(3, 4)) {
+      ggcor::correlate(env, env2, method = method, cor.test = TRUE) -> res2
+    }
+  }
+
+  if (mode == 1) {
+    if (is.null(env2)) {
+      p <- p +
+        do.call(geom, update_param(list(data = ggcor::get_data(type = "lower", show.diag = FALSE)), mode_param))
+    } else {
+      p <- p +
+        do.call(geom, update_param(list(data = ggcor::get_data(show.diag = FALSE)), mode_param))
+    }
+    p <- p +
+      ggcor::geom_mark(data = ggcor::get_data(type = "upper", show.diag = FALSE), size = 2) +
+      scale_fill_gradientn(colours = colors, limit = c(-1, 1))
+    return(p)
+  }
+  if (mode == 2) {
+    p <- p +
+      do.call(geom, update_param(list(data = ggcor::get_data(show.diag = FALSE)), mode_param)) +
+      ggcor::anno_row_tree() +
+      ggcor::anno_col_tree() +
+      ggcor::set_p_xaxis() +
+      ggcor::set_p_yaxis() +
+      scale_fill_gradientn(colours = colors, limit = c(-1, 1))
+    return(p)
+  }
+  if (mode == 3) {
+    rownames(res2$p.value) <- rownames(res2$r)
+    colnames(res2$p.value) <- colnames(res2$r)
+
+    do.call(corrplot::corrplot, update_param(list(
+      corr = res2$r, p.mat = res2$p.value, sig.level = 0.05, insig = "blank",
+      diag = TRUE, tl.cex = 1, method = "square", addCoef.col = "black",
+      col = colors, tl.srt = 45, tl.col = "black",
+      number.cex = 0.7, number.font = 1, cl.length = 6
+    ), mode_param))
+  }
+  if (mode == 4) {
+    do.call(pheatmap::pheatmap, update_param(list(
+      mat = res2$r, show_rownames = FALSE, show_colnames = FALSE, color = colors, border_color = FALSE
+    ), mode_param))
   }
 }
 
@@ -368,12 +372,13 @@ gettop <- \(a, top){
 #' My Sankey plot
 #'
 #' @param test a dataframe with hierarchical structure
-#' @param ... look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}
+#' @param D3_params look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}
 #' @param mode "sankeyD3","ggsankey"
 #' @param space space width for ggsankey
 #' @param topN "all" or numeric vector, determine how many topN shows in each column
 #' @param width width
 #' @param str_width str_width
+#' @param ... additional parameters
 #'
 #' @export
 #'
@@ -394,7 +399,8 @@ gettop <- \(a, top){
 #'   my_sankey(test)
 #' }
 #' }
-my_sankey <- function(test, mode = c("sankeyD3", "ggsankey"), topN = "all", space = 1, width = 0.1, str_width = 20, ...) {
+my_sankey <- function(test, mode = c("sankeyD3", "ggsankey"), topN = "all",
+                      space = 1, width = 0.1, str_width = 20, D3_params = NULL, ...) {
   mode <- match.arg(mode, c("sankeyD3", "ggsankey"))
   test <- as.data.frame(test)
   nc <- ncol(test)
@@ -424,24 +430,40 @@ my_sankey <- function(test, mode = c("sankeyD3", "ggsankey"), topN = "all", spac
     links$IDsource <- match(links$source, nodes$name) - 1
     links$IDtarget <- match(links$target, nodes$name) - 1
 
-    p <- sankeyD3::sankeyNetwork(
-      Links = as.data.frame(links), Nodes = nodes,
-      Source = "IDsource", Target = "IDtarget", Value = "weight",
-      NodeID = "name", nodeWidth = 10, units = "TWh",
-      xAxisDomain = colnames(test)[-nc],
-      # height=400,width=500,
-      # colourScale=JS("d3.scaleOrdinal(d3.schemeCategory10);"),
-      # numberFormat=".0f",
-      # fontSize = 8,dragY = TRUE,nodeShadow = TRUE,
-      # doubleclickTogglesChildren = TRUE,
-      ...
+    # p <- sankeyD3::sankeyNetwork(
+    #   Links = as.data.frame(links), Nodes = nodes,
+    #   Source = "IDsource", Target = "IDtarget", Value = "weight",
+    #   NodeID = "name", nodeWidth = 10, units = "TWh",
+    #   xAxisDomain = colnames(test)[-nc],
+    #   # height=400,width=500,
+    #   # colourScale=JS("d3.scaleOrdinal(d3.schemeCategory10);"),
+    #   # numberFormat=".0f",
+    #   # fontSize = 8,dragY = TRUE,nodeShadow = TRUE,
+    #   # doubleclickTogglesChildren = TRUE,
+    #   ...
+    # )
+    p <- do.call(
+      sankeyD3::sankeyNetwork,
+      update_param(list(
+        Links = as.data.frame(links), Nodes = nodes,
+        Source = "IDsource", Target = "IDtarget", Value = "weight",
+        NodeID = "name", nodeWidth = 10, units = "TWh",
+        xAxisDomain = colnames(test)[-nc]
+      ), D3_params)
     )
-
     return(p)
   }
   if (mode == "ggsankey") {
     lib_ps("ggsankey", library = FALSE)
-    df <- ggsankey::make_long(test, 1:(nc - 1), value = !!nc)
+    test <- dplyr::arrange_at(test, seq_len(nc - 1))
+    unlist(dplyr::select(test, seq_len(nc - 1))) %>% unique() -> node_fct
+
+    df <- ggsankey::make_long(test, seq_len(nc - 1), value = !!nc)
+    df <- df %>% dplyr::mutate(
+      node = (factor(node, levels = node_fct)),
+      next_node = (factor(next_node, levels = node_fct))
+    )
+
     parms <- list(...)
 
     if (!is.null(parms$num)) {

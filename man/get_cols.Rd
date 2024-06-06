@@ -4,12 +4,14 @@
 \alias{get_cols}
 \title{Get n colors}
 \usage{
-get_cols(n = 11, pal = "col1")
+get_cols(n = 11, pal = NULL, n_break = 5)
 }
 \arguments{
 \item{n}{how many colors you need}
 
-\item{pal}{col1~3; or a vector of colors, you can get from: \code{RColorBrewer::brewer.pal(5,"Set2")} or \code{ggsci::pal_aaas()(5)}}
+\item{pal}{"col1", "col2", "col3"; or a vector of colors, you can get from: \code{RColorBrewer::brewer.pal(5,"Set2")} or \code{ggsci::pal_aaas()(5)}}
+
+\item{n_break}{default: 5}
 }
 \value{
 a vector of n colors

@@ -1,3 +1,14 @@
+# pcutils v0.2.6 Notes
+
+## Added
+
+- added `df2distance` function <2024-05-10, Fri>
+- added `ggmosaic` function for mosaic plot <2024-03-25, Mon>
+
+## Fixed
+
+- fixed `scale_color_pc()` and `scale_fill_pc()` <2024-04-07, Sun>
+
 # pcutils v0.2.5 Notes
 
 ## Others

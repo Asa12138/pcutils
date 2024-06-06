@@ -4,7 +4,7 @@
 \alias{my_lm}
 \title{Fit a linear model and plot}
 \usage{
-my_lm(tab, var, metadata = NULL, lm_color = "red", ...)
+my_lm(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE, ...)
 }
 \arguments{
 \item{tab}{your dataframe}
@@ -13,7 +13,9 @@ my_lm(tab, var, metadata = NULL, lm_color = "red", ...)
 
 \item{metadata}{the dataframe contains the var}
 
-\item{lm_color}{"red"}
+\item{smooth_param}{parameters parse to \code{\link[ggplot2]{geom_smooth}}}
+
+\item{facet}{whether facet?}
 
 \item{...}{parameters parse to \code{\link[ggplot2]{geom_point}}}
 }

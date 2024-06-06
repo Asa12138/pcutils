@@ -12,6 +12,7 @@ sample_map(
   point_params = list(),
   label = NULL,
   label_params = list(),
+  leaflet_pal = NULL,
   shp_file = NULL,
   crs = 4326,
   xlim = NULL,
@@ -36,6 +37,8 @@ sample_map(
 \item{label}{one column name of metadata which mapping to point label}
 
 \item{label_params}{parameters parse to geom_sf_text}
+
+\item{leaflet_pal}{leaflet color palette}
 
 \item{shp_file}{a geojson file parse to \code{sf::read_sf}}
 

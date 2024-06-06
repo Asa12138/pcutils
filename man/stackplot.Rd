@@ -67,7 +67,7 @@ areaplot(
 
 \item{stack_order}{the order of stack fill}
 
-\item{group_order}{the order of x group}
+\item{group_order}{the order of x group, can be T/F, or a vector of x, or a name, or "cluster"}
 
 \item{facet_order}{the order of the facet}
 

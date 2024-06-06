@@ -99,10 +99,15 @@ copy_vector <- function(vec) {
   }
   lib_ps("clipr", library = FALSE)
   if (is.numeric(vec)) {
-    clipr::write_clip(paste0("c(", paste0(vec, collapse = ","), ")"))
+    res <- paste0("c(", paste0(vec, collapse = ","), ")")
   } else {
-    clipr::write_clip(paste0('c("', paste0(vec, collapse = '","'), '")'))
+    res <- paste0('c("', paste0(vec, collapse = '","'), '")')
   }
+  if (!is.null(names(vec))) {
+    res <- paste0("setNames(", res, ",c(", paste0('"', names(vec), '"', collapse = ","), "))")
+  }
+
+  clipr::write_clip(res)
   message("copy done, just Ctrl+V")
 }
 
@@ -198,8 +203,8 @@ tidai <- function(x, y, fac = FALSE, keep_origin = FALSE) {
 #' update_param(list(a = 1, b = 2), list(b = 5, c = 5))
 #'
 update_param <- function(default, update) {
-  if (length(default) == 0) default <- NULL
-  if (length(update) == 0) update <- NULL
+  if (missing(default) || length(default) == 0) default <- NULL
+  if (missing(update) || length(update) == 0) update <- NULL
   if (is.null(default)) {
     return(update)
   }
