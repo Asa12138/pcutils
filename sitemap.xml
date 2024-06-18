@@ -46,10 +46,16 @@
     <loc>/reference/del_ps.html</loc>
   </url>
   <url>
+    <loc>/reference/df2distance.html</loc>
+  </url>
+  <url>
     <loc>/reference/df2link.html</loc>
   </url>
   <url>
     <loc>/reference/download2.html</loc>
+  </url>
+  <url>
+    <loc>/reference/download_ncbi_genome_file.html</loc>
   </url>
   <url>
     <loc>/reference/explode.html</loc>
@@ -74,6 +80,9 @@
   </url>
   <url>
     <loc>/reference/gghuan2.html</loc>
+  </url>
+  <url>
+    <loc>/reference/ggmosaic.html</loc>
   </url>
   <url>
     <loc>/reference/ggplot_lim.html</loc>
@@ -137,6 +146,9 @@
   </url>
   <url>
     <loc>/reference/make_project.html</loc>
+  </url>
+  <url>
+    <loc>/reference/match_df.html</loc>
   </url>
   <url>
     <loc>/reference/metadata.html</loc>
