@@ -60,6 +60,7 @@ reference:
       - download2
       - search_browse
       - translator
+      - download_ncbi_genome_file
   - title: Statistics
     desc:  A collection of statistical tools
     contents:
