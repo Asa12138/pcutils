@@ -74,6 +74,8 @@ reference:
       - t2
       - explode
       - squash
+      - match_df
+      - df2distance
       - df2link
       - pre_number_str
       - split_text
@@ -112,6 +114,7 @@ reference:
       - sample_map
       - gghist
       - ggheatmap
+      - ggmosaic
       - venn
       - tax_pie
       - tax_radar

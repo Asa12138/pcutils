@@ -11,6 +11,7 @@ my_sankey(
   space = 1,
   width = 0.1,
   str_width = 20,
+  notshow = c(),
   D3_params = NULL,
   ...
 )
@@ -27,6 +28,8 @@ my_sankey(
 \item{width}{width}
 
 \item{str_width}{str_width}
+
+\item{notshow}{notshow}
 
 \item{D3_params}{look for parameters in \code{\link[sankeyD3]{sankeyNetwork}}}
 

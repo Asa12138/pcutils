@@ -1058,13 +1058,15 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
 #' @param alpha whether plot a group alphabeta by test of method
 #' @param method test method:wilcox, tukeyHSD, LSD, (default: wilcox), see \code{\link{multitest}}
 #' @param alpha_param parameters parse to \code{\link[ggplot2]{geom_text}}
-#' @param point_param parameters parse to \code{\link[ggplot2]{geom_jitter}}
+#' @param point_param parameters parse to \code{\link[ggplot2]{geom_point}},
 #' @param p_value1 multi-test of all group
 #' @param p_value2 two-test of each pair
 #' @param stat_compare_means_param parameters parse to \code{\link[ggpubr]{stat_compare_means}}
 #' @param trend_line add a trend line
 #' @param trend_line_param parameters parse to \code{\link[ggplot2]{geom_smooth}}
 #' @param only_sig only_sig for p_value2
+#' @param paired if paired is TRUE, points in different groups will be connected by lines. So the row names order is important.
+#' @param paired_line_param parameters parse to \code{\link[ggplot2]{geom_line}}.
 #'
 #' @return a ggplot
 #' @export
@@ -1077,9 +1079,10 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
 #' group_box(a, group = rep(c("a", "b", "c"), each = 6))
 group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
                       group_order = NULL, facet_order = NULL,
-                      alpha = FALSE, method = "wilcox", alpha_param = list(color = "red"), point_param = NULL,
+                      paired = FALSE, paired_line_param = list(),
+                      alpha = FALSE, method = "wilcox", alpha_param = list(), point_param = NULL,
                       p_value1 = FALSE, p_value2 = FALSE, only_sig = TRUE, stat_compare_means_param = NULL,
-                      trend_line = FALSE, trend_line_param = list(color = "blue")) {
+                      trend_line = FALSE, trend_line_param = list()) {
   # data transform
   g_name <- NULL
 
@@ -1098,7 +1101,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     if (is.null(metadata) && !is.null(group)) {
       md <- data.frame(tab, group = group, check.names = FALSE)
     } else if (!is.null(metadata) && !is.null(group)) {
-      if (!all(rownames(metadata) %in% rownames(tab))) message("rownames dont match in tab and metadata")
+      if (!all(rownames(metadata) %in% rownames(tab))) message("rownames do not match in tab and metadata")
       idx <- rownames(metadata) %in% rownames(tab)
       metadata <- metadata[idx, , drop = FALSE]
       tab <- tab[rownames(metadata), , drop = FALSE]
@@ -1107,22 +1110,36 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     }
   }
   md$group <- change_fac_lev(md$group, levels = group_order)
+  id_var <- "group"
 
-  md %>% reshape2::melt(id.vars = "group", variable.name = "indexes") -> md
+  if (paired) {
+    n_line <- table(md$group)[1]
+    if (!all(table(md$group) == n_line)) stop("all levels number should be equal when paired==TRUE")
+    md$`_Line` <- NA
+    for (i in levels(md$group)) {
+      md[md$group == i, "_Line"] <- paste0("Line", seq_len(n_line))
+    }
+    id_var <- c("group", "_Line")
+  }
+
+  md %>% reshape2::melt(id.vars = id_var, variable.name = "indexes") -> md
   md$indexes <- change_fac_lev(md$indexes, levels = facet_order)
+
+  default_jitter <- position_jitter(width = 0.15, seed = 123)
+  if (paired) default_jitter <- position_jitter(width = 0, seed = 123)
 
   # main plot
   if (mode == 1) {
     p <- ggplot(md, aes(x = group, y = value, color = group, group = group)) +
       stat_boxplot(geom = "errorbar", width = 0.15) +
       geom_boxplot(outlier.shape = NA) +
-      do.call(geom_jitter, update_param(list(width = 0.15, alpha = 0.8, size = 0.5), point_param))
+      do.call(geom_point, update_param(list(position = default_jitter, alpha = 0.8, size = 0.5), point_param))
   }
   if (mode == 2) {
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
       # stat_boxplot(geom = "errorbar",width=0.15)+
       geom_boxplot(color = "black", outlier.shape = NA) +
-      do.call(geom_jitter, update_param(list(color = "black", width = 0.15, alpha = 0.8, size = 0.5), point_param))
+      do.call(geom_point, update_param(list(position = default_jitter, color = "black", alpha = 0.8, size = 0.5), point_param))
   }
   if (mode == 3) {
     lib_ps("gghalves", library = FALSE)
@@ -1141,7 +1158,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
       geom_violin(trim = FALSE) +
       geom_boxplot(width = 0.1, outlier.shape = NA) +
-      do.call(geom_jitter, update_param(list(width = 0.15, alpha = 0.8, size = 0.5), point_param))
+      do.call(geom_point, update_param(list(position = default_jitter, alpha = 0.8, size = 0.5), point_param))
   }
   if (mode == 5) {
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
@@ -1166,7 +1183,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
       # 添加误差线
       stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", color = "black", width = .2) +
       # 添加抖动散点图
-      do.call(geom_jitter, update_param(list(width = 0.2, alpha = 0.8, size = 2, shape = 21), point_param))
+      do.call(geom_point, update_param(list(position = default_jitter, alpha = 0.8, size = 2, shape = 21), point_param))
   }
   if (mode == 8) {
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
@@ -1175,7 +1192,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
       # 添加误差线
       stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", color = "black", width = .2) +
       # 添加抖动散点图
-      do.call(geom_jitter, update_param(list(width = 0.2, alpha = 0.8, size = 0.5), point_param))
+      do.call(geom_point, update_param(list(position = default_jitter, alpha = 0.8, size = 0.5), point_param))
   }
   if (mode == 9) {
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
@@ -1195,10 +1212,18 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
   p <- p + guides(color = guide_legend(g_name), fill = guide_legend(g_name)) +
     ylab(label = NULL) + xlab(label = NULL)
 
+  if (paired) {
+    if ("position" %in% names(point_param)) default_jitter <- point_param[["position"]]
+    p <- p + do.call(geom_line, update_param(
+      list(mapping = aes(group = `_Line`), color = "grey", position = default_jitter),
+      paired_line_param
+    ))
+  }
+
   # trend line
   if (trend_line) {
     p <- p + do.call(geom_smooth, update_param(
-      list(mapping = aes(group = 1), method = "glm", se = FALSE, alpha = 0.8),
+      list(mapping = aes(group = 1), method = "glm", se = FALSE, alpha = 0.8, color = "blue"),
       trend_line_param
     ))
   }
@@ -1218,6 +1243,9 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     if (p_value1 == TRUE) p_value1 <- NULL
     md %>% summarise(low = min(value, na.rm = TRUE), high = max(value, na.rm = TRUE)) -> aa
     #    p <- p + ggpubr::stat_compare_means(show.legend = FALSE, method = p_value1, label.x = 1, label.y.npc = 1)
+    if (paired) {
+      stat_compare_means_param <- update_param(stat_compare_means_param, list(paired = TRUE))
+    }
     p <- p + do.call(ggpubr::stat_compare_means, update_param(list(
       show.legend = FALSE, method = p_value1, label.x = 1, label.y.npc = 1
     ), stat_compare_means_param))

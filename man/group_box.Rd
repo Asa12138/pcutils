@@ -11,16 +11,18 @@ group_box(
   mode = 1,
   group_order = NULL,
   facet_order = NULL,
+  paired = FALSE,
+  paired_line_param = list(),
   alpha = FALSE,
   method = "wilcox",
-  alpha_param = list(color = "red"),
+  alpha_param = list(),
   point_param = NULL,
   p_value1 = FALSE,
   p_value2 = FALSE,
   only_sig = TRUE,
   stat_compare_means_param = NULL,
   trend_line = FALSE,
-  trend_line_param = list(color = "blue")
+  trend_line_param = list()
 )
 }
 \arguments{
@@ -36,13 +38,17 @@ group_box(
 
 \item{facet_order}{the order of the facet}
 
+\item{paired}{if paired is TRUE, points in different groups will be connected by lines. So the row names order is important.}
+
+\item{paired_line_param}{parameters parse to \code{\link[ggplot2]{geom_line}}.}
+
 \item{alpha}{whether plot a group alphabeta by test of method}
 
 \item{method}{test method:wilcox, tukeyHSD, LSD, (default: wilcox), see \code{\link{multitest}}}
 
 \item{alpha_param}{parameters parse to \code{\link[ggplot2]{geom_text}}}
 
-\item{point_param}{parameters parse to \code{\link[ggplot2]{geom_jitter}}}
+\item{point_param}{parameters parse to \code{\link[ggplot2]{geom_point}},}
 
 \item{p_value1}{multi-test of all group}
 

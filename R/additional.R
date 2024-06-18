@@ -234,8 +234,8 @@ cor_plot <- function(env, env2 = NULL, geom = ggcor::geom_square, mode = 1,
     }
   } else {
     indx <- intersect(rownames(env), rownames(env2))
-    env <- env[indx, ]
-    env2 <- env2[indx, ]
+    env <- env[indx, , drop = FALSE]
+    env2 <- env2[indx, , drop = FALSE]
 
     if (mode == 1) {
       if (ncol(env2) == 1) {
@@ -244,9 +244,9 @@ cor_plot <- function(env, env2 = NULL, geom = ggcor::geom_square, mode = 1,
         env <- cbind(env, env)
       }
       p <- ggcor::quickcor(env, env2, method = method, cor.test = TRUE)
-      if (ncol(env2) == 1) {
+      if (length(unique(colnames(env2))) == 1) {
         p <- p + coord_fixed(xlim = c(0.5, 1.5))
-      } else if (ncol(env) == 1) {
+      } else if (length(unique(colnames(env))) == 1) {
         p <- p + coord_fixed(ylim = c(0.5, 1.5))
       }
     }
@@ -296,11 +296,13 @@ cor_plot <- function(env, env2 = NULL, geom = ggcor::geom_square, mode = 1,
       col = colors, tl.srt = 45, tl.col = "black",
       number.cex = 0.7, number.font = 1, cl.length = 6
     ), mode_param))
+    return(invisible())
   }
   if (mode == 4) {
     do.call(pheatmap::pheatmap, update_param(list(
       mat = res2$r, show_rownames = FALSE, show_colnames = FALSE, color = colors, border_color = FALSE
     ), mode_param))
+    return(invisible())
   }
 }
 
@@ -379,6 +381,7 @@ gettop <- \(a, top){
 #' @param width width
 #' @param str_width str_width
 #' @param ... additional parameters
+#' @param notshow notshow
 #'
 #' @export
 #'
@@ -400,7 +403,8 @@ gettop <- \(a, top){
 #' }
 #' }
 my_sankey <- function(test, mode = c("sankeyD3", "ggsankey"), topN = "all",
-                      space = 1, width = 0.1, str_width = 20, D3_params = NULL, ...) {
+                      space = 1, width = 0.1, str_width = 20,
+                      notshow = c(), D3_params = NULL, ...) {
   mode <- match.arg(mode, c("sankeyD3", "ggsankey"))
   test <- as.data.frame(test)
   nc <- ncol(test)
@@ -425,30 +429,29 @@ my_sankey <- function(test, mode = c("sankeyD3", "ggsankey"), topN = "all",
       tmp <- group_by(tmp, source, target) %>% summarise(weight = sum(weight), .groups = "keep")
       links <- rbind(links, tmp)
     }
+    if (length(notshow) > 0) links <- links[!grepl(paste0(notshow, collapse = "|"), links$target), ]
     # give ids
     nodes <- data.frame(name = c(as.character(links$source), as.character(links$target)) %>% unique())
+    node_depth <- lapply(seq_len(nc - 1), \(i)data.frame(name = unique(test[, i]), depth = i - 1)) %>% do.call(rbind, .)
+    nodes <- dplyr::left_join(nodes, node_depth, by = c("name"))
+
     links$IDsource <- match(links$source, nodes$name) - 1
     links$IDtarget <- match(links$target, nodes$name) - 1
 
-    # p <- sankeyD3::sankeyNetwork(
-    #   Links = as.data.frame(links), Nodes = nodes,
-    #   Source = "IDsource", Target = "IDtarget", Value = "weight",
-    #   NodeID = "name", nodeWidth = 10, units = "TWh",
-    #   xAxisDomain = colnames(test)[-nc],
-    #   # height=400,width=500,
-    #   # colourScale=JS("d3.scaleOrdinal(d3.schemeCategory10);"),
-    #   # numberFormat=".0f",
-    #   # fontSize = 8,dragY = TRUE,nodeShadow = TRUE,
-    #   # doubleclickTogglesChildren = TRUE,
-    #   ...
-    # )
+    # nodes$name=stringr::str_wrap(nodes$name, width = str_width)
     p <- do.call(
       sankeyD3::sankeyNetwork,
       update_param(list(
         Links = as.data.frame(links), Nodes = nodes,
         Source = "IDsource", Target = "IDtarget", Value = "weight",
-        NodeID = "name", nodeWidth = 10, units = "TWh",
-        xAxisDomain = colnames(test)[-nc]
+        NodeID = "name", NodeGroup = "name", NodePosX = "depth",
+        iterations = 1000, align = "none", LinkGroup = "source",
+        xAxisDomain = colnames(test)[-nc],
+        fontFamily = "arial", fontSize = 12, linkGradient = TRUE,
+        nodeWidth = 15, nodeCornerRadius = 5, highlightChildLinks = TRUE,
+        orderByPath = TRUE, scaleNodeBreadthsByString = TRUE,
+        numberFormat = "pavian", dragY = TRUE, nodeShadow = TRUE,
+        doubleclickTogglesChildren = TRUE
       ), D3_params)
     )
     return(p)
