@@ -30,6 +30,9 @@ If specified, this will override the \code{type} parameter. Defaults to NULL.}
 
 \item{timeout}{A numeric value representing the maximum time in seconds to wait for the download. Defaults to 300.}
 }
+\value{
+No value
+}
 \description{
 This function downloads specific genomic files from NCBI's FTP server
 based on the provided accession number. It supports downloading

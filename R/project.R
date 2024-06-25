@@ -414,10 +414,13 @@ for (( N = $START; N <= $STOP; N++ ))
 do
   sample=$(head -n \"$N\" $samplelist | tail -n 1)
 	echo $sample
+	start1=`date +%s`
 
   bowtie2 -p 8 -x ~/db/humangenome/hg38 -1 ~/work/st/data/fastp/${sample}_1.fq -2 ~/work/st/data/fastp/${sample}_2.fq \
   -S ~/work/st/data/rm_human/${sample}.sam --un-conc ~/work/st/data/rm_human/${sample}.fq --very-sensitive
 
+	end1=`date +%s`
+  echo `expr $end1 - $start1`s
 done
 ##############
 echo end: `date +'%Y-%m-%d %T'`

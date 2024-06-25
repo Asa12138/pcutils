@@ -3,7 +3,7 @@
 ## Added
 
 - added `download_ncbi_genome_file` function <2024-06-18, Tue>
-- added 'paired' arugment for `group_box()` <2024-06-14, Fri>
+- added 'paired' argument for `group_box()` <2024-06-14, Fri>
 - added `df2distance` function <2024-05-10, Fri>
 - added `ggmosaic` function for mosaic plot <2024-03-25, Mon>
 

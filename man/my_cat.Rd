@@ -4,10 +4,12 @@
 \alias{my_cat}
 \title{Show my little cat named Guo Dong which drawn by my girlfriend.}
 \usage{
-my_cat(mode = 1)
+my_cat(mode = 1, picture = 1)
 }
 \arguments{
 \item{mode}{1~2}
+
+\item{picture}{1~2}
 }
 \value{
 a ggplot

@@ -10,7 +10,7 @@
 [![](http://cranlogs.r-pkg.org/badges/grand-total/pcutils)](https://cran.r-project.org/package=pcutils)
 [![](http://cranlogs.r-pkg.org/badges/last-month/pcutils)](https://cran.r-project.org/package=pcutils)
 [![](https://www.r-pkg.org/badges/version/pcutils?color=green)](https://cran.r-project.org/package=pcutils)
-[![](https://img.shields.io/badge/devel%20version-0.2.5-green.svg)](https://github.com/Asa12138/pcutils)
+[![](https://img.shields.io/badge/devel%20version-0.2.6-green.svg)](https://github.com/Asa12138/pcutils)
 <!-- badges: end -->
 
 `pcutils` is a package that contains some useful functions for me, it
@@ -65,6 +65,8 @@ devtools::install_github("Asa12138/pcutils")
 ### for web
 
 - `download2` download a file from a url
+
+- `download_ncbi_genome_file` download a file from NCBI
 
 - `search_browse` search and browse a website
 

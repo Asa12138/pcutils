@@ -22,5 +22,5 @@ data.frame
 Split Composite Names
 }
 \examples{
-strsplit2(c("a;b", "c;d"), ";")
+strsplit2(c("a;b", "c;d"), ";", colnames = c("col1", "col2"))
 }

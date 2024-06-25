@@ -4,12 +4,14 @@
 \alias{hebing}
 \title{Group your data}
 \usage{
-hebing(otutab, group, margin = 2, act = "mean")
+hebing(otutab, group, metadata = NULL, margin = 2, act = "mean")
 }
 \arguments{
 \item{otutab}{data.frame}
 
-\item{group}{group vector}
+\item{group}{group vector or one of colnames(metadata)}
+
+\item{metadata}{metadata}
 
 \item{margin}{1 for row and 2 for column(default: 2)}
 
@@ -24,4 +26,5 @@ Group your data
 \examples{
 data(otutab)
 hebing(otutab, metadata$Group)
+hebing(otutab, "Group", metadata, act = "sum")
 }

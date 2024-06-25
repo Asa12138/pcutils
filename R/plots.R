@@ -1621,10 +1621,11 @@ ggmosaic <- function(tab, rect_params = list(), rect_space = 0,
   p
 }
 
-#' gg Histogram
+#' gg histogram
 #'
 #' @param x vector
 #' @param ... parameters parse to \code{\link[ggpubr]{gghistogram}}
+#' @param text_pos text postion, default is c(0.8, 0.8)
 #'
 #' @return ggplot
 #' @export
@@ -1633,7 +1634,7 @@ ggmosaic <- function(tab, rect_params = list(), rect_space = 0,
 #' if (requireNamespace("ggpubr")) {
 #'   gghist(rnorm(100))
 #' }
-gghist <- function(x, ...) {
+gghist <- function(x, text_pos = c(0.8, 0.8), ...) {
   lib_ps("ggpubr")
   p <- do.call(ggpubr::gghistogram, update_param(list(data = x, fill = "skyblue2", add = "median", add_density = TRUE), list(...)))
 
@@ -1645,7 +1646,8 @@ gghist <- function(x, ...) {
   a <- round(summary(x), 2)
   lims <- ggplot_lim(p)
   p + annotate("text",
-    x = 0.8 * lims$x[2] + 0.2 * lims$x[1], y = 0.8 * lims$y[2] + 0.2 * lims$y[1],
+    x = text_pos[1] * lims$x[2] + (1 - text_pos[1]) * lims$x[1],
+    y = text_pos[2] * lims$y[2] + (1 - text_pos[2]) * lims$y[1],
     label = paste0("Min: ", a[1], "\nMedian: ", a[3], "\nMean: ", a[4], "\nMax: ", a[6])
   )
 }
@@ -2337,15 +2339,25 @@ my_circle_packing <- function(test, anno = NULL, mode = 1,
 # ========Easter eggs=======
 
 #' Show my little cat named Guo Dong which drawn by my girlfriend.
+#'
 #' @param mode 1~2
+#' @param picture 1~2
+#'
 #' @return a ggplot
 #' @export
-my_cat <- function(mode = 1) {
+my_cat <- function(mode = 1, picture = 1) {
   little_guodong <- NULL
+  # data("little_guodong", package = "pcutils", envir = environment())
+  # magick::image_read("~/Pictures/smallguodong2.png")->a #透明背景png
+  # # magick::image_scale(a,"25%")->a
+  # little_guodong2=grid::rasterGrob(a,interpolate=TRUE)
+  # little_guodong[[2]]=little_guodong2
+  # save(little_guodong, file = "data/little_guodong.rda",compress = "xz")
   data("little_guodong", package = "pcutils", envir = environment())
+  pic <- little_guodong[[picture]]
   if (mode == 1) {
     p <- ggplot() +
-      annotation_custom(little_guodong, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
+      annotation_custom(pic, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf) +
       theme_void()
   }
   if (mode == 2) {
@@ -2355,7 +2367,7 @@ my_cat <- function(mode = 1) {
     d <- data.frame(x = 2 * (sin(t) - 0.5 * sin(2 * t)), y = 2 * (cos(t) - 0.5 * cos(2 * t)))
 
     temp <- tempdir()
-    ggsave(filename = paste0(temp, "/", "little_guodong.png"), plot = little_guodong, bg = "transparent")
+    ggsave(filename = paste0(temp, "/", "little_guodong.png"), plot = pic, bg = "transparent")
     p <- ggplot(d, aes(x, y)) +
       ggimage::geom_image(image = paste0(paste0(temp, "/", "little_guodong.png")), size = .05) +
       theme_void()

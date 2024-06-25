@@ -2,7 +2,7 @@
 % Please edit documentation in R/statistics.R
 \name{trans}
 \alias{trans}
-\title{Transfer your data}
+\title{Trans format your data}
 \usage{
 trans(df, method = "normalize", margin = 2, ...)
 }
@@ -20,7 +20,7 @@ trans(df, method = "normalize", margin = 2, ...)
 data.frame
 }
 \description{
-Transfer your data
+Trans format your data
 }
 \examples{
 data(otutab)

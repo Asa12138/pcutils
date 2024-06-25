@@ -75,6 +75,8 @@ devtools::install_github("Asa12138/pcutils")
 
 -   `download2` download a file from a url
 
+-   `download_ncbi_genome_file` download a file from NCBI
+
 -   `search_browse` search and browse a website
 
 -   `translator` translate a text

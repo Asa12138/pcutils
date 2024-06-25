@@ -390,7 +390,7 @@ grepl.data.frame <- function(pattern, x, ...) {
   if (.row_names_info(x) > 0L) {
     rownames(y) <- row.names(x)
   }
-  y
+  data.frame(y, check.names = FALSE)
 }
 
 #' Gsub applied on a data.frame
@@ -414,7 +414,7 @@ gsub.data.frame <- function(pattern, replacement, x, ...) {
   if (.row_names_info(x) > 0L) {
     rownames(y) <- row.names(x)
   }
-  y
+  data.frame(y, check.names = FALSE)
 }
 
 # =======Read file========
@@ -898,7 +898,7 @@ split_text <- function(text, nchr_each = 200) {
 #' When `type` is set to "all", the function cannot download the entire directory
 #' directly but provides a command line example for the user to download the directory
 #' using tools like `wget`.
-#'
+#' @return No value
 #' @examples
 #' \dontrun{
 #' download_ncbi_genome_file("GCF_001036115.1", out_dir = "downloads", type = "gff")
@@ -935,7 +935,7 @@ download_ncbi_genome_file <- function(accession, out_dir = ".", type = "gff", fi
       stop("Unable to access the directory: ", base_path)
     }
     # 提取文件夹列表
-    content <- content(res, "text")
+    content <- httr::content(res, "text")
     folders <- regmatches(content, gregexpr(paste0(accession, "_[^/]+"), content))
     if (length(folders[[1]]) == 0) {
       stop("No matching folder found for accession: ", accession)
@@ -955,10 +955,10 @@ download_ncbi_genome_file <- function(accession, out_dir = ".", type = "gff", fi
       "all" = "",
       "gff" = "_genomic.gff.gz",
       "fna" = "_genomic.fna.gz",
-      "gbff" = "genomic.gbff.gz",
-      "gtf" = "genomic.gtf.gz",
+      "gbff" = "_genomic.gbff.gz",
+      "gtf" = "_genomic.gtf.gz",
       "faa" = "_protein.faa.gz",
-      "gpff" = "genomic.gpff.gz",
+      "gpff" = "_genomic.gpff.gz",
       stop("Unsupported type: ", type)
     )
     file_name <- if (type == "all") "" else paste0(full_accession, file_suffix)

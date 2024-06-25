@@ -2,12 +2,14 @@
 % Please edit documentation in R/plots.R
 \name{gghist}
 \alias{gghist}
-\title{gg Histogram}
+\title{gg histogram}
 \usage{
-gghist(x, ...)
+gghist(x, text_pos = c(0.8, 0.8), ...)
 }
 \arguments{
 \item{x}{vector}
+
+\item{text_pos}{text postion, default is c(0.8, 0.8)}
 
 \item{...}{parameters parse to \code{\link[ggpubr]{gghistogram}}}
 }
@@ -15,7 +17,7 @@ gghist(x, ...)
 ggplot
 }
 \description{
-gg Histogram
+gg histogram
 }
 \examples{
 if (requireNamespace("ggpubr")) {
