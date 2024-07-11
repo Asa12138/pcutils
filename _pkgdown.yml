@@ -104,6 +104,7 @@ reference:
       - ggplot_lim
       - generate_labels
       - ggplot_translator
+      - igraph_translator
       - stackplot
       - areaplot
       - cor_plot

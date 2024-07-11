@@ -375,7 +375,7 @@ sanxian <- function(df, digits = 3, nrow = 10, ncol = 10, fig = FALSE, mode = 1,
 #' @param x your data.frame
 #' @param ... addtitional arguments for gerpl()
 #'
-#' @return a logical data.frame
+#' @return a logical matrix
 #' @export
 #' @examples
 #' matrix(letters[1:6], 2, 3) |> as.data.frame() -> a
@@ -390,7 +390,7 @@ grepl.data.frame <- function(pattern, x, ...) {
   if (.row_names_info(x) > 0L) {
     rownames(y) <- row.names(x)
   }
-  data.frame(y, check.names = FALSE)
+  y
 }
 
 #' Gsub applied on a data.frame
@@ -400,7 +400,7 @@ grepl.data.frame <- function(pattern, x, ...) {
 #' @param x your data.frame
 #' @param ... additional arguments for gerpl()
 #'
-#' @return a logical data.frame
+#' @return a data.frame
 #' @export
 #' @examples
 #' matrix(letters[1:6], 2, 3) |> as.data.frame() -> a
@@ -422,7 +422,7 @@ gsub.data.frame <- function(pattern, replacement, x, ...) {
 #' Read some special format file
 #'
 #' @param file file path
-#' @param format "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf","jpg", "png", "pdf", "svg"...
+#' @param format "blast", "diamond", "fa", "fasta", "fna", "faa", "bib", "gff", "gtf","jpg", "png", "pdf", "svg"...
 #' @param just_print just print the file
 #' @param all_yes all_yes?
 #' @param ... additional arguments
@@ -452,7 +452,9 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
   } else {
     if (is.null(format)) format <- tools::file_ext(file)
     format <- match.arg(format, c(
-      "blast", "diamond", "fa", "fasta", "fna", "gff", "gtf",
+      "blast", "diamond", "gff", "gtf",
+      "fa", "fasta", "fna", "faa",
+      "bib", "ris",
       "jpg", "png", "pdf", "svg", "gif", "biom"
     ))
 
@@ -470,8 +472,14 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
       return(df)
     }
 
-    if (format %in% c("fa", "fasta", "fna")) {
+    if (format %in% c("fa", "fasta", "fna", "faa")) {
       df <- read_fasta(file)
+      return(df)
+    }
+
+    if (format %in% c("bib", "ris")) {
+      lib_ps("revtools", library = FALSE)
+      df <- revtools::read_bibliography(filename = file, return_df = TRUE)
       return(df)
     }
 

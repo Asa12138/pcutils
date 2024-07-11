@@ -64,11 +64,11 @@ count2 <- function(df) {
 #' @examples
 #' data(otutab)
 #' hebing(otutab, metadata$Group)
-#' hebing(otutab, "Group", metadata, act = "sum")
-hebing <- function(otutab, group, metadata = NULL, margin = 2, act = "mean") {
+#' hebing(otutab, "Group", metadata = metadata, act = "sum")
+hebing <- function(otutab, group, margin = 2, act = "mean", metadata = NULL) {
   # prepare otutab
   if (!is.null(metadata)) {
-    if (length(group) != 1 | (!group %in% colnames(metadata))) stop("group should be one of colnames(metadata)")
+    if (length(group) != 1 | (!group[1] %in% colnames(metadata))) stop("group should be one of colnames(metadata)")
     match_res <- match_df(otutab, metadata)
     otutab <- match_res$otutab
     group <- match_res$metadata[, group, drop = TRUE]
@@ -226,7 +226,7 @@ strsplit2 <- function(x, split, colnames = NULL, ...) {
 #' @return data.frame
 #' @export
 t2 <- function(data) {
-  data.frame(t(data), optional = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
+  as.data.frame(t(data), optional = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
 }
 
 #' Explode a data.frame if there are split charter in one column

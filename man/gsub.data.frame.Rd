@@ -16,7 +16,7 @@ gsub.data.frame(pattern, replacement, x, ...)
 \item{...}{additional arguments for gerpl()}
 }
 \value{
-a logical data.frame
+a data.frame
 }
 \description{
 Gsub applied on a data.frame

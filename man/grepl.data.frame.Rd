@@ -14,7 +14,7 @@ grepl.data.frame(pattern, x, ...)
 \item{...}{addtitional arguments for gerpl()}
 }
 \value{
-a logical data.frame
+a logical matrix
 }
 \description{
 Grepl applied on a data.frame

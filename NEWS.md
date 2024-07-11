@@ -1,3 +1,9 @@
+# pcutils v0.2.7 Notes
+
+## Added
+
+- added `igraph_translator` function <2024-07-11, Thu>
+
 # pcutils v0.2.6 Notes
 
 ## Added

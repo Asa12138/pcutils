@@ -16,7 +16,7 @@ read.file(
 \arguments{
 \item{file}{file path}
 
-\item{format}{"blast", "diamond", "fa", "fasta", "fna", "gff", "gtf","jpg", "png", "pdf", "svg"...}
+\item{format}{"blast", "diamond", "fa", "fasta", "fna", "faa", "bib", "gff", "gtf","jpg", "png", "pdf", "svg"...}
 
 \item{just_print}{just print the file}
 

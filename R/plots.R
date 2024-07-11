@@ -1,7 +1,7 @@
 pcutils_theme <- {
   ggplot2::theme_classic(base_size = 13) +
     ggplot2::theme(
-      axis.text = element_text(color = "black"),
+      axis.text = ggplot2::element_text(color = "black"),
       plot.margin = grid::unit(rep(0.5, 4), "lines"),
       strip.background = ggplot2::element_rect(fill = NA)
     )
@@ -440,7 +440,7 @@ match_df <- function(otutab, metadata) {
 ggplot_translator <- function(gg, which = c("x", "y"), from = "en", to = "zh",
                               keep_original_label = FALSE, original_sep = "\n", verbose = TRUE) {
   if (verbose) {
-    message("Please set the font family to make the labels display well.\n see `how_to_set_font_for_plot()`.")
+    message("Tips: Please set the font family to make the labels display well.\n see `how_to_set_font_for_plot()`.")
     lib_ps("sysfonts", "showtext", library = FALSE)
     showtext::showtext_auto()
   }
@@ -519,6 +519,56 @@ ggplot_translator <- function(gg, which = c("x", "y"), from = "en", to = "zh",
     }
   }
   return(gg)
+}
+
+#' Translate text of igraph
+#'
+#' @param ig igraph object to be translated
+#' @param from source language
+#' @param to target language
+#' @param which vertex, edge, or all
+#' @param verbose verbose
+#'
+#' @return igraph object
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(igraph)
+#' ig <- make_graph(c("happy", "sad", "sad", "angry", "sad", "worried"))
+#' plot(ig)
+#' ig2 <- igraph_translator(ig)
+#' font_file <- "/System/Library/Fonts/Supplemental/Songti.ttc"
+#' sysfonts::font_add("Songti", font_file)
+#' plot(ig2, vertex.label.family="Songti")
+#' }
+igraph_translator <- function(ig, from = "en", to = "zh", which = c("vertex", "edge", "all")[1],
+                              verbose = TRUE) {
+  lib_ps("igraph", library = FALSE)
+  stopifnot(inherits(ig, "igraph"))
+  if (verbose) {
+    message('Tips: Please set the font family to make the labels display well.e.g:
+    ig <- igraph_translator(ig)
+    font_file <- "/System/Library/Fonts/Supplemental/Songti.ttc"
+    sysfonts::font_add("Songti", font_file)
+    plot(ig, vertex.label.family="Songti")
+            ')
+    lib_ps("sysfonts", "showtext", library = FALSE)
+    showtext::showtext_auto()
+  }
+  if ("all" %in% which) which <- c("vertex", "edge")
+  if ("vertex" %in% which) {
+    if (is.null(igraph::V(ig)$label)) {
+      if(is.null(igraph::V(ig)$name)) stop("No vertex label found")
+      V(ig)$label <- V(ig)$name
+    }
+    igraph::V(ig)$label <- translator(igraph::V(ig)$label, from = from, to = to)
+  }
+  if ("edge" %in% which) {
+    if (is.null(igraph::E(ig)$label)) stop("No edge label found")
+    igraph::E(ig)$label <- translator(igraph::E(ig)$label, from = from, to = to)
+  }
+  ig
 }
 
 # ========Common plots=======
@@ -1086,7 +1136,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
   # data transform
   g_name <- NULL
 
-  value <- indexes <- variable <- high <- low <- text_param <- y <- NULL
+  value <- indexes <- variable <- high <- low <- text_param <- y <- `_Line` <- NULL
   if (is.vector(tab)) {
     tab <- data.frame(value = tab)
   } else {
@@ -1515,6 +1565,7 @@ ggmosaic <- function(tab, rect_params = list(), rect_space = 0,
                      x_label = c("top", "bottom", "none")[1],
                      y_label = c("right", "left", "none")[1], label_params = list(),
                      chisq_test = TRUE) {
+  value <- Var1 <- value_x <- pct <- xmax <- percentage <- ymax <- ymin <- xmin <- Var2 <- xtext <- ytext <- NULL
   if (is.table(tab)) {
     oldcolnames <- names(attributes(tab)$dimnames)
     tab <- as.data.frame(tab)
@@ -1678,7 +1729,7 @@ my_lm <- function(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE
   lib_ps("ggpmisc", library = FALSE)
   # data transform
   g_name <- NULL
-  value <- eq.label <- adj.rr.label <- p.value.label <- NULL
+  value <- eq.label <- adj.rr.label <- p.value.label <- indexes <- NULL
   if (is.vector(tab)) tab <- data.frame(value = tab)
 
   if (is.null(metadata)) {

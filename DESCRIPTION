@@ -1,7 +1,7 @@
 Package: pcutils
 Type: Package
 Title: Some Useful Functions for Statistics and Visualization
-Version: 0.2.6
+Version: 0.2.7
 Authors@R:
     person("Chen", "Peng", email ="pengchen2001@zju.edu.cn", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-9449-7606"))
 Description: 
@@ -100,7 +100,8 @@ Suggests:
     SoDA,
     ggnewscale,
     ggtree,
-    ape
+    ape,
+    revtools
 Config/Needs/website:
     pkgdown,
     rnabioco/rbitemplate
