@@ -3,7 +3,7 @@
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">pcutils</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.7</span>
       </span>
     </div>
 
@@ -25,7 +25,7 @@
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
-     
+
   </a>
 </li>
 <li>
@@ -37,7 +37,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Other Packages
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -65,25 +65,25 @@
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/Asa12138/pcutils" class="external-link">
     <span class="fa fa-github"></span>
-     
+
   </a>
 </li>
       </ul><form class="navbar-form navbar-right hidden-xs hidden-sm" role="search">
         <div class="form-group">
           <input type="search" class="form-control" name="search-input" id="search-input" placeholder="Search..." aria-label="Search for..." autocomplete="off"></div>
       </form>
-      
+
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Group your data</h1>
-    <small class="dont-index">Source: <a href="https://github.com/Asa12138/pcutils/blob/HEAD/R/statistics.R" class="external-link"><code>R/statistics.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/Asa12138/pcutils/blob/main/R/statistics.R" class="external-link"><code>R/statistics.R</code></a></small>
     <div class="hidden name"><code>hebing.Rd</code></div>
     </div>
 
@@ -92,36 +92,36 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hebing</span><span class="op">(</span><span class="va">otutab</span>, <span class="va">group</span>, metadata <span class="op">=</span> <span class="cn">NULL</span>, margin <span class="op">=</span> <span class="fl">2</span>, act <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">hebing</span><span class="op">(</span><span class="va">otutab</span>, <span class="va">group</span>, margin <span class="op">=</span> <span class="fl">2</span>, act <span class="op">=</span> <span class="st">"mean"</span>, metadata <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>otutab</dt>
+
+
+<dl><dt id="arg-otutab">otutab<a class="anchor" aria-label="anchor" href="#arg-otutab"></a></dt>
 <dd><p>data.frame</p></dd>
 
 
-<dt>group</dt>
+<dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
 <dd><p>group vector or one of colnames(metadata)</p></dd>
 
 
-<dt>metadata</dt>
-<dd><p>metadata</p></dd>
-
-
-<dt>margin</dt>
+<dt id="arg-margin">margin<a class="anchor" aria-label="anchor" href="#arg-margin"></a></dt>
 <dd><p>1 for row and 2 for column(default: 2)</p></dd>
 
 
-<dt>act</dt>
+<dt id="arg-act">act<a class="anchor" aria-label="anchor" href="#arg-act"></a></dt>
 <dd><p>do (default: mean)</p></dd>
+
+
+<dt id="arg-metadata">metadata<a class="anchor" aria-label="anchor" href="#arg-metadata"></a></dt>
+<dd><p>metadata</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>data.frame</p>
+    <p>data.frame</p>
     </div>
 
     <div id="ref-examples">
@@ -1100,7 +1100,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> s__Nitrosospira_multiformis                            0.5000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> s__un_g__Leptospira                                    2.5000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> s__un_g__Rubrobacter                                   2.5000000</span>
-<span class="r-in"><span><span class="fu">hebing</span><span class="op">(</span><span class="va">otutab</span>, <span class="st">"Group"</span>, <span class="va">metadata</span>, act <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">hebing</span><span class="op">(</span><span class="va">otutab</span>, <span class="st">"Group"</span>, metadata <span class="op">=</span> <span class="va">metadata</span>, act <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                        NS   WS    CS</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> s__un_f__Thermomonosporaceae                         7310 7364 11473</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> s__Pelomonas_puraquae                               12526 5241  7450</span>
@@ -1601,16 +1601,16 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>
 
-  
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.6.1/docsearch.min.js" integrity="sha256-GKvGqXDznoRYHCwKXGnuchvKSwmx9SRMrZOTh2g4Sb0=" crossorigin="anonymous"></script><script>
   docsearch({
-    
-    
+
+
     apiKey: '599cec31baffa4868cae4e79f180729b',
     indexName: 'docsearch',
     inputSelector: 'input#search-input.form-control',
