@@ -2,6 +2,7 @@
 
 ## Added
 
+- added `euler` plot for venn <2024-07-20, Sat>
 - added `igraph_translator` function <2024-07-11, Thu>
 
 # pcutils v0.2.6 Notes

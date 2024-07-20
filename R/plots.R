@@ -604,11 +604,25 @@ venn_cal <- function(otu_time) {
   return(aa)
 }
 
+venn_cal2 <- function(my_list){
+  # 获取所有唯一的行名
+  all_elements <- unique(unlist(my_list))
+
+  # 创建一个逻辑矩阵，行名为all_elements，列名为列表的名字
+  result_matrix <- matrix(FALSE, nrow = length(all_elements), ncol = length(my_list),
+                          dimnames = list(all_elements, names(my_list)))
+  # 填充矩阵
+  for (name in names(my_list)) {
+    result_matrix[as.character(my_list[[name]]), name] <- TRUE
+  }
+  data.frame(result_matrix, check.names = FALSE)
+}
+
 #' @method venn list
 #' @rdname venn
 #'
 #' @param aa list
-#' @param mode "venn","venn2","upset","flower","network"
+#' @param mode "venn","venn2","euler","upset","flower","network"
 #' @param elements_label logical, show elements label in network?
 #' @param ... add
 #'
@@ -643,6 +657,12 @@ venn.list <- function(aa, mode = "venn", elements_label = TRUE, ...) {
   #   # plot(aap, doWeights = FALSE,type="ChowRuskey")
   # }
 
+  if (mode == "euler"){
+    lib_ps("eulerr", library = FALSE)
+    venn_cal2(aa) -> aa_df
+    fit=eulerr::euler(aa_df, shape = "ellipse")
+    do.call(plot, update_param(list(x = fit, quantities = TRUE),list(...)))%>%print()
+  }
   if (mode == "upset") {
     lib_ps("UpSetR", library = FALSE)
     UpSetR::upset(UpSetR::fromList(aa), order.by = "freq", nsets = length(aa), nintersects = 30, ...) -> p

@@ -69,9 +69,15 @@ hebing <- function(otutab, group, margin = 2, act = "mean", metadata = NULL) {
   # prepare otutab
   if (!is.null(metadata)) {
     if (length(group) != 1 | (!group[1] %in% colnames(metadata))) stop("group should be one of colnames(metadata)")
-    match_res <- match_df(otutab, metadata)
-    otutab <- match_res$otutab
-    group <- match_res$metadata[, group, drop = TRUE]
+    if (margin == 2) {
+      match_res <- match_df(otutab, metadata)
+      otutab <- match_res$otutab
+      group <- match_res$metadata[, group, drop = TRUE]
+    } else {
+      match_res <- match_df(t2(otutab), metadata)
+      otutab <- t2(match_res$otutab)
+      group <- match_res$metadata[, group, drop = TRUE]
+    }
   }
 
   if (margin == 2) {
