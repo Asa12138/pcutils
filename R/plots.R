@@ -540,7 +540,7 @@ ggplot_translator <- function(gg, which = c("x", "y"), from = "en", to = "zh",
 #' ig2 <- igraph_translator(ig)
 #' font_file <- "/System/Library/Fonts/Supplemental/Songti.ttc"
 #' sysfonts::font_add("Songti", font_file)
-#' plot(ig2, vertex.label.family="Songti")
+#' plot(ig2, vertex.label.family = "Songti")
 #' }
 igraph_translator <- function(ig, from = "en", to = "zh", which = c("vertex", "edge", "all")[1],
                               verbose = TRUE) {
@@ -559,8 +559,8 @@ igraph_translator <- function(ig, from = "en", to = "zh", which = c("vertex", "e
   if ("all" %in% which) which <- c("vertex", "edge")
   if ("vertex" %in% which) {
     if (is.null(igraph::V(ig)$label)) {
-      if(is.null(igraph::V(ig)$name)) stop("No vertex label found")
-      V(ig)$label <- V(ig)$name
+      if (is.null(igraph::V(ig)$name)) stop("No vertex label found")
+      igraph::V(ig)$label <- igraph::V(ig)$name
     }
     igraph::V(ig)$label <- translator(igraph::V(ig)$label, from = from, to = to)
   }
@@ -604,13 +604,15 @@ venn_cal <- function(otu_time) {
   return(aa)
 }
 
-venn_cal2 <- function(my_list){
+venn_cal2 <- function(my_list) {
   # 获取所有唯一的行名
   all_elements <- unique(unlist(my_list))
 
   # 创建一个逻辑矩阵，行名为all_elements，列名为列表的名字
-  result_matrix <- matrix(FALSE, nrow = length(all_elements), ncol = length(my_list),
-                          dimnames = list(all_elements, names(my_list)))
+  result_matrix <- matrix(FALSE,
+    nrow = length(all_elements), ncol = length(my_list),
+    dimnames = list(all_elements, names(my_list))
+  )
   # 填充矩阵
   for (name in names(my_list)) {
     result_matrix[as.character(my_list[[name]]), name] <- TRUE
@@ -657,11 +659,11 @@ venn.list <- function(aa, mode = "venn", elements_label = TRUE, ...) {
   #   # plot(aap, doWeights = FALSE,type="ChowRuskey")
   # }
 
-  if (mode == "euler"){
+  if (mode == "euler") {
     lib_ps("eulerr", library = FALSE)
     venn_cal2(aa) -> aa_df
-    fit=eulerr::euler(aa_df, shape = "ellipse")
-    do.call(plot, update_param(list(x = fit, quantities = TRUE),list(...)))%>%print()
+    fit <- eulerr::euler(aa_df, shape = "ellipse")
+    do.call(plot, update_param(list(x = fit, quantities = TRUE), list(...))) %>% print()
   }
   if (mode == "upset") {
     lib_ps("UpSetR", library = FALSE)

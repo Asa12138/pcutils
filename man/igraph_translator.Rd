@@ -37,6 +37,6 @@ plot(ig)
 ig2 <- igraph_translator(ig)
 font_file <- "/System/Library/Fonts/Supplemental/Songti.ttc"
 sysfonts::font_add("Songti", font_file)
-plot(ig2, vertex.label.family="Songti")
+plot(ig2, vertex.label.family = "Songti")
 }
 }

@@ -58,6 +58,7 @@ Suggests:
     ggimage,
     ggpmisc,
     UpSetR,
+    eulerr,
     plotrix,
     vegan,
     circlize,
