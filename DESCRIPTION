@@ -85,6 +85,7 @@ Suggests:
     showtext,
     jsonlite,
     httr,
+    r.proxy,
     openssl,
     styler,
     lintr,

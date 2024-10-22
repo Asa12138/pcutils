@@ -36,6 +36,7 @@ print_authors_affiliation <- function(authors = c("jc", "pc")) {
     lz = 1:2,
     jlyq = 1:2,
     hzn = 1:2,
+    wx = 1:2,
     cq = 1:2,
     tsj = 4:5,
     sxt = 6
@@ -452,7 +453,7 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
   } else {
     if (is.null(format)) format <- tools::file_ext(file)
     format <- match.arg(format, c(
-      "blast", "diamond", "gff", "gtf",
+      "blast", "diamond", "gff", "gtf", "bed",
       "fa", "fasta", "fna", "faa",
       "bib", "ris",
       "jpg", "png", "pdf", "svg", "gif", "biom"
@@ -469,6 +470,15 @@ read.file <- function(file, format = NULL, just_print = FALSE, all_yes = FALSE, 
         header = FALSE, stringsAsFactors = FALSE, comment.char = "",
         col.names = c("seqid", "source", "feature", "start", "end", "score", "strand", "phase", "attributes")
       )
+      return(df)
+    }
+
+    if (format %in% c("bed")) {
+      utils::read.table(file, header = FALSE, sep = "\t", stringsAsFactors = FALSE) -> df
+      colnames(df) <- c(
+        "chrom", "chromStart", "chromEnd", "name", "score", "strand", "thickStart",
+        "thickEnd", "itemRgb", "blockCount", "blockSizes", "blockStarts"
+      )[seq_len(ncol(df))]
       return(df)
     }
 
@@ -660,10 +670,11 @@ trans_format <- function(file, to_format, format = NULL, ..., browser = "/Applic
 #' @param timeout timeout, 300s
 #' @param force FALSE, if TRUE, overwrite existed file
 #' @param ... add
+#' @param proxy use proxy, default is FALSE
 #'
 #' @return No value
 #' @export
-download2 <- function(url, file_path, timeout = 300, force = FALSE, ...) {
+download2 <- function(url, file_path, timeout = 300, force = FALSE, proxy = FALSE, ...) {
   if (file.exists(file_path) & !force) {
     return(invisible())
   } else {
@@ -672,6 +683,12 @@ download2 <- function(url, file_path, timeout = 300, force = FALSE, ...) {
 
     if (!dir.exists(dirname(file_path))) dir.create(dirname(file_path), recursive = TRUE)
     options(timeout = timeout)
+
+    if (proxy) {
+      lib_ps("r.proxy", library = FALSE)
+      r.proxy::proxy()
+    }
+
     # Download the file
     tryCatch(
       expr = {

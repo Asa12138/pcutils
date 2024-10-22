@@ -9,9 +9,9 @@ guolv(tab, sum = 10, exist = 1)
 \arguments{
 \item{tab}{dataframe}
 
-\item{sum}{the rowsum should bigger than sum(default:10)}
+\item{sum}{the rowsum should bigger than sum (default:10)}
 
-\item{exist}{the exist number bigger than exist(default:1)}
+\item{exist}{the exist number bigger than exist (default:1)}
 }
 \value{
 input object

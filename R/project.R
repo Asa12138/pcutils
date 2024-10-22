@@ -260,6 +260,76 @@ publish_book2github <- function(dir, overwrite = FALSE) {
   system(paste0("rsync -a _book/* ", destination))
 }
 
+#' Make a new python package
+#'
+#' @param pkg_name package name
+#' @param path project path, default "."
+#' @param author author
+#' @param email email
+#' @param description description
+#' @param license license
+#'
+#' @return No return value
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   make_py_pkg("my_python_package", path = "~/projects",
+#'   author = "John Doe", description = "My Python library",
+#'   license = "MIT")
+#' }
+make_py_pkg <- function(pkg_name, path = ".", author = "Your Name", email = "your.email@example.com", description = "A brief description of your library", license = "MIT") {
+  # 创建项目主目录
+  pkg_path <- file.path(path, pkg_name)
+  dir.create(pkg_path, showWarnings = FALSE, recursive = TRUE)
+
+  # 创建项目子目录
+  dir.create(file.path(pkg_path, pkg_name)) # 主库代码目录
+  dir.create(file.path(pkg_path, "tests")) # 测试目录
+
+  # 创建__init__.py文件
+  file.create(file.path(pkg_path, pkg_name, "__init__.py"))
+  file.create(file.path(pkg_path, "requirements.txt"))
+
+  # 创建README.md文件
+  readme_content <- paste0("# ", pkg_name, "\n\n", description)
+  writeLines(readme_content, con = file.path(pkg_path, "README.md"))
+
+  # 创建LICENSE文件
+  license_content <- paste0(license, " License")
+  writeLines(license_content, con = file.path(pkg_path, "LICENSE"))
+
+  # 创建setup.py文件
+  setup_content <- paste0(
+    "from setuptools import setup, find_packages\n\n",
+    "setup(\n",
+    "    name='", pkg_name, "',\n",
+    "    version='0.1',\n",
+    "    packages=find_packages(),\n",
+    "    install_requires=[\n",
+    "        # \u5217\u51fa\u4f9d\u8d56\u7684\u5305\uff0c\u5982\u9700\u4f7f\u7528\n",
+    "    ],\n",
+    "    author='", author, "',\n",
+    "    author_email='", email, "',\n",
+    "    description='", description, "',\n",
+    "    long_description=open('README.md').read(),\n",
+    "    long_description_content_type='text/markdown',\n",
+    "    url='',  # \u4ee3\u7801\u4ed3\u5e93\u7684URL\n",
+    "    license='", license, "',\n",
+    "    classifiers=[\n",
+    "        'Programming Language :: Python :: 3',\n",
+    "        'License :: OSI Approved :: ", license, " License',\n",
+    "        'Operating System :: OS Independent',\n",
+    "    ],\n",
+    "    python_requires='>=3.6',\n",
+    ")\n"
+  )
+  writeLines(setup_content, con = file.path(pkg_path, "setup.py"))
+
+  # 提示用户项目已创建
+  message("Python package structure created at: ", pkg_path)
+}
+
 # =======Some tips========
 
 #' How to use parallel

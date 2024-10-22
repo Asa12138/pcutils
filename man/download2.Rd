@@ -4,7 +4,7 @@
 \alias{download2}
 \title{Download File}
 \usage{
-download2(url, file_path, timeout = 300, force = FALSE, ...)
+download2(url, file_path, timeout = 300, force = FALSE, proxy = FALSE, ...)
 }
 \arguments{
 \item{url}{The URL from which to download the file.}
@@ -14,6 +14,8 @@ download2(url, file_path, timeout = 300, force = FALSE, ...)
 \item{timeout}{timeout, 300s}
 
 \item{force}{FALSE, if TRUE, overwrite existed file}
+
+\item{proxy}{use proxy, default is FALSE}
 
 \item{...}{add}
 }

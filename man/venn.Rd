@@ -17,7 +17,7 @@ venn(...)
 
 \item{aa}{list}
 
-\item{mode}{"venn","venn2","upset","flower"}
+\item{mode}{"venn", "venn2", "euler", "upset", "flower", "network"}
 
 \item{elements_label}{logical, show elements label in network?}
 
@@ -38,6 +38,7 @@ Plot a general venn (upset, flower)
 if (interactive()) {
   aa <- list(a = 1:3, b = 3:7, c = 2:4)
   venn(aa, mode = "venn")
+  venn(aa, mode = "euler")
   venn(aa, mode = "network")
   venn(aa, mode = "upset")
   data(otutab)

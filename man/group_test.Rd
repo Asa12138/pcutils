@@ -9,8 +9,9 @@ group_test(
   group,
   metadata = NULL,
   method = "wilcox.test",
+  pattern = NULL,
+  p.adjust.method = "none",
   threads = 1,
-  p.adjust.method = "BH",
   verbose = TRUE
 )
 }
@@ -23,11 +24,15 @@ group_test(
 
 \item{method}{the type of test. Default is wilcox.test. Allowed values include:
 \itemize{\item \code{\link[stats]{t.test}} (parametric) and \code{\link[stats]{wilcox.test}} (non-parametric). Perform comparison between two groups of samples. If the grouping variable contains more than two levels, then a pairwise comparison is performed.
-\item \code{\link[stats]{anova}} (parametric) and \code{\link[stats]{kruskal.test}} (non-parametric). Perform one-way ANOVA test comparing multiple groups.}}
+\item \code{\link[stats]{anova}} (parametric) and \code{\link[stats]{kruskal.test}} (non-parametric). Perform one-way ANOVA test comparing multiple groups.
+\item \code{\link[stats]{chisq.test}},  performs chi-squared contingency table tests and goodness-of-fit tests.
+\item 'pearson', 'kendall', or 'spearman' (correlation), see \code{\link[stats]{cor}}.}}
 
-\item{threads}{default 1}
+\item{pattern}{a named vector matching the group, e.g. c('G1'=1,'G2'=3,'G3'=2), use the correlation analysis with specific pattern to calculate p-value.}
 
 \item{p.adjust.method}{p.adjust.method, see \code{\link[stats]{p.adjust}}, default BH.}
+
+\item{threads}{default 1}
 
 \item{verbose}{logical}
 }

@@ -585,6 +585,7 @@ igraph_translator <- function(ig, from = "en", to = "zh", which = c("vertex", "e
 #' if (interactive()) {
 #'   aa <- list(a = 1:3, b = 3:7, c = 2:4)
 #'   venn(aa, mode = "venn")
+#'   venn(aa, mode = "euler")
 #'   venn(aa, mode = "network")
 #'   venn(aa, mode = "upset")
 #'   data(otutab)
@@ -624,7 +625,7 @@ venn_cal2 <- function(my_list) {
 #' @rdname venn
 #'
 #' @param aa list
-#' @param mode "venn","venn2","euler","upset","flower","network"
+#' @param mode "venn", "venn2", "euler", "upset", "flower", "network"
 #' @param elements_label logical, show elements label in network?
 #' @param ... add
 #'
@@ -782,9 +783,7 @@ venn_flower <- function(aa) {
 
 
 #' @param otutab table
-#' @param mode "venn","venn2","upset","flower"
-#' @param elements_label logical, show elements label in network?
-#' @param ... add
+#'
 #' @return a plot
 #' @method venn data.frame
 #' @rdname venn
