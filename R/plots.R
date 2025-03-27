@@ -1556,10 +1556,14 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
 #' @export
 #'
 #' @examples
+#' \donttest{
+#' if (interactive()) {
 #' data.frame(
 #'   a = c("a", "a", "b", "b", "c"), b = c("a", LETTERS[2:5]), c = rep("a", 5),
 #'   number = 1:5
 #' ) %>% gghuan2()
+#' }
+#' }
 gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 0.2, circle_label = NULL, pal = NULL,
                     name = TRUE, percentage = FALSE, text_params = NULL, circle_label_params = NULL, bar_params = NULL) {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
