@@ -48,8 +48,12 @@ a ggplot
 gghuan2 for multi-doughnut chart
 }
 \examples{
-data.frame(
-  a = c("a", "a", "b", "b", "c"), b = c("a", LETTERS[2:5]), c = rep("a", 5),
-  number = 1:5
-) \%>\% gghuan2()
+\donttest{
+if (interactive()) {
+  data.frame(
+    a = c("a", "a", "b", "b", "c"), b = c("a", LETTERS[2:5]), c = rep("a", 5),
+    number = 1:5
+  ) \%>\% gghuan2()
+}
+}
 }
