@@ -1,11 +1,24 @@
+# pcutils v0.2.8 Notes
+
+## Added
+
+- added `check_directory_structure` function <2025-03-27, Thu>
+
 # pcutils v0.2.7 Notes
 
 ## Added
 
+- added `get_legend2` function <2025-01-05, Sun>
+- added `list_to_dataframe` function <2024-11-19, Tue>
+- added `hebing2` function <2024-10-23, Wed>
 - added `make_py_pkg` function <2024-10-22, Tue>
 - added `distance2df` function <2024-10-22, Tue>
 - added `euler` plot for venn <2024-07-20, Sat>
 - added `igraph_translator` function <2024-07-11, Thu>
+
+## Others
+
+- modified `gghuan2` code: different legend for different huan <2024-11-30, Sat>
 
 # pcutils v0.2.6 Notes
 

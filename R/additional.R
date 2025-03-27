@@ -9,7 +9,6 @@
 # ggsankey,
 # sankeyD3,
 # SoDA,
-# ggnewscale,
 # ggtree,
 # ape
 ## some suggested pkgs: end

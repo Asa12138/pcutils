@@ -34,8 +34,10 @@ Make a new python package
 }
 \examples{
 if (interactive()) {
-  make_py_pkg("my_python_package", path = "~/projects",
-  author = "John Doe", description = "My Python library",
-  license = "MIT")
+  make_py_pkg("my_python_package",
+    path = "~/projects",
+    author = "John Doe", description = "My Python library",
+    license = "MIT"
+  )
 }
 }

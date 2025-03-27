@@ -10,6 +10,7 @@ gghuan2(
   circle_width = 1,
   space_width = 0.2,
   circle_label = NULL,
+  pal = NULL,
   name = TRUE,
   percentage = FALSE,
   text_params = NULL,
@@ -27,6 +28,8 @@ gghuan2(
 \item{space_width}{the space width between doughnuts (0~1).}
 
 \item{circle_label}{the center circle label}
+
+\item{pal}{color palette}
 
 \item{name}{label the name}
 

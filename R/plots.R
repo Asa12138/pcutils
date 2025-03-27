@@ -195,10 +195,11 @@ get_cols <- function(n = 11, pal = NULL, n_break = 5) {
   )
 
   bluered <- rev(RColorBrewer::brewer.pal(11, "RdBu"))
+  bluered2 <- c("#182F8B", "#4B6DCC", "#82A9E8", "#BAD1F1", "#E6F0FF", "#F9DCE6", "#F6A6C0", "#E36B8F", "#BF3F66", "#9B123C")
 
   if (is.null(pal)) pal <- "col1"
   if (length(pal) == 1) {
-    if (pal %in% c("col1", "col2", "col3", "bluered")) {
+    if (pal %in% c("col1", "col2", "col3", "bluered", "bluered2")) {
       pal <- get(pal)
     }
   }
@@ -286,6 +287,48 @@ add_theme <- function(set_theme = NULL) {
     mytheme <- set_theme
   }
   mytheme <<- mytheme
+}
+
+#' Get a legend from a ggplot object
+#'
+#' @param plot a ggplot object
+#' @param legend NULL, or position ("top")
+#'
+#' @return a grob object, or NULL if no legend found
+#' @export
+#'
+#' @examples
+#' library(ggplot2)
+#' p <- ggplot(mtcars, aes(wt, mpg, color = mpg)) +
+#'   geom_point()
+#' legend <- get_legend2(p)
+#' plot(legend)
+get_legend2 <- function(plot, legend = NULL) {
+  if (ggplot2::is.ggplot(plot)) {
+    gt <- ggplot2::ggplotGrob(plot)
+  } else {
+    if (grid::is.grob(plot)) {
+      gt <- plot
+    } else {
+      stop("Plot object is neither a `ggplot` nor a `grob`.")
+    }
+  }
+  pattern <- "guide-box"
+  if (!is.null(legend)) {
+    pattern <- paste0(pattern, "-", legend)
+  }
+  indices <- grep(pattern, gt$layout$name)
+  not_empty <- !vapply(
+    gt$grobs[indices],
+    inherits,
+    what = "zeroGrob",
+    FUN.VALUE = logical(1)
+  )
+  indices <- indices[not_empty]
+  if (length(indices) > 0) {
+    return(gt$grobs[[indices[1]]])
+  }
+  return(NULL)
 }
 
 #' Scale a legend size
@@ -842,7 +885,7 @@ pre_stack_data <- function(otutab, metadata = NULL, group = "Group",
     data_all <- data_all %>%
       dplyr::group_by(variable, Taxonomy) %>%
       dplyr::summarise(n = sum(value)) %>%
-      dplyr::mutate(value = n / sum(n))
+      dplyr::mutate(value = n / sum(n) * 100)
   }
 
   if (style == "sample") {
@@ -1016,7 +1059,7 @@ stackplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE
     }
   }
   if (relative) {
-    p <- p + scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
+    p <- p + ylab("Relative Abundance (%)")
   } else {
     p <- p + ylab("Number")
   }
@@ -1105,7 +1148,7 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
   p <- p + scale_x_continuous(breaks = 1:nlevels(data_all$variable), labels = levels(data_all$variable))
 
   if (relative) {
-    p <- p + scale_y_continuous(labels = scales::percent) + ylab("Relative Abundance (%)")
+    p <- p + ylab("Relative Abundance (%)")
   } else {
     p <- p + ylab("Number")
   }
@@ -1235,17 +1278,17 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
       do.call(geom_dotplot, update_param(list(binaxis = "y", stackdir = "center", position = "dodge"), point_param)) +
       # 添加误差线
-      stat_summary(fun.data = "mean_sdl", fun.args = list(mult = 1), geom = "pointrange", color = "black", size = 1.2) + # 添加均值散点
-      stat_summary(fun = "mean", fun.args = list(mult = 1), geom = "point", color = "white", size = 4)
+      stat_summary(fun.data = "mean_sdl", fun.args = list(mult = 1), geom = "pointrange", color = "black", size = 1.2, show.legend = FALSE) + # 添加均值散点
+      stat_summary(fun = "mean", fun.args = list(mult = 1), geom = "point", color = "white", size = 4, show.legend = FALSE)
   }
   if (mode == 6) {
     lib_ps("ggbeeswarm", library = FALSE)
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
       do.call(ggbeeswarm::geom_quasirandom, update_param(list(width = 0.5, alpha = 0.8, size = 2, shape = 21), point_param)) +
       # 添加误差线
-      stat_summary(fun.data = "mean_sdl", fun.args = list(mult = 1), geom = "pointrange", color = "black", size = 1.2) +
+      stat_summary(fun.data = "mean_sdl", fun.args = list(mult = 1), geom = "pointrange", color = "black", size = 1.2, show.legend = FALSE) +
       # 添加均值散点
-      stat_summary(fun = "mean", fun.args = list(mult = 1), geom = "point", color = "white", size = 4)
+      stat_summary(fun = "mean", fun.args = list(mult = 1), geom = "point", color = "white", size = 4, show.legend = FALSE)
   }
   if (mode == 7) {
     p <- ggplot(md, aes(x = group, y = value, fill = group, group = group)) +
@@ -1352,6 +1395,10 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     ), stat_compare_means_param))
   }
 
+  if (any(grepl("-", unique(md$group)))) {
+    warning("'-' can not be in the colnames! skip `alpha` marks.")
+    alpha <- FALSE
+  }
   if (alpha) {
     a <- list()
     for (i in colnames(tab)) {
@@ -1502,6 +1549,7 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
 #' @param circle_width the center circle width
 #' @param circle_label the center circle label
 #' @param circle_label_params parameters parse to \code{\link[ggplot2]{geom_text}}
+#' @param pal color palette
 #'
 #' @import ggplot2 dplyr
 #' @return a ggplot
@@ -1512,7 +1560,7 @@ gghuan <- function(tab, reorder = TRUE, mode = "1", topN = 5, name = TRUE, perce
 #'   a = c("a", "a", "b", "b", "c"), b = c("a", LETTERS[2:5]), c = rep("a", 5),
 #'   number = 1:5
 #' ) %>% gghuan2()
-gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 0.2, circle_label = NULL,
+gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 0.2, circle_label = NULL, pal = NULL,
                     name = TRUE, percentage = FALSE, text_params = NULL, circle_label_params = NULL, bar_params = NULL) {
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
   if ((space_width < 0) | space_width >= 1) stop("space_width should be [0,1)")
@@ -1525,6 +1573,7 @@ gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 
     colnames(plot_df) <- c("type", "n")
     count2(plot_df) -> plot_df
     dplyr::mutate(plot_df, fraction = n / sum(n)) -> plot_df
+    plot_df$level <- colnames(tab)[i]
     plot_df$ymax <- cumsum(plot_df$fraction)
     plot_df$ymin <- c(0, head(plot_df$ymax, n = -1))
     plot_df$xmax <- sum(huan_widths[seq_len(i + 1)])
@@ -1542,11 +1591,27 @@ gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 
     plot_df_res <- rbind(plot_df_res, plot_df)
   }
 
-  ggplot(data = plot_df_res, aes(fill = type, ymax = ymax, ymin = ymin, xmax = xmax, xmin = xmin)) +
-    do.call(geom_rect, update_param(list(alpha = 0.8), bar_params)) +
+  if (is.null(pal)) pal <- get_cols(unique(plot_df_res$type))
+
+  p <- ggplot()
+
+  for (i in colnames(tab)[seq_len(ncol(tab) - 1)]) {
+    p <- p + do.call(
+      geom_rect,
+      update_param(list(
+        data = filter(plot_df_res, level == i),
+        mapping = aes(fill = type, ymax = ymax, ymin = ymin, xmax = xmax, xmin = xmin)
+      ), bar_params)
+    ) +
+      scale_fill_manual(values = pal, name = i) +
+      ggnewscale::new_scale_fill()
+  }
+
+  p +
     xlim(c(0, sum(huan_widths) + 1)) +
     coord_polar(theta = "y") +
     do.call(geom_text, update_param(list(
+      data = plot_df_res,
       mapping = aes(x = ((xmin + xmax) / 2) + 1, y = ((ymin + ymax) / 2), label = lab),
       size = 3, nudge_x = -1
     ), text_params)) +
@@ -1735,6 +1800,7 @@ gghist <- function(x, text_pos = c(0.8, 0.8), ...) {
 #' @param ... parameters parse to \code{\link[ggplot2]{geom_point}}
 #' @param facet whether facet?
 #' @param smooth_param parameters parse to \code{\link[ggplot2]{geom_smooth}}
+#' @param formula_size formula font size, default is 2.5
 #'
 #' @return a ggplot
 #' @export
@@ -1746,7 +1812,7 @@ gghist <- function(x, text_pos = c(0.8, 0.8), ...) {
 #'   my_lm(c(1:50) + runif(50, 0, 5), var = 1:50)
 #' }
 #' }
-my_lm <- function(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE, ...) {
+my_lm <- function(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE, formula_size = 2.5, ...) {
   lib_ps("ggpmisc", library = FALSE)
   # data transform
   g_name <- NULL
@@ -1780,7 +1846,7 @@ my_lm <- function(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE
         sep = "~~~~~"
       )),
       formula = y ~ x, parse = TRUE, color = ifelse(is.null(smooth_param$color), "red", smooth_param$color),
-      size = 2.5, # Formula font size
+      size = formula_size, # Formula font size
       label.x = 0.05, label.y = 1.05
     )
 
@@ -1801,7 +1867,7 @@ my_lm <- function(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE
             sep = "~~~~~"
           )),
           formula = y ~ x, parse = TRUE,
-          size = 2.5, # Formula font size
+          size = formula_size, # Formula font size
           label.x = 0.05, label.y = seq(1, (1.05 - 0.05 * ncol(tab)), -0.05)
         )
     }

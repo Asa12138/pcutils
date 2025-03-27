@@ -4,7 +4,15 @@
 \alias{my_lm}
 \title{Fit a linear model and plot}
 \usage{
-my_lm(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE, ...)
+my_lm(
+  tab,
+  var,
+  metadata = NULL,
+  smooth_param = list(),
+  facet = TRUE,
+  formula_size = 2.5,
+  ...
+)
 }
 \arguments{
 \item{tab}{your dataframe}
@@ -16,6 +24,8 @@ my_lm(tab, var, metadata = NULL, smooth_param = list(), facet = TRUE, ...)
 \item{smooth_param}{parameters parse to \code{\link[ggplot2]{geom_smooth}}}
 
 \item{facet}{whether facet?}
+
+\item{formula_size}{formula font size, default is 2.5}
 
 \item{...}{parameters parse to \code{\link[ggplot2]{geom_point}}}
 }

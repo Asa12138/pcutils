@@ -82,15 +82,47 @@ hebing <- function(otutab, group, margin = 2, act = "mean", metadata = NULL) {
 
   if (margin == 2) {
     stats::aggregate(t(otutab), FUN = act, by = list(factor(group))) -> a
-    a[, -1] -> a
-    data.frame(t(a)) -> a
+    a[, -1, drop = FALSE] -> a
+    data.frame(t2(a), check.names = FALSE) -> a
     levels(factor(group)) -> colnames(a)
   } else {
     stats::aggregate(otutab, FUN = act, by = list(factor(group))) -> a
-    a[, -1] -> a
+    a[, -1, drop = FALSE] -> a
     levels(factor(group)) -> rownames(a)
   }
   return(a)
+}
+
+#' Group your data
+#'
+#' @param otutab data.frame
+#' @param group_df group data.frame with two columns (id and group). The same ID can be mapped to multiple groups.
+#' @param margin 1 for row and 2 for column(default: 2)
+#' @param act do (default: mean)
+#'
+#' @return data.frame
+#'
+#' @export
+#'
+#' @examples
+#' data(otutab)
+#' hebing2(otutab, data.frame(id = c("NS1", "NS2", "NS1", "NS3"), group = c("A", "A", "B", "B")))
+hebing2 <- function(otutab, group_df, margin = 2, act = "mean") {
+  stopifnot(is.data.frame(group_df) & ncol(group_df) == 2)
+  colnames(group_df) <- c("id", "group")
+
+  if (margin == 2) {
+    otutab <- t2(otutab)
+    as.character(rownames(otutab)) -> otutab$id
+    tmpdf <- dplyr::inner_join(group_df, otutab, by = "id")
+    b <- pcutils::hebing(dplyr::select(tmpdf, -c("id", "group")), tmpdf$group, 1, act = act)
+    b <- t2(b)
+  } else {
+    as.character(rownames(otutab)) -> otutab$id
+    tmpdf <- dplyr::inner_join(group_df, otutab, by = "id")
+    b <- pcutils::hebing(dplyr::select(tmpdf, -c("id", "group")), tmpdf$group, 1, act = act)
+  }
+  return(b)
 }
 
 #' Filter your data

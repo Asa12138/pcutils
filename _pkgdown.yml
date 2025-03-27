@@ -53,6 +53,7 @@ reference:
       - sanxian
       - grepl.data.frame
       - gsub.data.frame
+      - list_to_dataframe
       - read.file
       - trans_format
       - read_fasta
@@ -61,12 +62,14 @@ reference:
       - search_browse
       - translator
       - download_ncbi_genome_file
+      - check_directory_structure
   - title: Statistics
     desc:  A collection of statistical tools
     contents:
       - remove.outliers
       - count2
       - hebing
+      - hebing2
       - guolv
       - rm_low
       - trans
@@ -101,6 +104,7 @@ reference:
       - scale_fill_pc
       - scale_color_pc
       - add_theme
+      - get_legend2
       - legend_size
       - ggplot_lim
       - generate_labels

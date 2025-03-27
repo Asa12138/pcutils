@@ -274,9 +274,11 @@ publish_book2github <- function(dir, overwrite = FALSE) {
 #'
 #' @examples
 #' if (interactive()) {
-#'   make_py_pkg("my_python_package", path = "~/projects",
-#'   author = "John Doe", description = "My Python library",
-#'   license = "MIT")
+#'   make_py_pkg("my_python_package",
+#'     path = "~/projects",
+#'     author = "John Doe", description = "My Python library",
+#'     license = "MIT"
+#'   )
 #' }
 make_py_pkg <- function(pkg_name, path = ".", author = "Your Name", email = "your.email@example.com", description = "A brief description of your library", license = "MIT") {
   # 创建项目主目录
