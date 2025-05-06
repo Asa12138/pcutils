@@ -49,6 +49,139 @@ print_authors_affiliation <- function(authors = c("jc", "pc")) {
   message(paste0(pa, collapse = "\n\n"))
 }
 
+
+#' Generate Author-Affiliation Markdown and Write to Rmd File
+#'
+#' This function takes a data frame with two columns (`Author`, `Affiliation`),
+#' deduplicates authors and affiliations while preserving their original order,
+#' optionally adds custom author notes (e.g., "*", "#"), and writes the formatted
+#' author list and affiliation footnotes into a `.Rmd` file compatible with
+#' `bookdown::word_document2` output.
+#'
+#' @param df A data frame with two columns: the first for author names and the second for affiliations.
+#' @param file Character. Output file path (e.g., "authors.Rmd") to write the formatted content.
+#' @param affiliation_df Optional. A data frame of affiliations to define a fixed ordering. If NULL, uses unique order from `df`.
+#' @param author_note Optional. A data frame with two columns: `Author` and `Note`, specifying symbol(s) (e.g., *, #) to append to each author.
+#'
+#' @return Invisibly returns a list with `author_line` and `affiliation_list` components.
+#' @export
+#'
+generate_and_write_author_rmd <- function(df, file, affiliation_df = NULL, author_note = NULL) {
+  colnames(df) <- c("Author", "Affiliation")
+  df$Author <- trimws(df$Author)
+  df$Affiliation <- trimws(df$Affiliation)
+
+  df$Affiliation <- gsub(";\\s?", "; ", df$Affiliation)
+  df <- explode(df, "Affiliation", split = "; ")
+
+  # 保留单位顺序
+  if (is.null(affiliation_df)) {
+    unique_affils <- unique(df$Affiliation)
+  } else {
+    unique_affils <- unique(affiliation_df$Affiliation)
+  }
+  affil_id_map <- setNames(seq_along(unique_affils), unique_affils)
+
+  # 保留作者顺序（首次出现顺序）
+  author_order <- unique(df$Author)
+
+  # 整理 author_note，转为命名向量（Author -> Note）
+  note_map <- if (!is.null(author_note)) {
+    setNames(as.character(author_note$Note), author_note$Author)
+  } else {
+    character(0)
+  }
+
+  # 汇总每位作者对应的单位编号
+  author_affil_map <- lapply(author_order, function(author) {
+    affils <- df$Affiliation[df$Author == author]
+    affil_ids <- sort(unique(affil_id_map[affils]))
+    note <- if (author %in% names(note_map)) note_map[[author]] else ""
+    if (note == "") {
+      return(paste0(author, "^", paste(affil_ids, collapse = ","), "^"))
+    }
+    paste0(author, "^", paste(c(affil_ids, paste0("\\", note)), collapse = ","), "^")
+  })
+
+  # 拼接作者信息行
+  author_line <- paste(author_affil_map, collapse = ", ")
+
+  # 拼接单位列表行
+  affiliation_lines <- paste0("^", seq_along(unique_affils), "^", unique_affils, collapse = "\n\n")
+
+  # 写入Rmd文件
+  rmd_header <- "---\noutput:\n  bookdown::word_document2\n---\n\n"
+  rmd_body <- paste0(author_line, "\n\n", affiliation_lines, "\n")
+  writeLines(c(rmd_header, rmd_body), con = file)
+
+  # 可选：返回生成内容（用于调试或直接显示）
+  invisible(list(
+    author_line = author_line,
+    affiliation_list = affiliation_lines
+  ))
+}
+
+#' Format CRediT Contributions with Optional Author Name Shortening
+#'
+#' @param df A data frame with columns `Author` and `Contributions`
+#' @param short_name Logical. If TRUE, format author names as initials (e.g., C.P.)
+#'
+#' @return A character string summarizing contributions in the format:
+#' "Conceptualization, A, B; Methodology, C, D; ..."
+#' @export
+#'
+#' @examples
+#' df <- data.frame(
+#'   Author = c("Chen Peng", "Xin Wei"),
+#'   Contributions = c("Methodology,Visualization", "Methodology")
+#' )
+#' format_credit_contributions(df, short_name = TRUE)
+format_credit_contributions <- function(df, short_name = FALSE) {
+  colnames(df) <- c("Author", "Contributions")
+  df$Author <- trimws(df$Author)
+  df$Contributions <- trimws(df$Contributions)
+
+  # Author缩写
+  if (short_name) {
+    df$ShortAuthor <- sapply(df$Author, function(name) {
+      parts <- unlist(strsplit(name, "\\s+"))
+      paste0(substr(parts, 1, 1), collapse = ".") %>% paste0(".")
+    })
+  } else {
+    df$ShortAuthor <- df$Author
+  }
+
+  # CRediT标准顺序
+  credit_items <- c(
+    "Conceptualization", "Data curation", "Formal analysis", "Funding acquisition",
+    "Investigation", "Methodology", "Project administration", "Resources",
+    "Software", "Supervision", "Validation", "Visualization",
+    "Writing \u2013 original draft", "Writing \u2013 review & editing"
+  )
+
+  # 拆分每位作者的贡献项
+  df$contrib_list <- strsplit(df$Contributions, "\\s*,\\s*")
+
+  output_lines <- c()
+
+  for (credit in credit_items) {
+    authors_for_credit <- c()
+    for (i in seq_len(nrow(df))) {
+      if (credit %in% df$contrib_list[[i]]) {
+        authors_for_credit <- c(authors_for_credit, df$ShortAuthor[i])
+      }
+    }
+    if (length(authors_for_credit) > 0) {
+      line <- paste0(credit, ", ", paste(authors_for_credit, collapse = ", "))
+      output_lines <- c(output_lines, line)
+    }
+  }
+
+  result <- paste(output_lines, collapse = "; ")
+  return(result)
+}
+
+
 # =========Little tools=========
 #' Print some message with =
 #'

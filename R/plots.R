@@ -1569,7 +1569,7 @@ gghuan2 <- function(tab = NULL, huan_width = 1, circle_width = 1, space_width = 
   lib_ps("ggnewscale", library = FALSE)
   if (!is.numeric(tab[, ncol(tab)])) stop("the last column must be numeric")
   if ((space_width < 0) | space_width >= 1) stop("space_width should be [0,1)")
-  type <- ymax <- ymin <- xmin <- xmax <- lab <- fraction <- NULL
+  type <- ymax <- ymin <- xmin <- xmax <- lab <- fraction <- level <- NULL
 
   huan_widths <- c(circle_width, rep(huan_width, length = ncol(tab) - 1))
   plot_df_res <- data.frame()

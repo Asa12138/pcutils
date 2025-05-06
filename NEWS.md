@@ -2,6 +2,8 @@
 
 ## Added
 
+- added function `format_credit_contributions` <2025-05-06, Tue>
+- added function `generate_and_write_author_rmd` <2025-05-02, Fri>
 - added `check_directory_structure` function <2025-03-27, Thu>
 
 # pcutils v0.2.7 Notes
