@@ -10,7 +10,7 @@
 [![](http://cranlogs.r-pkg.org/badges/grand-total/pcutils)](https://cran.r-project.org/package=pcutils)
 [![](http://cranlogs.r-pkg.org/badges/last-month/pcutils)](https://cran.r-project.org/package=pcutils)
 [![](https://www.r-pkg.org/badges/version/pcutils?color=green)](https://cran.r-project.org/package=pcutils)
-[![](https://img.shields.io/badge/devel%20version-0.2.8-green.svg)](https://github.com/Asa12138/pcutils)
+[![](https://img.shields.io/badge/devel%20version-0.2.9-green.svg)](https://github.com/Asa12138/pcutils)
 <!-- badges: end -->
 
 `pcutils` is a package that contains some useful functions for me, it
@@ -141,6 +141,8 @@ devtools::install_github("Asa12138/pcutils")
 - `group_box` plot a boxplot easily
 
 - `gghuan` plot a doughnut chart; `gghuan2` plot a multi-doughnut chart
+
+- `ggmosaic` plot a mosaic plot
 
 - `my_lm` fit a linear model and plot
 

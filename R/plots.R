@@ -145,6 +145,44 @@ plotgif <- function(plist, file, speed = 1, ...) {
   # }
 }
 
+pc_colors <- list(
+  col1 = c(
+    "#8dd3c7", "#F8CC00", "#bebada", "#fb8072", "#80b1d3",
+    "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
+    "#ccebc5"
+  ),
+  col2 = c(
+    "#a6cee3", "#78c679", "#c2a5cf", "#ff7f00", "#1f78b4",
+    "#810f7c", "#F8CC00", "#006d2c", "#4d4d4d", "#8c510a",
+    "#d73027", "#7f0000", "#41b6c4", "#e7298a", "#54278f"
+  ),
+  col3 = c(
+    "#a6bce3", "#fb9a99", "#fdbf6f", "#1f78b4", "#b2df8a",
+    "#cab2d6", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a",
+    "#F8CC00", "#b15928"
+  ),
+  col4 = c(
+    "#E64B35", "#4DBBD5", "#00A087", "#3C5488", "#F39B7F",
+    "#8491B4", "#91D1C2", "#DC0000", "#7E6148", "#B09C85",
+    "#E18727", "#20854E", "#7876B1", "#6F99AD", "#FFDC91"
+  ),
+  # 渐变配色
+  bluered = c(
+    "#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#F7F7F7",
+    "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"
+  ),
+  bluered2 = c(
+    "#182F8B", "#4B6DCC", "#82A9E8", "#BAD1F1", "#E6F0FF",
+    "#F9DCE6", "#F6A6C0", "#E36B8F", "#BF3F66", "#9B123C"
+  ),
+  ocean = c("#00204A", "#005792", "#00B2CA", "#7DCFB6", "#FBD1A2"),
+  forest = c("#2D5A27", "#538D22", "#73A942", "#AAD576", "#E9F5DB"),
+  viridis = c(
+    "#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF",
+    "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"
+  )
+)
+
 #' Get n colors
 #'
 #' @param n how many colors you need
@@ -157,9 +195,6 @@ plotgif <- function(plist, file, speed = 1, ...) {
 #' @examples
 #' get_cols(10, "col2") -> my_cols
 #' scales::show_col(my_cols)
-#' \donttest{
-#' scales::show_col(get_cols(15, RColorBrewer::brewer.pal(5, "Set2")))
-#' }
 get_cols <- function(n = 11, pal = NULL, n_break = 5) {
   if (!(is.numeric(n) && length(n) == 1)) {
     if (is.character(n) || is.factor(n) || is.logical(n)) {
@@ -178,29 +213,10 @@ get_cols <- function(n = 11, pal = NULL, n_break = 5) {
 
   n <- as.integer(n)
 
-  col1 <- c(
-    "#8dd3c7", "#F8CC00", "#bebada", "#fb8072", "#80b1d3",
-    "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
-    "#ccebc5"
-  )
-  col2 <- c(
-    "#a6cee3", "#78c679", "#c2a5cf", "#ff7f00", "#1f78b4",
-    "#810f7c", "#F8CC00", "#006d2c", "#4d4d4d", "#8c510a",
-    "#d73027", "#7f0000", "#41b6c4", "#e7298a", "#54278f"
-  )
-  col3 <- c(
-    "#a6bce3", "#fb9a99", "#fdbf6f", "#1f78b4", "#b2df8a",
-    "#cab2d6", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a",
-    "#F8CC00", "#b15928"
-  )
-
-  bluered <- rev(RColorBrewer::brewer.pal(11, "RdBu"))
-  bluered2 <- c("#182F8B", "#4B6DCC", "#82A9E8", "#BAD1F1", "#E6F0FF", "#F9DCE6", "#F6A6C0", "#E36B8F", "#BF3F66", "#9B123C")
-
   if (is.null(pal)) pal <- "col1"
   if (length(pal) == 1) {
-    if (pal %in% c("col1", "col2", "col3", "bluered", "bluered2")) {
-      pal <- get(pal)
+    if (pal %in% names(pc_colors)) {
+      pal <- pc_colors[[pal]]
     }
   }
 
@@ -211,47 +227,56 @@ get_cols <- function(n = 11, pal = NULL, n_break = 5) {
   return(pal[seq_len(n)])
 }
 
-pal_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11) {
-  palette <- match.arg(palette)
+pal_pc <- function(palette = NULL, alpha = 1, n = 11, rev = FALSE) {
   if (alpha > 1L | alpha <= 0L) {
     stop("alpha must be in (0, 1]")
   }
   raw_cols <- get_cols(n = n, pal = palette)
   alpha_cols <- add_alpha(raw_cols, alpha)
-  scales::manual_pal(unname(alpha_cols))
-}
-
-#' Scale a fill color
-#' @param palette col1~3; or a vector of colors, you can get from: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
-#' @param alpha alpha
-#' @param n how many colors you need
-#' @param ... additional
-#' @param alpha alpha
-#' @return scale_fill
-#' @export
-scale_fill_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11, ...) {
-  palette <- match.arg(palette)
-  discrete_scale(
-    "fill", "pc", pal_pc(palette, alpha, n),
-    ...
-  )
+  if (rev) {
+    alpha_cols <- rev(alpha_cols)
+  }
+  alpha_cols
 }
 
 #' Scale a fill color
 #'
 #' @param palette col1~3; or a vector of colors, you can get from: `RColorBrewer::brewer.pal(5,"Set2")` or `ggsci::pal_aaas()(5)`
+#' @param alpha alpha
 #' @param n how many colors you need
 #' @param ... additional
+#' @param discrete TRUE or FALSE
 #' @param alpha alpha
+#' @param rev reverse
+#'
+#' @return scale_fill
+#' @export
+scale_fill_pc <- function(palette = NULL, alpha = 1, n = 11, discrete = TRUE, rev = FALSE, ...) {
+  if (discrete) {
+    discrete_scale(
+      "fill", "pc", scales::manual_pal(unname(pal_pc(palette, alpha, n, rev))),
+      ...
+    )
+  } else {
+    scale_fill_gradientn(colours = pal_pc(palette, alpha, n, rev), ...)
+  }
+}
+
+#' Scale a fill color
+#'
+#' @inheritParams scale_fill_pc
 #'
 #' @return scale_color
 #' @export
-scale_color_pc <- function(palette = c("col1", "col2", "col3", "bluered"), alpha = 1, n = 11, ...) {
-  palette <- match.arg(palette)
-  discrete_scale(
-    "color", "pc", pal_pc(palette, alpha, n),
-    ...
-  )
+scale_color_pc <- function(palette = NULL, alpha = 1, n = 11, discrete = TRUE, rev = FALSE, ...) {
+  if (discrete) {
+    discrete_scale(
+      "color", "pc", scales::manual_pal(unname(pal_pc(palette, alpha, n, rev))),
+      ...
+    )
+  } else {
+    scale_color_gradientn(colours = pal_pc(palette, alpha, n, rev), ...)
+  }
 }
 
 #' Add a global gg_theme and colors for plots
@@ -1954,6 +1979,7 @@ china_map <- function(china_shp = NULL, download_dir = "pcutils_temp", text_para
 #' @param north_arrow_params parameters parse to `ggspatial::annotation_north_arrow`
 #' @param leaflet_pal leaflet color palette
 #' @param label_params parameters parse to geom_sf_text
+#' @param map_provider the map provider, default is "OpenStreetMap", see \code{\link[leaflet]{providers}} for more options.
 #'
 #' @return map
 #' @export
@@ -1970,7 +1996,7 @@ china_map <- function(china_shp = NULL, download_dir = "pcutils_temp", text_para
 sample_map <- function(metadata, mode = 1, map_params = list(),
                        group = NULL, point_params = list(),
                        label = NULL, label_params = list(),
-                       leaflet_pal = NULL,
+                       leaflet_pal = NULL, map_provider = "OpenStreetMap",
                        shp_file = NULL, crs = 4326, xlim = NULL, ylim = NULL,
                        add_scale = TRUE, scale_params = list(),
                        add_north_arrow = TRUE, north_arrow_params = list()) {
@@ -2005,7 +2031,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
       lapply(htmltools::HTML)
 
     if (is.null(leaflet_pal)) {
-      if (is.numeric()) {
+      if (is.numeric(metadata$Group)) {
         leaflet_pal <- get_cols(pal = "bluered")
       } else {
         leaflet_pal <- get_cols(nlevels(factor(metadata$Group)))
@@ -2039,7 +2065,7 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
     }
     inter_p <- leaflet::leaflet(metadata) %>%
       # 添加图层
-      leaflet::addTiles() %>%
+      leaflet::addProviderTiles(map_provider) %>%
       # 确定中心点
       leaflet::setView(lng = Longitude_m, lat = Latitude_m, zoom = zoom) %>%
       # 添加散点注释
@@ -2082,6 +2108,9 @@ sample_map <- function(metadata, mode = 1, map_params = list(),
         )
       )
     }
+
+    p <- p + coord_sf(crs = crs, xlim = xlim, ylim = ylim) +
+      labs(x = "Longitude", y = "Latitude")
   }
   if (mode == 2) {
     lib_ps("sf", library = FALSE)

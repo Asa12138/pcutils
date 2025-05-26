@@ -20,36 +20,6 @@ some_packages <- c(
   "SpiecEasi" = "zdk123/SpiecEasi"
 )
 
-print_authors_affiliation <- function(authors = c("jc", "pc")) {
-  affiliations <- c(
-    "1" = "MOE Key Laboratory of Biosystems Homeostasis & Protection, and Zhejiang Provincial Key Laboratory of Cancer Molecular Cell Biology, Life Sciences Institute, Zhejiang University, Hangzhou, Zhejiang 310030, China",
-    "2" = "State Key Laboratory for Diagnosis and Treatment of Infectious Diseases, First Affiliated Hospital, Zhejiang University School of Medicine, Hangzhou, Zhejiang 310009, China",
-    "3" = "Center for Life Sciences, Shaoxing Institute, Zhejiang University, Shaoxing, Zhejiang 321000, China",
-    "4" = "BGI Research, Wuhan, Hubei 430074, China",
-    "5" = "BGI Research, Shenzhen, Guangdong 518083, China",
-    "6" = "Department of Genetics, Stanford University School of Medicine, Stanford, CA, USA"
-  )
-  author_list <- list(
-    jc = 1:3,
-    pc = 1:2,
-    lye = 1:2,
-    lz = 1:2,
-    jlyq = 1:2,
-    hzn = 1:2,
-    wx = 1:2,
-    cq = 1:2,
-    tsj = 4:5,
-    sxt = 6
-  )
-  pa <- affiliations[author_list[authors] %>% Reduce(union, .)]
-  for (i in seq_along(pa)) {
-    pa[i] <- paste0("^", i, "^", pa[i])
-  }
-  paste0(pa, collapse = "\n\n") %>% clipr::write_clip()
-  message(paste0(pa, collapse = "\n\n"))
-}
-
-
 #' Generate Author-Affiliation Markdown and Write to Rmd File
 #'
 #' This function takes a data frame with two columns (`Author`, `Affiliation`),

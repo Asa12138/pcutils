@@ -204,6 +204,8 @@ dev.off()
 
 -   `gghuan` plot a doughnut chart; `gghuan2` plot a multi-doughnut chart
 
+-   `ggmosaic` plot a mosaic plot
+
 -   `my_lm` fit a linear model and plot
 
 -   `china_map` plot a china map; `sample_map` plot a sample map

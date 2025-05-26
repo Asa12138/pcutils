@@ -13,6 +13,7 @@ sample_map(
   label = NULL,
   label_params = list(),
   leaflet_pal = NULL,
+  map_provider = "OpenStreetMap",
   shp_file = NULL,
   crs = 4326,
   xlim = NULL,
@@ -39,6 +40,8 @@ sample_map(
 \item{label_params}{parameters parse to geom_sf_text}
 
 \item{leaflet_pal}{leaflet color palette}
+
+\item{map_provider}{the map provider, default is "OpenStreetMap", see \code{\link[leaflet]{providers}} for more options.}
 
 \item{shp_file}{a geojson file parse to \code{sf::read_sf}}
 

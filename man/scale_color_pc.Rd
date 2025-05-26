@@ -5,9 +5,11 @@
 \title{Scale a fill color}
 \usage{
 scale_color_pc(
-  palette = c("col1", "col2", "col3", "bluered"),
+  palette = NULL,
   alpha = 1,
   n = 11,
+  discrete = TRUE,
+  rev = FALSE,
   ...
 )
 }
@@ -17,6 +19,10 @@ scale_color_pc(
 \item{alpha}{alpha}
 
 \item{n}{how many colors you need}
+
+\item{discrete}{TRUE or FALSE}
+
+\item{rev}{reverse}
 
 \item{...}{additional}
 }
