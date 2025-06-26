@@ -11,6 +11,7 @@ group_box(
   mode = 1,
   group_order = NULL,
   facet_order = NULL,
+  facet_ncol = NULL,
   paired = FALSE,
   paired_line_param = list(),
   alpha = FALSE,
@@ -37,6 +38,8 @@ group_box(
 \item{group_order}{the order of x group}
 
 \item{facet_order}{the order of the facet}
+
+\item{facet_ncol}{number of columns in facet, if NULL, will use the default value of ggplot2}
 
 \item{paired}{if paired is TRUE, points in different groups will be connected by lines. So the row names order is important.}
 

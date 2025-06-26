@@ -1206,6 +1206,7 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
 #' @param only_sig only_sig for p_value2
 #' @param paired if paired is TRUE, points in different groups will be connected by lines. So the row names order is important.
 #' @param paired_line_param parameters parse to \code{\link[ggplot2]{geom_line}}.
+#' @param facet_ncol number of columns in facet, if NULL, will use the default value of ggplot2
 #'
 #' @return a ggplot
 #' @export
@@ -1217,7 +1218,7 @@ areaplot <- function(otutab, metadata = NULL, group = "Group", get_data = FALSE,
 #' a <- data.frame(a = 1:18, b = runif(18, 0, 5))
 #' group_box(a, group = rep(c("a", "b", "c"), each = 6))
 group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
-                      group_order = NULL, facet_order = NULL,
+                      group_order = NULL, facet_order = NULL, facet_ncol = NULL,
                       paired = FALSE, paired_line_param = list(),
                       alpha = FALSE, method = "wilcox", alpha_param = list(), point_param = NULL,
                       p_value1 = FALSE, p_value2 = FALSE, only_sig = TRUE, stat_compare_means_param = NULL,
@@ -1370,7 +1371,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
   # facet?
   flag <- (ncol(tab) == 1)
   if (!flag) {
-    p <- p + facet_wrap(. ~ indexes, scales = "free_y")
+    p <- p + facet_wrap(. ~ indexes, scales = "free_y", ncol = facet_ncol)
   } else {
     ylab <- colnames(tab)[1]
     p <- p + ylab(ylab)
@@ -1455,6 +1456,7 @@ group_box <- function(tab, group = NULL, metadata = NULL, mode = 1,
     }
   }
 
+  p <- p + scale_y_continuous(expand = c(0.1, 0.1))
   return(p)
 }
 
@@ -2254,7 +2256,7 @@ my_sunburst <- function(test, ...) {
 #' My Treemap plot
 #'
 #' @param test a three-columns dataframe with hierarchical structure
-#' @param ... look for parameters in \code{\link[plotly]{plot_ly}}
+#' @param ... look for parameters in \code{\link[treemap]{treemap}}
 #'
 #' @return htmlwidget
 #' @export
@@ -2297,7 +2299,7 @@ my_treemap <- function(test, ...) {
     # 定义所有级别各类的标签
     index = c("source", "target"),
     # 定义各分类的值（一一对应）
-    vSize = "weight", type = "index"
+    vSize = "weight", type = "index", ...
   )
   # if (d3) {
   #     lib_ps("d3treeR", library = FALSE)

@@ -1,3 +1,9 @@
+# pcutils v0.2.9 Notes
+
+## Added
+
+- added `fill_na` function <2025-06-11, Wed>
+
 # pcutils v0.2.8 Notes
 
 ## Added

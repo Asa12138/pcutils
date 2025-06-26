@@ -4,7 +4,7 @@
 \alias{rm_low}
 \title{Remove the low relative items in each column}
 \usage{
-rm_low(otutab, relative_threshold = 0.0001)
+rm_low(otutab, relative_threshold = 1e-04)
 }
 \arguments{
 \item{otutab}{otutab}

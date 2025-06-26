@@ -9,7 +9,7 @@ my_treemap(test, ...)
 \arguments{
 \item{test}{a three-columns dataframe with hierarchical structure}
 
-\item{...}{look for parameters in \code{\link[plotly]{plot_ly}}}
+\item{...}{look for parameters in \code{\link[treemap]{treemap}}}
 }
 \value{
 htmlwidget

@@ -20,6 +20,73 @@ remove.outliers <- function(x, factor = 1.5) {
   return(res)
 }
 
+#' Fill NA values in numeric columns of a data frame
+#'
+#' Replaces NA values in all numeric columns using specified filling method.
+#'
+#' @param df Input data frame
+#' @param mode Filling method:
+#'   "value" - fill with constant value (default)
+#'   "mean" - fill with column mean
+#'   "median" - fill with column median
+#'   "locf" - last observation carried forward
+#'   "nocb" - next observation carried backward
+#' @param value Value to use when mode = "value" (default 0)
+#' @export
+#' @return Data frame with NA values filled
+#' @examples
+#' df <- data.frame(a = c(1, NA, 3), b = c(NA, 2, NA))
+#' fill_na(df) # fills with 0
+#' fill_na(df, mode = "mean")
+#' fill_na(df, mode = "locf")
+fill_na <- function(df, mode = "value", value = 0) {
+  if (!is.data.frame(df)) {
+    stop("Input must be a data frame")
+  }
+
+  numeric_cols <- vapply(df, is.numeric, logical(1))
+  if (!any(numeric_cols)) {
+    warning("No numeric columns found")
+    return(df)
+  }
+
+  df_filled <- df
+  for (col in names(df)[numeric_cols]) {
+    na_pos <- is.na(df[[col]])
+
+    if (any(na_pos)) {
+      if (mode == "value") {
+        df_filled[[col]][na_pos] <- value
+      } else if (mode == "mean") {
+        df_filled[[col]][na_pos] <- mean(df[[col]], na.rm = TRUE)
+      } else if (mode == "median") {
+        df_filled[[col]][na_pos] <- median(df[[col]], na.rm = TRUE)
+      } else if (mode == "locf") {
+        # Last observation carried forward
+        vals <- df[[col]]
+        for (i in seq_along(vals)) {
+          if (is.na(vals[i]) && i > 1) {
+            vals[i] <- vals[i - 1]
+          }
+        }
+        df_filled[[col]] <- vals
+      } else if (mode == "nocb") {
+        # Next observation carried backward
+        vals <- df[[col]]
+        for (i in rev(seq_along(vals))) {
+          if (is.na(vals[i]) && i < length(vals)) {
+            vals[i] <- vals[i + 1]
+          }
+        }
+        df_filled[[col]] <- vals
+      } else {
+        stop("Unsupported mode: ", mode)
+      }
+    }
+  }
+
+  return(df_filled)
+}
 
 #' Like `uniq -c` in shell to count a vector
 #'

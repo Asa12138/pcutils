@@ -68,6 +68,7 @@ reference:
     desc:  A collection of statistical tools
     contents:
       - remove.outliers
+      - fill_na
       - count2
       - hebing
       - hebing2
